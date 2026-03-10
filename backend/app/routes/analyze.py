@@ -4,6 +4,7 @@ from app.services.repo_scanner import scan_repository
 from app.services.dependency_parser import detect_frameworks
 from app.services.architecture_builder import build_architecture
 from app.services.diagram_generator import generate_architecture_diagram
+from app.services.ai_explainer import generate_repo_explanation
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
@@ -23,10 +24,13 @@ def analyze_repo(repo_url: str):
 
     diagram = generate_architecture_diagram(architecture, repo_name)
 
+    explanation = generate_repo_explanation(framework_data, scan_data)
+
     return {
         "repo_url": repo_url,
         "scan_results": scan_data,
         "framework_detection": framework_data,
         "architecture": architecture,
-        "diagram": diagram
+        "diagram": diagram,
+        "ai_explanation": explanation
     }
