@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
+
 from app.services.repo_cloner import clone_repository
 from app.services.repo_scanner import scan_repository
 from app.services.dependency_parser import detect_frameworks
@@ -9,8 +11,14 @@ from app.services.ai_explainer import generate_repo_explanation
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
 
+class RepoRequest(BaseModel):
+    repo_url: str
+
+
 @router.post("/")
-def analyze_repo(repo_url: str):
+def analyze_repo(request: RepoRequest):
+
+    repo_url = request.repo_url
 
     clone_path = clone_repository(repo_url)
 
