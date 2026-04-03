@@ -4,3 +4,4 @@ __pycache__/
 .env
 repos/
 node_modules/
+context.md
