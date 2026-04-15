@@ -5,3 +5,7 @@ __pycache__/
 repos/
 node_modules/
 context.md
+# HuggingFace model cache
+hf_cache/
+**/hf_cache/
+**/.cache/huggingface/

@@ -136,6 +136,30 @@ def analyze_repo(request: RepoRequest):
 
         explanation = generate_repo_explanation(framework_data, scan_data)
 
+        # ── Phase 11: Build RAG vector store (non-blocking, non-fatal) ────────
+        t_rag = time.perf_counter()
+        rag_ready = False
+        try:
+            from app.services.embeddings import build_chunks, get_model
+            from app.services.retriever import build_store as rag_build_store
+
+            rag_chunks = build_chunks(
+                file_contents_map or {},
+                extra_context={
+                    "ai_explanation":      explanation,
+                    "folder_explanations": folder_explanations,
+                    "api_routes":          api_routes,
+                    "important_files":     important_files,
+                },
+            )
+            rag_model = get_model()
+            rag_build_store(repo_url, rag_chunks, rag_model)
+            rag_ready = True
+            print(f"[timing] RAG index built in {time.perf_counter() - t_rag:.2f}s "
+                  f"({len(rag_chunks)} chunks)")
+        except Exception as rag_err:
+            print(f"[rag] index build skipped: {rag_err}")
+
         print(f"[timing] TOTAL pipeline: {time.perf_counter() - t0:.2f}s")
 
         return {
@@ -150,6 +174,8 @@ def analyze_repo(request: RepoRequest):
             "api_routes": api_routes,
             "important_files": important_files,
             "folder_explanations": folder_explanations,
+            # ── Phase 11: chat readiness flag ─────────────────────────────
+            "rag_ready": rag_ready,
         }
 
     except RepoNotAccessibleError as e:
