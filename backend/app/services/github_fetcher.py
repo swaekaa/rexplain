@@ -146,6 +146,8 @@ def _build_scan_data(paths: list[str]) -> dict:
         "total_files": included,
         "languages": dict(ext_counts),
         "key_files": key_files,
+        # Phase 10: full filtered path list for intelligence enrichment
+        "file_paths": [p for p in paths if not any(seg in SKIP_SEGMENTS for seg in p.split("/")[:-1])],
     }
 
 

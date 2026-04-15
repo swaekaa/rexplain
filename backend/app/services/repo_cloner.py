@@ -11,6 +11,9 @@ BASE_REPO_DIR = os.path.abspath(
 # Hard ceiling: if git clone takes longer than this, abort.
 CLONE_TIMEOUT_SECONDS = 30
 
+# Fast pre-check: ls-remote must finish within this to prove repo is reachable.
+LS_REMOTE_TIMEOUT = 8
+
 
 class CloneTimeoutError(Exception):
     """Raised when git clone does not complete within CLONE_TIMEOUT_SECONDS."""
@@ -18,6 +21,10 @@ class CloneTimeoutError(Exception):
 
 class CloneError(Exception):
     """Raised when git clone exits with a non-zero status code."""
+
+
+class RepoNotAccessibleError(Exception):
+    """Raised when the repository is private, non-existent, or unreachable."""
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +66,53 @@ def _kill_process_tree(pid: int):
     )
 
 
+def _check_repo_accessible(repo_url: str) -> None:
+    """
+    Run `git ls-remote --exit-code <url>` with a short timeout.
+
+    This is a fast (~1–3 s) handshake that:
+      - Returns exit 0   → repo is public and reachable  ✓
+      - Returns exit 2   → repo exists but is empty       ✓ (allow clone attempt)
+      - Returns exit 128 → repo is private/404/bad URL    → raise RepoNotAccessibleError
+      - Times out        → network issue                  → raise RepoNotAccessibleError
+
+    Prevents wasting 30 seconds on a doomed clone.
+    """
+    t0 = time.perf_counter()
+    try:
+        proc = subprocess.Popen(
+            ["git", "ls-remote", "--exit-code", "--heads", repo_url],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},  # never prompt for password
+        )
+        _, stderr = proc.communicate(timeout=LS_REMOTE_TIMEOUT)
+        elapsed = time.perf_counter() - t0
+
+        # exit 2 = repo exists but has no heads (empty) — still cloneable
+        if proc.returncode in (0, 2):
+            print(f"[info] repo accessible (ls-remote {elapsed:.1f}s)")
+            return
+
+        # exit 128 = fatal: repository not found / auth required
+        stderr_clean = (stderr or "").strip()
+        print(f"[error] ls-remote failed (exit {proc.returncode}) → {stderr_clean}")
+        raise RepoNotAccessibleError(
+            "Repository is private or does not exist. "
+            "Only public repositories are supported."
+        )
+
+    except subprocess.TimeoutExpired:
+        _kill_process_tree(proc.pid)
+        proc.communicate()
+        print(f"[error] ls-remote timed out after {LS_REMOTE_TIMEOUT}s → {repo_url}")
+        raise RepoNotAccessibleError(
+            "Could not reach the repository. "
+            "Check the URL or your network connection."
+        )
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -67,21 +121,22 @@ def clone_repository(repo_url: str) -> str:
     """
     Clone a GitHub repository using subprocess + system git.
 
-    Why subprocess instead of GitPython:
-      subprocess.Popen gives us direct control over the OS process,
-      letting us terminate the entire process tree on timeout via taskkill.
-      GitPython + ThreadPoolExecutor only stops waiting — the git.exe process
-      keeps running and holds file handles, causing WinError 32 on cleanup.
+    Pre-check:
+      Runs git ls-remote first (8 s timeout) to detect private / missing repos
+      before committing to a full 30-second clone attempt.
 
     Clone flags:
       --depth 1       — shallow clone, latest commit only
       --single-branch — fetch only the default branch ref
-      (no --filter: blobless clones negotiate slowly on large repos)
 
     Raises:
-        CloneTimeoutError  — clone exceeded CLONE_TIMEOUT_SECONDS
-        CloneError         — git exited non-zero (bad URL, private repo, etc.)
+        RepoNotAccessibleError — repo is private, missing, or unreachable
+        CloneTimeoutError      — clone exceeded CLONE_TIMEOUT_SECONDS
+        CloneError             — git exited non-zero
     """
+    # ── Fast accessibility check ──────────────────────────────────────────
+    _check_repo_accessible(repo_url)
+
     repo_name = repo_url.rstrip("/").split("/")[-1].replace(".git", "")
     clone_path = os.path.join(BASE_REPO_DIR, repo_name)
 
@@ -102,24 +157,24 @@ def clone_repository(repo_url: str) -> str:
 
     proc = subprocess.Popen(
         cmd,
-        stdout=subprocess.DEVNULL,   # we don't need git's stdout
-        stderr=subprocess.PIPE,       # capture stderr for error messages
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
         text=True,
+        env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},  # never prompt for password
     )
 
     try:
         _, stderr = proc.communicate(timeout=CLONE_TIMEOUT_SECONDS)
 
     except subprocess.TimeoutExpired:
-        # Kill entire process tree (parent + git-remote-https.exe etc.)
         _kill_process_tree(proc.pid)
-        proc.communicate()  # drain pipes — fast, process is now dead
+        proc.communicate()
 
         elapsed = time.perf_counter() - t0
         print(f"[error] clone timeout after {elapsed:.1f}s  →  {repo_url}")
         delete_repository(clone_path)
         raise CloneTimeoutError(
-            "Repository clone timed out (repo too large or slow network)"
+            "Repository clone timed out — the repo may be too large."
         )
 
     elapsed = time.perf_counter() - t0

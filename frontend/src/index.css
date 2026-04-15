@@ -1,59 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* index.css — minimal reset; all design tokens live in public/index.html */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --bg-base: #0d1117;
-  --bg-card: #161b22;
-  --bg-card-hover: #1c2230;
-  --bg-input: #21262d;
-  --border: #30363d;
-  --border-accent: #388bfd;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
-  --accent-blue: #388bfd;
-  --accent-green: #3fb950;
-  --accent-purple: #bc8cff;
-  --accent-orange: #ffa657;
-  --accent-red: #f85149;
-  --gradient-start: #388bfd;
-  --gradient-end: #bc8cff;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  line-height: 1.6;
-  min-height: 100vh;
-}
-
-@keyframes spin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
-}
-
-.fade-in {
-  animation: fadeInUp 0.45s ease both;
-}
+/* react-markdown prose overrides inside the glass card */
+.readme-prose h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 700; color: #111; margin: 1rem 0 0.5rem; letter-spacing: -0.02em; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.4rem; }
+.readme-prose h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; color: #111; margin: 1rem 0 0.4rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.2rem; }
+.readme-prose h3 { font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 600; color: #111; margin: 0.8rem 0 0.3rem; }
+.readme-prose p  { color: #585f6c; line-height: 1.75; margin: 0.5rem 0; font-size: 0.95rem; }
+.readme-prose a  { color: #111; text-decoration: underline; text-underline-offset: 3px; }
+.readme-prose code { background: rgba(0,0,0,0.05); color: #111; padding: 1px 6px; border-radius: 3px; font-size: 0.82em; font-family: monospace; }
+.readme-prose pre { background: rgba(0,0,0,0.04); border-left: 2px solid #111; padding: 14px 16px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; }
+.readme-prose pre code { background: none; padding: 0; font-size: inherit; }
+.readme-prose ul, .readme-prose ol { padding-left: 1.4rem; color: #585f6c; margin: 0.4rem 0; }
+.readme-prose li { margin: 0.25rem 0; line-height: 1.6; font-size: 0.9rem; }
+.readme-prose blockquote { border-left: 4px solid rgba(0,0,0,0.1); padding-left: 1rem; color: #777; margin: 0.6rem 0; font-style: italic; }
+.readme-prose img { max-width: 100%; border-radius: 4px; margin: 0.5rem 0; }
+.readme-prose hr { border: none; border-top: 1px solid rgba(0,0,0,0.07); margin: 1rem 0; }
+.readme-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.6rem 0; }
+.readme-prose th { border: 1px solid rgba(0,0,0,0.1); padding: 6px 12px; text-align: left; background: rgba(0,0,0,0.03); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #777; }
+.readme-prose td { border: 1px solid rgba(0,0,0,0.07); padding: 6px 12px; color: #585f6c; }

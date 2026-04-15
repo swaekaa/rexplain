@@ -1,11 +1,24 @@
-# RExplain backend dependencies
-# Generated: Phase 9 cleanup — minimal production requirements
-
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anyio==4.13.0
+certifi==2026.2.25
+charset-normalizer==3.4.7
+click==8.3.1
+colorama==0.4.6
 fastapi==0.135.3
-uvicorn==0.42.0
-gitpython==3.1.46
+gitdb==4.0.12
+GitPython==3.1.46
 graphviz==0.21
+h11==0.16.0
+idna==3.11
 networkx==3.6.1
 pydantic==2.12.5
+pydantic_core==2.41.5
 python-multipart==0.0.22
-requests==2.32.3
+requests==2.33.1
+smmap==5.0.3
+starlette==1.0.0
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+urllib3==2.6.3
+uvicorn==0.42.0
