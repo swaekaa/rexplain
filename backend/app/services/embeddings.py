@@ -1,13 +1,22 @@
 """
 embeddings.py
 -------------
-Phase 11: Smart file chunking + SentenceTransformer model singleton.
+Phase 11 → 12 upgrade: Higher-fidelity chunking with overlap.
 
 Chunking strategy:
-  - Python  → split by def / async def / class blocks
-  - JS/TS   → split by function / class / export blocks
-  - Markdown → split by ## section headers
-  - JSON/YAML/other → fixed 800-char windows
+  - Python  → split by def / async def / class, with 3-line look-ahead overlap
+              + inject module-level docstring as separate chunk
+  - JS/TS   → split by function / class / export definitions
+  - Markdown → split by ALL heading levels (h1–h4) + paragraph fallback
+               README files get extra fine-grained paragraph splitting
+  - JSON/YAML → fixed 600-char windows with 150-char overlap
+  - Generic   → 700-char windows with 200-char overlap
+
+Key improvements over v12:
+  - README paragraph cap tightened to 250 chars so single-line technical
+    facts (accuracy, model name, param counts) are their own chunks
+  - Technical-keyword short-circuit: paragraphs containing domain terms
+    (accuracy / model / parameter / dataset / …) are always emitted alone
 
 Model: all-MiniLM-L6-v2 (local, ~90 MB, fast)
 Loaded once and reused across all requests.
@@ -55,21 +64,50 @@ SKIP_DIRS = {
     "static", "assets", ".mypy_cache",
 }
 
-MAX_FILE_CHARS = 40_000   # cap per file before chunking
+MAX_FILE_CHARS = 60_000   # raised from 40k so large READMEs aren't truncated
+
+# README file names (case-insensitive)
+_README_NAMES = {"readme.md", "readme.rst", "readme.txt", "readme"}
+
+
+def _is_readme(path: str) -> bool:
+    return path.replace("\\", "/").split("/")[-1].lower() in _README_NAMES
+
+
+# ── Overlap helper ────────────────────────────────────────────────────────────
+
+def _add_overlap(chunks: list[dict], overlap_chars: int = 150) -> list[dict]:
+    """
+    Append a tail snippet from chunk[i] to the start of chunk[i+1].
+    This prevents technical keywords from being cut at a boundary.
+    """
+    if len(chunks) < 2:
+        return chunks
+    result = [chunks[0]]
+    for i in range(1, len(chunks)):
+        prev_tail = chunks[i - 1]["text"][-overlap_chars:].strip()
+        merged_text = prev_tail + "\n" + chunks[i]["text"]
+        result.append({**chunks[i], "text": merged_text[:3_500]})
+    return result
 
 
 # ── Per-language chunkers ─────────────────────────────────────────────────────
 
 def _chunk_python(content: str, path: str) -> list[dict]:
-    """Split Python source by function / class definitions."""
+    """
+    Split Python source at top-level and class-method boundaries.
+
+    Improvements:
+    - Module-level docstring / constants emitted as own chunk
+    - 3-line look-behind overlap added between adjacent blocks
+    - Chunks capped at 2500 chars to keep them focused
+    """
     lines = content.split("\n")
     block_start_re = re.compile(
         r"^(\s*)(async\s+def\s+\w|def\s+\w|class\s+\w)"
     )
 
-    blocks: list[tuple[int, int]] = []   # (start_line, end_line)
     starts: list[int] = []
-
     for i, line in enumerate(lines):
         if block_start_re.match(line):
             starts.append(i)
@@ -77,21 +115,27 @@ def _chunk_python(content: str, path: str) -> list[dict]:
     if not starts:
         return _chunk_generic(content, path)
 
-    for idx, start in enumerate(starts):
-        end = starts[idx + 1] if idx + 1 < len(starts) else len(lines)
-        blocks.append((start, end))
+    chunks: list[dict] = []
 
-    chunks = []
-    for start, end in blocks:
-        text = "\n".join(lines[start:end]).strip()
+    # Module-level preamble (imports, constants, docstrings before first def)
+    if starts[0] > 0:
+        preamble = "\n".join(lines[: starts[0]]).strip()
+        if len(preamble) > 30:
+            chunks.append({"path": path, "text": preamble[:2_500], "type": "module"})
+
+    for idx, start in enumerate(starts):
+        # 3-line overlap from previous block
+        overlap_start = max(0, start - 3)
+        end = starts[idx + 1] if idx + 1 < len(starts) else len(lines)
+        text = "\n".join(lines[overlap_start:end]).strip()
         if len(text) > 30:
-            chunks.append({"path": path, "text": text[:3_000], "type": "function"})
+            chunks.append({"path": path, "text": text[:2_500], "type": "function"})
 
     return chunks or [{"path": path, "text": content[:2_000], "type": "file"}]
 
 
 def _chunk_js(content: str, path: str) -> list[dict]:
-    """Split JS/TS by function / class / export definitions."""
+    """Split JS/TS by function / class / export definitions with overlap."""
     split_re = re.compile(
         r"(?=\n(?:"
         r"export\s+(?:default\s+)?(?:async\s+)?(?:function|class)\s+"
@@ -105,37 +149,94 @@ def _chunk_js(content: str, path: str) -> list[dict]:
     for part in parts:
         text = part.strip()
         if len(text) > 30:
-            chunks.append({"path": path, "text": text[:3_000], "type": "function"})
-    return chunks or [{"path": path, "text": content[:2_000], "type": "file"}]
+            chunks.append({"path": path, "text": text[:2_500], "type": "function"})
+
+    return _add_overlap(chunks, 120) or [{"path": path, "text": content[:2_000], "type": "file"}]
 
 
-def _chunk_markdown(content: str, path: str) -> list[dict]:
-    """Split Markdown by section headers (# / ## / ###)."""
-    sections = re.split(r"\n(?=#{1,3}\s)", content)
-    chunks = []
+def _chunk_markdown(content: str, path: str, fine_grained: bool = False) -> list[dict]:
+    """
+    Split Markdown by ALL heading levels (h1–h4).
+
+    For README files (fine_grained=True):
+    - Split long sections into paragraph-level sub-chunks.
+    - Technical paragraphs (those containing domain keywords such as
+      accuracy, model, parameter, dataset, loss …) are always emitted
+      as their own chunk, regardless of length, so they remain independently
+      retrievable.
+    - The accumulation cap is 250 chars (down from 600) so single-line
+      technical facts never get buried inside a multi-line blob.
+    """
+    # Keywords whose presence forces an immediate paragraph flush
+    _TECH_KEYWORDS = {
+        "accuracy", "model", "parameter", "dataset", "loss", "epoch",
+        "f1", "backbone", "checkpoint", "pretrained", "benchmark",
+        "inference", "latency", "precision", "recall", "metric",
+        "train", "test", "val", "score", "top-1", "top-5", "map",
+        "weight", "layer", "architecture", "resnet", "vgg", "bert",
+        "transformer", "encoder", "decoder", "optimizer", "lr", "batch",
+    }
+
+    def _is_technical(text: str) -> bool:
+        """True if the text contains at least one technical domain keyword."""
+        words = set(re.findall(r"[a-z0-9_-]+", text.lower()))
+        return bool(words & _TECH_KEYWORDS)
+
+    # Split on any heading level 1-4
+    sections = re.split(r"\n(?=#{1,4}\s)", content)
+
+    chunks: list[dict] = []
     for section in sections:
         text = section.strip()
-        if len(text) < 20:
+        if len(text) < 15:
             continue
-        if len(text) > 2_000:
-            for i in range(0, len(text), 1_800):
-                sub = text[i : i + 2_000].strip()
-                if sub:
-                    chunks.append({"path": path, "text": sub, "type": "section"})
+
+        if fine_grained:
+            # For README: further split on blank-line paragraph boundaries
+            paragraphs = re.split(r"\n{2,}", text)
+            para_buf = ""
+            for para in paragraphs:
+                para = para.strip()
+                if not para:
+                    continue
+                # Force-flush current buffer before a technical paragraph
+                if _is_technical(para):
+                    if para_buf:
+                        chunks.append({"path": path, "text": para_buf, "type": "section"})
+                        para_buf = ""
+                    # Emit the technical paragraph as its own dedicated chunk
+                    chunks.append({"path": path, "text": para, "type": "section"})
+                # Accumulate non-technical paragraphs up to 250 chars
+                elif len(para_buf) + len(para) + 2 < 250:
+                    para_buf = (para_buf + "\n\n" + para).strip()
+                else:
+                    if para_buf:
+                        chunks.append({"path": path, "text": para_buf, "type": "section"})
+                    para_buf = para
+            if para_buf:
+                chunks.append({"path": path, "text": para_buf, "type": "section"})
         else:
-            chunks.append({"path": path, "text": text, "type": "section"})
-    return chunks or [{"path": path, "text": content[:2_000], "type": "file"}]
+            # Standard mode: keep sections together, sub-split only if very large
+            if len(text) > 1_800:
+                for i in range(0, len(text), 1_500):
+                    sub = text[i: i + 1_800].strip()
+                    if sub:
+                        chunks.append({"path": path, "text": sub, "type": "section"})
+            else:
+                chunks.append({"path": path, "text": text, "type": "section"})
+
+    return _add_overlap(chunks, 100) or [{"path": path, "text": content[:2_000], "type": "file"}]
 
 
 def _chunk_generic(content: str, path: str) -> list[dict]:
-    """Fixed 800-char sliding window with 100-char overlap."""
-    window, step = 800, 700
+    """700-char sliding window with 200-char overlap (improved from 800/700)."""
+    window, step = 700, 500   # step=500 → 200-char overlap
     chunks = []
     for i in range(0, len(content), step):
-        text = content[i : i + window].strip()
+        text = content[i: i + window].strip()
         if len(text) > 30:
             chunks.append({"path": path, "text": text, "type": "chunk"})
-    return chunks or [{"path": path, "text": content[:800], "type": "file"}]
+    return chunks or [{"path": path, "text": content[:700], "type": "file"}]
 
 
 def chunk_file(path: str, content: str) -> list[dict]:
@@ -148,7 +249,7 @@ def chunk_file(path: str, content: str) -> list[dict]:
     if ext in {".js", ".ts", ".tsx", ".jsx"}:
         return _chunk_js(content, path)
     if ext == ".md":
-        return _chunk_markdown(content, path)
+        return _chunk_markdown(content, path, fine_grained=_is_readme(path))
     return _chunk_generic(content, path)
 
 
@@ -163,6 +264,9 @@ def build_chunks(
 
     Also injects structured intelligence data (AI explanation, folder map,
     detected API routes) as additional searchable chunks.
+
+    README files are tagged with is_readme=True so the retriever can
+    apply a small score boost.
     """
     all_chunks: list[dict] = []
 
@@ -179,8 +283,15 @@ def build_chunks(
         if not content or not content.strip():
             continue
 
+        is_readme = _is_readme(path)
+
         try:
-            all_chunks.extend(chunk_file(path, content))
+            file_chunks = chunk_file(path, content)
+            # Tag README chunks for retriever boosting
+            if is_readme:
+                for c in file_chunks:
+                    c["is_readme"] = True
+            all_chunks.extend(file_chunks)
         except Exception as exc:
             print(f"[rag] chunk error for {path}: {exc}")
 

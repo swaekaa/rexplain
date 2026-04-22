@@ -1,4 +1,6 @@
 annotated-doc==0.0.4
+groq>=1.2.0
+python-dotenv>=1.0.0
 annotated-types==0.7.0
 anyio==4.13.0
 certifi==2026.2.25

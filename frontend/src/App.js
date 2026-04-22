@@ -221,34 +221,296 @@ function LoadingState({ repoUrl }) {
   );
 }
 
+// ─── Confidence badge ────────────────────────────────────────────────────────
+function ConfidenceBadge({ level }) {
+  const cfg = {
+    high:   { bg: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.35)",  color: "#15803d", label: "High confidence"   },
+    medium: { bg: "rgba(234,179,8,0.12)",  border: "rgba(234,179,8,0.35)",  color: "#a16207", label: "Medium confidence" },
+    low:    { bg: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.35)",  color: "#b91c1c", label: "Low confidence"    },
+  };
+  const { bg, border, color, label } = cfg[level] || cfg.medium;
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em",
+      padding: "2px 7px", borderRadius: 4,
+      background: bg, border: `1px solid ${border}`, color,
+      fontFamily: "Inter, sans-serif",
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, display: "inline-block" }} />
+      {label}
+    </span>
+  );
+}
+
+// ─── Source pill ─────────────────────────────────────────────────────────────
+function SourcePill({ path }) {
+  const [hovered, setHovered] = useState(false);
+  const name = path.split("/").pop();
+  return (
+    <span
+      title={path}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+        padding: "2px 7px", borderRadius: 4, cursor: "default",
+        background: hovered ? "rgba(17,17,17,0.07)" : "rgba(255,255,255,0.55)",
+        border: "1px solid rgba(0,0,0,0.09)", color: "#585f6c",
+        fontFamily: "Inter, sans-serif", transition: "background 0.15s",
+      }}>
+      <span className="material-symbols-outlined" style={{ fontSize: 9, color: "#aaa" }}>description</span>
+      {name}
+    </span>
+  );
+}
+
+// ─── Typing animation hook ────────────────────────────────────────────────────
+function useTypewriter(fullText, speed = 14) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone]           = useState(false);
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+    if (!fullText) return;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(fullText.slice(0, i));
+      if (i >= fullText.length) { clearInterval(id); setDone(true); }
+    }, speed);
+    return () => clearInterval(id);
+  }, [fullText, speed]);
+  return { displayed, done };
+}
+
+// ─── Assistant message bubble ─────────────────────────────────────────────────
+function AssistantBubble({ msg, isLatest }) {
+  // Only animate the most recent message once streaming is done
+  const animate = isLatest && !msg._settled && !msg._streaming;
+  const { displayed, done } = useTypewriter(animate ? msg.text : "", 10);
+  const text = animate ? displayed : msg.text;
+  const showCursor = animate && !done;
+
+  // ── While SSE is still streaming: show a clean generating skeleton ──────────
+  if (msg._streaming) {
+    return (
+      <div style={{
+        maxWidth: "88%", padding: "14px 16px",
+        borderRadius: "12px 12px 12px 2px",
+        background: "rgba(0,0,0,0.04)",
+        border: "1px solid rgba(0,0,0,0.05)",
+        fontFamily: "Inter, sans-serif",
+      }}>
+        {/* Pulse lines skeleton */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {["80%", "65%", "90%"].map((w, i) => (
+            <div key={i} style={{
+              height: 11, borderRadius: 6,
+              background: `rgba(0,0,0,${0.055 - i * 0.01})`,
+              width: w,
+              animation: `breathing 1.6s ease-in-out ${i * 0.22}s infinite`,
+            }} />
+          ))}
+        </div>
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 6 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              width: 4, height: 4, borderRadius: "50%", background: "#bbb",
+              animation: "breathing 1.1s ease-in-out infinite",
+              animationDelay: `${i * 0.18}s`,
+            }} />
+          ))}
+          <span style={{ fontSize: 10, color: "#bbb", letterSpacing: "0.05em", fontWeight: 600, textTransform: "uppercase" }}>Generating…</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Settled / typewriter state ───────────────────────────────────────────────
+  const footerVisible = (done || !animate) && (msg.sources?.length > 0 || msg.confidence);
+
+  return (
+    <div style={{
+      maxWidth: "88%", padding: "13px 15px",
+      borderRadius: "12px 12px 12px 2px",
+      background: "rgba(0,0,0,0.04)",
+      border: "1px solid rgba(0,0,0,0.06)",
+      fontSize: 13.5, lineHeight: 1.75, fontFamily: "Inter, sans-serif",
+      color: "#1a1c1b", whiteSpace: "pre-wrap", wordBreak: "break-word",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    }}>
+      {text}
+      {showCursor && (
+        <span style={{
+          display: "inline-block", width: 2, height: "0.9em",
+          background: "#555", marginLeft: 2,
+          verticalAlign: "text-bottom",
+          animation: "breathing 0.7s ease-in-out infinite",
+        }} />
+      )}
+      {footerVisible && (
+        <div style={{
+          marginTop: 11,
+          display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center",
+          borderTop: "1px solid rgba(0,0,0,0.05)", paddingTop: 9,
+        }}>
+          {msg.confidence && <ConfidenceBadge level={msg.confidence} />}
+          {msg.sources?.map((src, si) => <SourcePill key={si} path={src} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Chat Sidebar ───────────────────────────────────────────────────────────
 function ChatSidebar({ repoUrl, ragReady }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState("");
   const [asking, setAsking]     = useState(false);
+  const [streaming, setStreaming] = useState(false);
   const bottomRef               = useRef(null);
+  const esRef                   = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const ask = async () => {
-    const q = input.trim();
-    if (!q || asking) return;
-    setMessages(prev => [...prev, { role: "user", text: q }]);
-    setInput("");
-    setAsking(true);
+  // Cleanup EventSource on unmount
+  useEffect(() => () => esRef.current?.close(), []);
+
+  const _blockingAsk = async (q, replacePlaceholderId) => {
     try {
       const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
-      setMessages(prev => [...prev, { role: "assistant", text: res.data.answer, sources: res.data.sources || [] }]);
+      const newMsg = {
+        role: "assistant",
+        text: res.data.answer,
+        sources: res.data.sources || [],
+        confidence: res.data.confidence || "medium",
+        _settled: false,
+        _id: Date.now(),
+      };
+      if (replacePlaceholderId) {
+        setMessages(prev => prev.map(m => m._id === replacePlaceholderId ? newMsg : m));
+      } else {
+        setMessages(prev => [...prev, newMsg]);
+      }
     } catch (err) {
-      setMessages(prev => [...prev, { role: "error", text: err?.response?.data?.detail || "Something went wrong." }]);
+      const errMsg = {
+        role: "error",
+        text: err?.response?.data?.detail || "Something went wrong. Check your GROQ_API_KEY.",
+        _id: Date.now(),
+      };
+      if (replacePlaceholderId) {
+        setMessages(prev => prev.map(m => m._id === replacePlaceholderId ? errMsg : m));
+      } else {
+        setMessages(prev => [...prev, errMsg]);
+      }
     } finally {
       setAsking(false);
+      setStreaming(false);
     }
   };
 
+  const ask = async () => {
+    const q = input.trim();
+    if (!q || asking) return;
+    setMessages(prev => [...prev, { role: "user", text: q, _id: Date.now() }]);
+    setInput("");
+    setAsking(true);
+
+    if (typeof EventSource !== "undefined" && ragReady) {
+      setStreaming(true);
+      const placeholderIdx = Date.now() + 1;
+      setMessages(prev => [...prev, {
+        role: "assistant", text: "", sources: [], confidence: "medium",
+        _streaming: true, _id: placeholderIdx,
+      }]);
+
+      let accText = "";
+      const streamUrl = `http://127.0.0.1:8000/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
+      const es = new EventSource(streamUrl);
+      esRef.current = es;
+
+      es.onmessage = (e) => {
+        const data = e.data;
+        if (data === "[DONE]") {
+          es.close();
+          setAsking(false);
+          setStreaming(false);
+
+          // ── Extract clean answer text from accumulated raw JSON ──────────────
+          let finalText = accText;
+          try {
+            // Strip any markdown fences the model may have added
+            const cleaned = accText.trim()
+              .replace(/^```(?:json)?\s*/m, "")
+              .replace(/```\s*$/m, "")
+              .trim();
+            const parsed = JSON.parse(cleaned);
+            if (parsed && typeof parsed.answer === "string" && parsed.answer.trim()) {
+              finalText = parsed.answer.trim();
+            }
+          } catch (_) {
+            // Regex fallback: pull the answer value even from partial JSON
+            const m = accText.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
+            if (m) {
+              finalText = m[1]
+                .replace(/\\n/g, "\n")
+                .replace(/\\t/g, "\t")
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, "\\");
+            }
+          }
+
+          // _settled: false → triggers typewriter animation on the clean answer
+          setMessages(prev => prev.map(m =>
+            m._id === placeholderIdx
+              ? { ...m, text: finalText, _streaming: false, _settled: false }
+              : m
+          ));
+          return;
+        }
+        if (data.startsWith("[META] ")) {
+          try {
+            const meta = JSON.parse(data.slice(7));
+            setMessages(prev => prev.map(m =>
+              m._id === placeholderIdx
+                ? { ...m, sources: meta.sources || [], confidence: meta.confidence || "medium" }
+                : m
+            ));
+          } catch (_) {}
+          return;
+        }
+        const token = data.replace(/\\n/g, "\n");
+        accText += token;
+        setMessages(prev => prev.map(m =>
+          m._id === placeholderIdx ? { ...m, text: accText } : m
+        ));
+      };
+
+      es.onerror = () => {
+        es.close();
+        if (!accText) {
+          _blockingAsk(q, placeholderIdx);
+        } else {
+          setAsking(false);
+          setStreaming(false);
+          setMessages(prev => prev.map(m =>
+            m._id === placeholderIdx ? { ...m, _streaming: false, _settled: true } : m
+          ));
+        }
+      };
+      return;
+    }
+
+    _blockingAsk(q, null);
+  };
+
   const handleKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } };
+
+  const latestAssistantIdx = messages.reduce((acc, m, i) => m.role === "assistant" ? i : acc, -1);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(20px)" }}>
@@ -256,53 +518,76 @@ function ChatSidebar({ repoUrl, ragReady }) {
       {/* Header */}
       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(0,0,0,0.06)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#111" }}>chat</span>
-          <span className="font-headline font-bold text-xs uppercase tracking-widest" style={{ color: "#111" }}>Repository Chat</span>
+          <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#111" }}>smart_toy</span>
+          <span className="font-headline font-bold text-xs uppercase tracking-widest" style={{ color: "#111" }}>Repository AI Chat</span>
+          {streaming && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em",
+              padding: "2px 7px", borderRadius: 4, marginLeft: "auto",
+              background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)", color: "#4f46e5",
+              fontFamily: "Inter, sans-serif", animation: "breathing 1.5s ease-in-out infinite",
+            }}>Streaming…</span>
+          )}
         </div>
         <p style={{ fontSize: 11, color: ragReady ? "#22c55e" : "#aaa", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: 5 }}>
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: ragReady ? "#22c55e" : "#ddd", display: "inline-block", flexShrink: 0 }} />
-          {ragReady ? "RAG index ready" : "Analyze a repo to enable chat"}
+          {ragReady ? "LLM RAG ready — powered by Groq" : "Analyze a repo to enable chat"}
         </p>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
         {messages.length === 0 && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 14, opacity: 0.45 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#ccc" }}>auto_awesome</span>
-            <p style={{ fontSize: 12, color: "#aaa", textAlign: "center", lineHeight: 1.65, maxWidth: 180, fontFamily: "Inter, sans-serif" }}>
-              Ask about files, functions, frameworks, or the architecture of this repo.
+            <span className="material-symbols-outlined" style={{ fontSize: 32, color: "#ccc" }}>forum</span>
+            <p style={{ fontSize: 12, color: "#aaa", textAlign: "center", lineHeight: 1.65, maxWidth: 190, fontFamily: "Inter, sans-serif" }}>
+              Ask about files, functions, frameworks, API routes, or architecture.
             </p>
-          </div>
-        )}
-        {messages.map((msg, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-            <div style={{
-              maxWidth: "88%", padding: "9px 13px",
-              borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
-              background: msg.role === "user" ? "#111" : msg.role === "error" ? "#fee2e2" : "rgba(0,0,0,0.05)",
-              color: msg.role === "user" ? "#fff" : msg.role === "error" ? "#991b1b" : "#1a1c1b",
-              fontSize: 13, lineHeight: 1.6, fontFamily: "Inter, sans-serif", whiteSpace: "pre-wrap",
-            }}>
-              {msg.text}
-              {msg.sources?.length > 0 && (
-                <div style={{ marginTop: 7, display: "flex", flexWrap: "wrap", gap: 3 }}>
-                  {msg.sources.map((src, si) => (
-                    <span key={si} style={{
-                      fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
-                      padding: "2px 6px", borderRadius: 3,
-                      background: "rgba(255,255,255,0.55)", border: "1px solid rgba(0,0,0,0.09)", color: "#585f6c",
-                      fontFamily: "Inter, sans-serif",
-                    }}>
-                      {src.split("/").pop()}
-                    </span>
-                  ))}
-                </div>
-              )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center", maxWidth: 220 }}>
+              {["What does this repo do?", "List the API routes", "What framework is used?"].map(hint => (
+                <button key={hint} onClick={() => setInput(hint)}
+                  style={{
+                    fontSize: 10, padding: "4px 8px", borderRadius: 5, border: "1px solid rgba(0,0,0,0.1)",
+                    background: "rgba(0,0,0,0.03)", color: "#777", cursor: "pointer", fontFamily: "Inter, sans-serif",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(0,0,0,0.06)"; e.currentTarget.style.color = "#111"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(0,0,0,0.03)"; e.currentTarget.style.color = "#777"; }}
+                >{hint}</button>
+              ))}
             </div>
           </div>
+        )}
+
+        {messages.map((msg, i) => (
+          <div key={msg._id ?? i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
+            {msg.role === "user" && (
+              <div style={{
+                maxWidth: "88%", padding: "9px 13px",
+                borderRadius: "12px 12px 2px 12px",
+                background: "#111", color: "#fff",
+                fontSize: 13, lineHeight: 1.6, fontFamily: "Inter, sans-serif",
+              }}>
+                {msg.text}
+              </div>
+            )}
+            {msg.role === "assistant" && (
+              <AssistantBubble msg={msg} isLatest={i === latestAssistantIdx} />
+            )}
+            {msg.role === "error" && (
+              <div style={{
+                maxWidth: "88%", padding: "9px 13px",
+                borderRadius: "12px 12px 12px 2px",
+                background: "#fee2e2", color: "#991b1b",
+                fontSize: 13, lineHeight: 1.6, fontFamily: "Inter, sans-serif",
+              }}>
+                ⚠️ {msg.text}
+              </div>
+            )}
+          </div>
         ))}
-        {asking && (
+
+        {asking && !streaming && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
             <div style={{ padding: "9px 13px", borderRadius: "12px 12px 12px 2px", background: "rgba(0,0,0,0.05)", display: "flex", gap: 4, alignItems: "center" }}>
               {[0, 1, 2].map(i => (
@@ -317,12 +602,13 @@ function ChatSidebar({ repoUrl, ragReady }) {
       {/* Input */}
       <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "10px 12px", flexShrink: 0, display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.75)" }}>
         <input
+          id="chat-input"
           type="text" value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKey}
           disabled={asking || !ragReady}
-          placeholder={ragReady ? "Ask a question…" : "Run an analysis first…"}
+          placeholder={ragReady ? "Ask about this repository…" : "Run an analysis first…"}
           style={{ flex: 1, border: "none", outline: "none", background: "rgba(0,0,0,0.04)", borderRadius: 8, padding: "9px 12px", fontFamily: "Inter, sans-serif", fontSize: 13, color: "#111" }}
         />
-        <button onClick={ask} disabled={asking || !input.trim() || !ragReady}
+        <button id="chat-send-btn" onClick={ask} disabled={asking || !input.trim() || !ragReady}
           style={{
             background: asking || !input.trim() || !ragReady ? "#e5e5e5" : "#111",
             color: asking || !input.trim() || !ragReady ? "#999" : "#fff",
