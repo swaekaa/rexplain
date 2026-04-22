@@ -29,6 +29,12 @@ from app.services.retriever import get_store, query_store
 from app.services.embeddings import get_model
 from app.services.rag_chat import answer_question
 from app.services.llm_service import stream_answer_tokens
+from app.services.repo_metadata import (
+    is_metadata_question,
+    answer_metadata_question,
+    stream_metadata_answer,
+    get_cached_metadata,
+)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -64,6 +70,10 @@ def chat(request: ChatRequest):
                 "Please run an analysis first, then ask questions."
             ),
         )
+
+    if is_metadata_question(question):
+        metadata = get_cached_metadata(repo_url)
+        return answer_metadata_question(question, metadata)
 
     model = get_model()
     retrieved = query_store(store, question, model, top_k=8)
@@ -101,6 +111,20 @@ def chat_stream(
                 "No analysis found for this repository. "
                 "Please run an analysis first, then ask questions."
             ),
+        )
+
+    if is_metadata_question(question):
+        metadata = get_cached_metadata(repo_url)
+        def _meta_stream():
+            yield from stream_metadata_answer(question, metadata)
+        return StreamingResponse(
+            _meta_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Access-Control-Allow-Origin": "*",
+            },
         )
 
     model = get_model()

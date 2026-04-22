@@ -14,12 +14,14 @@ except ImportError:
 from fastapi import FastAPI
 from app.routes.analyze import router as analyze_router
 from app.routes.chat import router as chat_router
+from app.routes.files import router as files_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="RExplain API")
 
 app.include_router(analyze_router)
 app.include_router(chat_router)
+app.include_router(files_router)
 
 app.add_middleware(
     CORSMiddleware,

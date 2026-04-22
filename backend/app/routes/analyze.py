@@ -15,7 +15,10 @@ from app.services.repo_intelligence import (
     detect_important_files,
     extract_api_routes,
     explain_folders,
+    detect_entry_points,
+    detect_doc_links,
 )
+from app.services.repo_metadata import fetch_repo_metadata
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
@@ -121,6 +124,8 @@ def analyze_repo(request: RepoRequest):
         important_files    = detect_important_files(tree_for_intel)
         api_routes         = extract_api_routes(file_contents_map or {})
         folder_explanations = explain_folders(tree_for_intel)
+        entry_points       = detect_entry_points(tree_for_intel)
+        doc_links          = detect_doc_links(tree_for_intel)
 
         print(f"[timing] intelligence done in {time.perf_counter() - t_intel:.2f}s "
               f"(routes={len(api_routes)}, files={len(important_files)})")
@@ -139,6 +144,9 @@ def analyze_repo(request: RepoRequest):
         # ── Phase 11: Build RAG vector store (non-blocking, non-fatal) ────────
         t_rag = time.perf_counter()
         rag_ready = False
+
+        # ── Fetch and cache metadata for the chatbot ──────────────────────────
+        metadata = fetch_repo_metadata(repo_url, clone_path)
         try:
             from app.services.embeddings import build_chunks, get_model
             from app.services.retriever import build_store as rag_build_store
@@ -174,6 +182,9 @@ def analyze_repo(request: RepoRequest):
             "api_routes": api_routes,
             "important_files": important_files,
             "folder_explanations": folder_explanations,
+            "entry_points": entry_points,
+            "doc_links": doc_links,
+            "metadata": metadata,
             # ── Phase 11: chat readiness flag ─────────────────────────────
             "rag_ready": rag_ready,
         }

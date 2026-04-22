@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import "./index.css";
 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
@@ -27,6 +28,84 @@ function methodBg(method) {
   const bg = { GET: "#dcfce7", POST: "#dbeafe", PUT: "#ffedd5", PATCH: "#ede9fe", DELETE: "#fee2e2", HEAD: "#f3f4f6", OPTIONS: "#f3f4f6" };
   const c  = { GET: "#166534", POST: "#1e40af", PUT: "#9a3412", PATCH: "#5b21b6", DELETE: "#991b1b", HEAD: "#374151", OPTIONS: "#374151" };
   return { bg: bg[method] || "#f3f4f6", color: c[method] || "#374151" };
+}
+
+// ─── File Preview Modal ─────────────────────────────────────────────────────
+function FilePreviewModal({ repoUrl, filePath, onClose }) {
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchFile() {
+      try {
+        const res = await axios.post("http://127.0.0.1:8000/files/content", { repo_url: repoUrl, file_path: filePath });
+        setContent(res.data.content);
+      } catch (err) {
+        setError(err?.response?.data?.detail || "Failed to load file.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFile();
+  }, [repoUrl, filePath]);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }} onClick={onClose}>
+      <div style={{ background: "#111", width: "100%", maxWidth: 900, maxHeight: "100%", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "#1a1a1a" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="material-symbols-outlined text-stone-400" style={{ fontSize: 18 }}>description</span>
+            <span style={{ color: "#fff", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 14 }}>{filePath}</span>
+          </div>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#aaa", cursor: "pointer", display: "flex", alignItems: "center" }}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: 24, background: "#111" }}>
+          {loading ? (
+             <div style={{ color: "#888", fontFamily: "Inter, sans-serif", fontSize: 14 }}>Loading preview...</div>
+          ) : error ? (
+             <div style={{ color: "#f87171", fontFamily: "Inter, sans-serif", fontSize: 14 }}>⚠️ {error}</div>
+          ) : (
+             <pre style={{ margin: 0, fontFamily: "monospace", fontSize: 13, color: "#e5e5e5", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+               {content}
+             </pre>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Commit Graph ────────────────────────────────────────────────────────────
+function CommitGraph({ commits }) {
+  if (!commits || commits.length === 0) return null;
+  
+  // Group by date
+  const dataMap = {};
+  commits.forEach(c => {
+    const d = new Date(c.date).toLocaleDateString();
+    dataMap[d] = (dataMap[d] || 0) + 1;
+  });
+  
+  // Ensure chronological
+  const data = Object.keys(dataMap).reverse().map(k => ({ date: k, count: dataMap[k] }));
+
+  return (
+    <div style={{ height: 200, width: "100%", marginTop: 10 }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <XAxis dataKey="date" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
+          <Tooltip 
+            contentStyle={{ background: "#222", border: "none", borderRadius: 8, color: "#fff", fontSize: 12 }}
+            itemStyle={{ color: "#4ade80" }}
+          />
+          <Line type="monotone" dataKey="count" stroke="#4ade80" strokeWidth={3} dot={{ r: 4, fill: "#4ade80" }} activeDot={{ r: 6 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 // ─── Landing Page ──────────────────────────────────────────────────────────
@@ -639,6 +718,7 @@ function AnalysisView({ result, repoUrl, onReset }) {
 
   // ── Resizable split ────────────────────────────────────────────────────────
   const [splitPct, setSplitPct] = useState(38);
+  const [previewFile, setPreviewFile] = useState(null);
   const dragging    = useRef(false);
   const containerRef = useRef(null);
 
@@ -796,6 +876,68 @@ function AnalysisView({ result, repoUrl, onReset }) {
             </div>
           </section>
 
+          {previewFile && <FilePreviewModal repoUrl={repoUrl} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
+
+          {/* Repository Activity */}
+          {result.metadata?.commits?.length > 0 && (
+            <section style={{ marginBottom: 44 }} className="reveal-up reveal-hidden delay-3">
+              <SectionHeader label="Repository Activity" extra={`${result.metadata.total_commits || 0} Total Commits`} />
+              <div className="glass-card p-7">
+                <CommitGraph commits={result.metadata.commits} />
+                <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {result.metadata.commits.slice(0, 3).map((c, i) => (
+                    <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingBottom: 10, borderBottom: i < 2 ? "1px solid rgba(0,0,0,0.05)" : "none" }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", marginTop: 7, flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontSize: 13, color: "#111", fontWeight: 500, fontFamily: "Inter, sans-serif" }}>{c.message}</div>
+                        <div style={{ fontSize: 11, color: "#888", marginTop: 2, fontFamily: "Inter, sans-serif" }}>{c.author} • {new Date(c.date).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Entry Points & Docs */}
+          {(result.entry_points?.length > 0 || result.doc_links?.length > 0) && (
+            <section style={{ marginBottom: 44 }} className="reveal-up reveal-hidden delay-4">
+              <SectionHeader label="Project Navigation" />
+              
+              {result.entry_points?.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888", marginBottom: 12 }}>Entry Points</h4>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {result.entry_points.map(ep => (
+                      <div key={ep} onClick={() => setPreviewFile(ep)} 
+                           className="glass-card glass-card-hover"
+                           style={{ padding: "8px 14px", display: "flex", alignItems: "center", gap: 8, cursor: "pointer", borderRadius: 8 }}>
+                        <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>play_circle</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, fontFamily: "Inter, sans-serif", color: "#111" }}>{ep}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.doc_links?.length > 0 && (
+                <div>
+                  <h4 style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888", marginBottom: 12 }}>Documentation Links</h4>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {result.doc_links.map(dl => (
+                      <div key={dl} onClick={() => setPreviewFile(dl)} 
+                           className="glass-card glass-card-hover"
+                           style={{ padding: "6px 12px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer", borderRadius: 6, background: "rgba(0,0,0,0.02)" }}>
+                        <span className="material-symbols-outlined text-stone-500" style={{ fontSize: 14 }}>menu_book</span>
+                        <span style={{ fontSize: 11, fontWeight: 500, fontFamily: "Inter, sans-serif", color: "#555" }}>{dl}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {/* Architecture Diagram */}
           {result.diagram && (
             <section style={{ marginBottom: 44 }} className="reveal-up reveal-hidden delay-4">
@@ -839,7 +981,7 @@ function AnalysisView({ result, repoUrl, onReset }) {
                     : name.endsWith(".json") ? "data_object"
                     : name.endsWith(".py") ? "terminal" : "description";
                   return (
-                    <div key={i} className="group glass-card p-5 flex justify-between items-center cursor-pointer key-file-row">
+                    <div key={i} onClick={() => setPreviewFile(file)} className="group glass-card p-5 flex justify-between items-center cursor-pointer key-file-row">
                       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                         <div className="w-9 h-9 flex items-center justify-center bg-stone-100 key-file-icon">
                           <span className="material-symbols-outlined text-stone-400" style={{ fontSize: 17 }}>{icon}</span>

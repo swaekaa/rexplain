@@ -368,3 +368,39 @@ def explain_folders(paths: list[str]) -> dict[str, str]:
             result[folder] = f"{label} — {desc}"
 
     return result
+
+# ---------------------------------------------------------------------------
+# 5. Entry Point & Doc Links Detection
+# ---------------------------------------------------------------------------
+
+def detect_entry_points(paths: list[str]) -> list[str]:
+    """Detect likely project entry points from the file paths."""
+    entry_candidates = {
+        "main.py", "app.py", "run.py", "wsgi.py", "asgi.py",
+        "src/main.tsx", "src/index.js", "src/index.tsx", "src/main.js", "src/App.tsx", "src/App.jsx", "src/App.js",
+        "index.js", "index.ts", "server.js", "server.ts", "app.js", "app.ts"
+    }
+    found = []
+    for path in paths:
+        if path in entry_candidates:
+            found.append(path)
+        # Fallback for nested backend entry points
+        elif path.endswith("/main.py") or path.endswith("/app.py") or path.endswith("/server.js") or path.endswith("/index.js"):
+            found.append(path)
+    
+    return sorted(list(set(found)))[:10]
+
+def detect_doc_links(paths: list[str]) -> list[str]:
+    """Detect important documentation files."""
+    docs = []
+    for path in paths:
+        lower_path = path.lower()
+        # Top-level docs
+        if "/" not in path and lower_path in ("readme.md", "readme", "readme.rst", "readme.txt", "contributing.md", "contributing", "license", "license.md", "changelog.md", "changelog"):
+            docs.append(path)
+        # Inside docs folder
+        elif path.startswith("docs/") and lower_path.endswith((".md", ".rst", ".txt")):
+            docs.append(path)
+    
+    return sorted(list(set(docs)))[:20]
+
