@@ -21,230 +21,85 @@
         darkMode: "class",
         theme: {
           extend: {
-            colors: {
-              primary: "#111111",
-              "surface-lowest": "rgba(255,255,255,0.55)",
-              tertiary: "#2d2d2d",
-              background: "#f3f3f1",
-              "on-background": "#1a1c1b",
-              secondary: "#525252",
-              outline: "rgba(255,255,255,0.3)",
+            "colors": {
+              "primary": "#ffffff",
+              "surface-container-lowest": "#1c1c1c",
+              "tertiary": "#a855f7",
+              "accent-orange": "#f97316",
+              "background": "#121212",
+              "on-background": "#f3f3f1",
+              "secondary": "#a3a3a3",
+              "outline": "rgba(255, 255, 255, 0.05)",
+              "accent-purple": "#a855f7",
+              "bg-page": "#121212",
+              "bg-subtle": "rgba(255, 255, 255, 0.03)",
+              "border-subtle": "rgba(255, 255, 255, 0.05)"
             },
-            fontFamily: {
-              headline: ["Manrope", "sans-serif"],
-              body: ["Inter", "sans-serif"],
-            },
-            borderRadius: {
-              DEFAULT: "0.125rem",
-              lg: "0.5rem",
-              xl: "1rem",
+            "borderRadius": {
+              "DEFAULT": "0.125rem",
+              "lg": "0.25rem",
+              "xl": "0.5rem",
               "2xl": "1.5rem",
               "3xl": "2rem",
+              "full": "0.75rem"
             },
-            animation: {
-              shimmer: "shimmer 2.5s cubic-bezier(0.4,0,0.2,1) infinite",
-              "liquid-pulse": "liquidPulse 4s cubic-bezier(0.4,0,0.2,1) infinite",
-              breathing: "breathing 3s ease-in-out infinite",
+            "fontFamily": {
+              "headline": ["Manrope", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            "animation": {
+              "shimmer": "shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+              "liquid-pulse": "liquidPulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+              "breathing": "breathing 3s ease-in-out infinite",
               "slow-spin": "spin 8s linear infinite",
-              "fade-in-title": "fadeInTitle 2.5s ease-out forwards",
-              "slide-up": "slideUpFade 1.8s cubic-bezier(0.16,1,0.3,1) 0.5s both",
-              "reveal-up": "revealUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards",
-              shine: "shine 12s ease-in-out infinite",
+              "reveal-up": "revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              "draw-line": "drawLine 2s ease-in-out forwards",
+              "shine": "shine 12s ease-in-out infinite",
+              "fadeInTitle": "fadeInTitle 2.5s ease-out forwards",
+              "slideUpFade": "slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both"
             },
-            keyframes: {
+            "keyframes": {
               shimmer: {
                 "0%": { transform: "translateX(-100%)" },
-                "100%": { transform: "translateX(200%)" },
+                "100%": { transform: "translateX(200%)" }
               },
               liquidPulse: {
-                "0%,100%": { transform: "scale(1)", opacity: "0.3", filter: "blur(8px)" },
-                "50%": { transform: "scale(1.4)", opacity: "0.6", filter: "blur(12px)" },
+                "0%, 100%": { transform: "scale(1)", opacity: "0.3", filter: "blur(8px)" },
+                "50%": { transform: "scale(1.4)", opacity: "0.6", filter: "blur(12px)" }
               },
               breathing: {
-                "0%,100%": { opacity: "1" },
-                "50%": { opacity: "0.5" },
-              },
-              fadeInTitle: {
-                from: { opacity: "0", transform: "translateY(10px)" },
-                to: { opacity: "1", transform: "translateY(0)" },
-              },
-              slideUpFade: {
-                from: { opacity: "0", transform: "translateY(20px)" },
-                to: { opacity: "1", transform: "translateY(0)" },
+                "0%, 100%": { opacity: "1" },
+                "50%": { opacity: "0.5" }
               },
               revealUp: {
                 "0%": { opacity: "0", transform: "translateY(20px)" },
-                "100%": { opacity: "1", transform: "translateY(0)" },
+                "100%": { opacity: "1", transform: "translateY(0)" }
+              },
+              drawLine: {
+                "0%": { width: "0%" },
+                "100%": { width: "100%" }
               },
               shine: {
-                "0%": { backgroundPosition: "-100% center" },
-                "100%": { backgroundPosition: "100% center" },
+                "0%": { "background-position": "-100% center" },
+                "100%": { "background-position": "100% center" }
               },
-            },
+              fadeInTitle: {
+                from: { opacity: "0", transform: "translateY(10px)" },
+                to: { opacity: "1", transform: "translateY(0)" }
+              },
+              slideUpFade: {
+                from: { opacity: "0", transform: "translateY(20px)" },
+                to: { opacity: "1", transform: "translateY(0)" }
+              }
+            }
           },
         },
       };
     </script>
 
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f3f3f1;
-        background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0%, transparent 100%);
-        color: #1a1c1b;
-      }
-      .font-headline { font-family: 'Manrope', sans-serif; }
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        vertical-align: middle;
-        line-height: 1;
-      }
-
-      /* Glass card */
-      .glass-card {
-        background: rgba(255, 255, 255, 0.55);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.03);
-        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .glass-card-hover:hover {
-        transform: scale(1.01);
-        background: rgba(255, 255, 255, 0.65);
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05), 0 0 15px rgba(255,255,255,0.8);
-        border-color: rgba(255, 255, 255, 0.8);
-      }
-
-      /* Liquid glass text (landing hero) */
-      .liquid-glass-text {
-        background: linear-gradient(120deg, #111 30%, #666 45%, #111 50%, #777 55%, #111 70%);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: shine 12s ease-in-out infinite, fadeInTitle 2.5s ease-out forwards;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
-        opacity: 0;
-      }
-      @keyframes shine {
-        0%   { background-position: -100% center; }
-        100% { background-position: 100% center; }
-      }
-      @keyframes fadeInTitle {
-        from { opacity: 0; transform: translateY(10px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes slideUpFade {
-        from { opacity: 0; transform: translateY(20px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes revealUp {
-        0%   { opacity: 0; transform: translateY(20px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-      @keyframes shimmer {
-        0%   { transform: translateX(-100%); }
-        100% { transform: translateX(200%); }
-      }
-      @keyframes liquidPulse {
-        0%,100% { transform: scale(1);   opacity: 0.3; filter: blur(8px);  }
-        50%      { transform: scale(1.4); opacity: 0.6; filter: blur(12px); }
-      }
-      @keyframes breathing {
-        0%,100% { opacity: 1; }
-        50%      { opacity: 0.5; }
-      }
-
-      /* Reveal up animation utility */
-      .reveal-up {
-        animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-      .reveal-hidden { opacity: 0; }
-      .delay-1 { animation-delay: 0.1s; }
-      .delay-2 { animation-delay: 0.25s; }
-      .delay-3 { animation-delay: 0.4s; }
-      .delay-4 { animation-delay: 0.55s; }
-      .delay-5 { animation-delay: 0.7s; }
-      .delay-6 { animation-delay: 0.85s; }
-
-      /* Search input override */
-      .search-input:focus { outline: none; box-shadow: none; border: none; }
-      input[type="text"]:focus { outline: none; }
-
-      /* Search container */
-      .search-container {
-        animation: slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
-      }
-      .search-container:focus-within {
-        background: rgba(255, 255, 255, 0.85) !important;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06) !important;
-        transform: scale(1.01);
-      }
-      .hero-sub {
-        animation: slideUpFade 2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-      }
-
-      /* Logo glass */
-      .logo-glass {
-        background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
-        backdrop-filter: blur(8px);
-        padding: 4px 12px;
-        border-radius: 4px;
-        border: 1px solid rgba(0,0,0,0.05);
-      }
-
-      /* Architecture diagram line */
-      .draw-container {
-        position: relative;
-        width: 100%;
-        height: 1px;
-        background: rgba(0,0,0,0.05);
-        overflow: hidden;
-      }
-      .draw-line-inner {
-        position: absolute;
-        height: 100%;
-        background: rgba(0,0,0,0.15);
-        animation: drawLine 2s ease-in-out 1.2s forwards;
-        width: 0;
-      }
-      @keyframes drawLine {
-        0%   { width: 0%; }
-        100% { width: 100%; }
-      }
-
-      /* Stack card hover underline */
-      .stack-card:hover .stack-underline {
-        width: 2rem;
-      }
-      .stack-underline {
-        width: 0;
-        height: 2px;
-        background: #111;
-        transition: width 0.5s ease;
-        margin-top: 0.5rem;
-      }
-
-      /* Key file row hover */
-      .key-file-row:hover .key-file-icon {
-        background: #111;
-      }
-      .key-file-row:hover .key-file-icon .material-symbols-outlined {
-        color: white;
-      }
-      .key-file-row:hover .key-file-name {
-        transform: translateX(4px);
-      }
-      .key-file-row:hover .key-file-arrow {
-        color: #111;
-        transform: translateX(8px);
-      }
-      .key-file-name, .key-file-arrow { transition: all 0.3s ease; }
-      .key-file-icon { transition: background 0.3s ease; }
-    </style>
   </head>
-  <body class="antialiased selection:bg-black selection:text-white">
+  <body class="bg-page text-on-background antialiased selection:bg-tertiary selection:text-white">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>

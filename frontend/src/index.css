@@ -1,20 +1,132 @@
-/* index.css — minimal reset; all design tokens live in public/index.html */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg-page: #121212;
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --accent-purple: #a855f7;
+  --accent-orange: #f97316;
+}
 
-/* react-markdown prose overrides inside the glass card */
-.readme-prose h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 700; color: #111; margin: 1rem 0 0.5rem; letter-spacing: -0.02em; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.4rem; }
-.readme-prose h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; color: #111; margin: 1rem 0 0.4rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 0.2rem; }
-.readme-prose h3 { font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 600; color: #111; margin: 0.8rem 0 0.3rem; }
-.readme-prose p  { color: #585f6c; line-height: 1.75; margin: 0.5rem 0; font-size: 0.95rem; }
-.readme-prose a  { color: #111; text-decoration: underline; text-underline-offset: 3px; }
-.readme-prose code { background: rgba(0,0,0,0.05); color: #111; padding: 1px 6px; border-radius: 3px; font-size: 0.82em; font-family: monospace; }
-.readme-prose pre { background: rgba(0,0,0,0.04); border-left: 2px solid #111; padding: 14px 16px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.font-headline { font-family: 'Manrope', sans-serif; }
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* Liquid glass text (landing hero h1 - large) */
+.liquid-glass-text {
+  background: linear-gradient(
+      120deg, 
+      #fff 30%, 
+      #a855f7 45%, 
+      #fff 50%, 
+      #f97316 55%, 
+      #fff 70%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 8s ease-in-out infinite, fadeInTitle 1s ease-out forwards;
+  opacity: 0;
+}
+
+/* RExplain nav logo - always visible */
+.rexplain-logo {
+  background: linear-gradient(135deg, #fff 0%, #c084fc 50%, #f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.4));
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-glass:hover {
+  transform: scale(1.01);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3), 0 0 15px rgba(168, 85, 247, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-bubble-ai {
+  background: rgba(168, 85, 247, 0.08);
+  border-left: 3px solid var(--accent-purple);
+  backdrop-filter: blur(8px);
+}
+
+.chat-bubble-user {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.scroll-hide::-webkit-scrollbar {
+  width: 4px;
+}
+.scroll-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-hide::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+
+/* Fix autofill white overlay */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px var(--bg-page) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Remove click selection */
+::selection { background: var(--accent-purple); color: #fff; }
+::-moz-selection { background: var(--accent-purple); color: #fff; }
+h1, h2, h3, h4, h5, h6, button, nav, .liquid-glass, span.material-symbols-outlined { user-select: none; -webkit-user-select: none; }
+.readme-prose p, .readme-prose li, .readme-prose code, input, textarea { user-select: text; -webkit-user-select: text; }
+
+/* react-markdown prose overrides */
+.readme-prose h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.5rem; letter-spacing: -0.02em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem; }
+.readme-prose h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.2rem; }
+.readme-prose h3 { font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0.8rem 0 0.3rem; }
+.readme-prose p  { color: var(--text-secondary); line-height: 1.8; margin: 0.5rem 0; font-size: 0.95rem; font-family: 'Inter', sans-serif; font-weight: 300; }
+.readme-prose a  { color: var(--accent-purple); text-decoration: underline; text-underline-offset: 3px; }
+.readme-prose code { background: rgba(255,255,255,0.05); color: var(--text-primary); padding: 1px 6px; border-radius: 3px; font-size: 0.82em; font-family: monospace; }
+.readme-prose pre { background: rgba(255,255,255,0.03); border-left: 2px solid var(--accent-purple); padding: 14px 16px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; border-radius: 0 4px 4px 0; }
 .readme-prose pre code { background: none; padding: 0; font-size: inherit; }
-.readme-prose ul, .readme-prose ol { padding-left: 1.4rem; color: #585f6c; margin: 0.4rem 0; }
-.readme-prose li { margin: 0.25rem 0; line-height: 1.6; font-size: 0.9rem; }
-.readme-prose blockquote { border-left: 4px solid rgba(0,0,0,0.1); padding-left: 1rem; color: #777; margin: 0.6rem 0; font-style: italic; }
+.readme-prose ul, .readme-prose ol { padding-left: 1.4rem; color: var(--text-secondary); margin: 0.4rem 0; font-weight: 300; }
+.readme-prose li { margin: 0.25rem 0; line-height: 1.8; font-size: 0.9rem; }
+.readme-prose blockquote { border-left: 4px solid var(--accent-purple); padding-left: 1rem; color: var(--text-secondary); margin: 0.6rem 0; font-style: italic; }
 .readme-prose img { max-width: 100%; border-radius: 4px; margin: 0.5rem 0; }
-.readme-prose hr { border: none; border-top: 1px solid rgba(0,0,0,0.07); margin: 1rem 0; }
+.readme-prose hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; }
 .readme-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.6rem 0; }
-.readme-prose th { border: 1px solid rgba(0,0,0,0.1); padding: 6px 12px; text-align: left; background: rgba(0,0,0,0.03); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #777; }
-.readme-prose td { border: 1px solid rgba(0,0,0,0.07); padding: 6px 12px; color: #585f6c; }
+.readme-prose th { border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; text-align: left; background: rgba(255,255,255,0.05); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.readme-prose td { border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; color: var(--text-secondary); }
+
+/* Remove previous layout definitions and animations as they are in tailwind.config and index.html */
+
+@keyframes shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fadeInTitle {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
