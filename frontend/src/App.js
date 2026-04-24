@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
-import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { LineChart, Line, BarChart, Bar, YAxis, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import "./index.css";
 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
         <div className="flex flex-col md:flex-row items-center gap-10">
           <span className="bitcount-brand text-primary text-xl">REX</span>
-          <span className="text-secondary font-body text-sm font-light tracking-wide">© 2024 REX. Built for clarity.</span>
+          <span className="text-secondary font-body text-sm font-light tracking-wide">© 2026 REX. Built for clarity.</span>
         </div>
         <div className="flex gap-10">
           {["Github", "Privacy", "Terms", "Status"].map(l => (
@@ -110,6 +110,30 @@ function CommitGraph({ commits }) {
           />
           <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, fill: "#a855f7" }} activeDot={{ r: 6 }} />
         </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ─── File Types Graph ────────────────────────────────────────────────────────
+function FileTypesGraph({ langs }) {
+  if (!langs || langs.length === 0) return null;
+
+  const data = langs.map(([ext, count]) => ({ ext, count }));
+
+  return (
+    <div className="h-[200px] w-full mt-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <XAxis dataKey="ext" stroke="#a3a3a3" fontSize={10} tickLine={false} axisLine={false} />
+          <YAxis stroke="#a3a3a3" fontSize={10} tickLine={false} axisLine={false} />
+          <Tooltip
+            contentStyle={{ background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff", fontSize: 12 }}
+            itemStyle={{ color: "#a855f7" }}
+            cursor={{ fill: "rgba(255,255,255,0.05)" }}
+          />
+          <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
@@ -310,7 +334,7 @@ function LoadingState({ repoUrl, theme }) {
         
         {/* Footer (Mini) */}
         <footer className="absolute bottom-8 left-0 right-0 text-center bg-transparent">
-            <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2024 • RExplain AI Systems</p>
+            <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
         </footer>
       </main>
     </div>
@@ -714,11 +738,11 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                     <div className="w-8 h-[1px] bg-accent-orange"></div>
                     <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
                 </div>
-                <h1 className="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white">
+                <h1 className="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/50">
                     Repository<br/>Analysis
                 </h1>
                 <p className="text-secondary font-body text-base leading-relaxed font-light">
-                    Breakdown of <span className="text-white font-medium border-b border-white/20">{repoName}</span>. Analyzed in <span className="font-medium text-white">{result._elapsed || "~5"}s</span>.
+                    Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-white/10 pb-[1px] hover:border-accent-purple transition-colors duration-300">{repoName}</a>. Analyzed in <span className="font-medium text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{result._elapsed || "~5"}s</span>.
                 </p>
             </section>
 
@@ -727,8 +751,8 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 <div className="liquid-glass p-8 flex flex-col gap-6 shadow-sm rounded-xl">
                     <div className="space-y-1">
                         <span className="block text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold">Comprehensive Scan</span>
-                        <h2 className="text-4xl font-headline font-bold tracking-tight text-white">
-                          {scan.total_files?.toLocaleString() || 0} <span className="text-xl font-light text-secondary/40">files</span>
+                        <h2 className="text-4xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60">
+                          {scan.total_files?.toLocaleString() || 0} <span className="text-xl font-light text-secondary/40 drop-shadow-none">files</span>
                         </h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -741,20 +765,47 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 </div>
             </section>
 
+            {/* File Types Graph */}
+            {langs.length > 0 && (
+              <section className="mb-12 animate-reveal-up animate-delay-1">
+                  <SectionHeader label="File Distribution" />
+                  <div className="liquid-glass p-6 rounded-xl">
+                      <FileTypesGraph langs={langs} />
+                  </div>
+              </section>
+            )}
+
             {/* Tech Stack */}
             <section className="mb-16 animate-reveal-up animate-delay-2">
                 <SectionHeader label="Ecosystem" />
-                <div className="grid grid-cols-2 gap-4">
-                  {stackItems.slice(0,2).map(({ label, value, icon }) => (
+                <div className="grid grid-cols-3 gap-4">
+                  {stackItems.map(({ label, value, icon }) => (
                     <div key={label} className="liquid-glass p-6 h-40 flex flex-col justify-between group rounded-xl">
                         <div className="flex justify-between items-start">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/40">{label}</span>
                             <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors">{icon}</span>
                         </div>
-                        <span className="text-2xl font-headline font-bold tracking-tight text-white">{value || "Not detected"}</span>
+                        <span className="text-2xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 group-hover:from-accent-purple group-hover:to-accent-orange transition-all duration-500">{value || "Not detected"}</span>
                     </div>
                   ))}
                 </div>
+            </section>
+
+            {/* System Diagram */}
+            <section className="mb-16 animate-reveal-up animate-delay-3">
+              <SectionHeader label="System Diagram" />
+              <div className="liquid-glass p-8 rounded-xl overflow-x-auto scroll-hide">
+                <div className="min-w-max md:min-w-0 flex items-center justify-center">
+                  {result.diagram ? (
+                    <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded shadow-lg border border-white/5" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 py-12 opacity-50">
+                      <span className="material-symbols-outlined text-3xl text-secondary">schema</span>
+                      <p className="text-secondary font-body text-sm font-medium tracking-wide">No system diagram available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </section>
 
             {/* AI Explanation */}
@@ -883,7 +934,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Footer (Mini) */}
             <footer className="pt-12 text-center bg-transparent">
-                <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2024 • RExplain AI Systems</p>
+                <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
             </footer>
 
           </div>
