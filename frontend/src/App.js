@@ -127,12 +127,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Explore</a>
-            <a className="text-secondary hover:text-primary transition-colors" href="#">Docs</a>
-            <a className="text-secondary hover:text-primary transition-colors" href="#">Pricing</a>
           </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="px-5 py-2 text-xs font-bold uppercase tracking-widest hover:text-tertiary transition-colors duration-200">Sign In</button>
         </div>
       </header>
 
@@ -249,77 +244,75 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 function LoadingState({ repoUrl, theme }) {
   const repoName = repoUrl ? repoUrl.split("/").slice(-2).join("/") : "repository";
   return (
-    <div className="bg-background text-on-background font-body selection:bg-tertiary selection:text-white antialiased min-h-screen">
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-6 bg-transparent border-b border-outline">
-        <div className="flex items-center gap-12">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 liquid-glass rounded-full flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+    <div className="bg-background text-on-background font-body antialiased h-screen overflow-hidden flex flex-col">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-transparent backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-8">
+            <div className="flex items-center">
+                <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
             </div>
-            <span className="text-lg font-semibold tracking-[-0.03em] text-primary font-headline">RExplain</span>
-          </div>
-          <nav className="hidden md:flex gap-8">
-            {["Explore", "Docs", "Pricing"].map(l => (
-              <a key={l} className="text-[13px] text-secondary hover:text-primary transition-colors font-medium tracking-tight" href="#">{l}</a>
-            ))}
-          </nav>
+            <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
+                <a className="text-white border-b-2 border-white pb-1" href="#">Analysis</a>
+            </nav>
         </div>
-        <button className="text-primary font-medium tracking-tight text-[13px] hover:opacity-60 transition-opacity">Sign In</button>
       </header>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_0%,transparent_100%)]">
-        <div className="w-full max-w-sm flex flex-col items-center z-10">
-          <div className="text-center space-y-6 mb-12">
-            <div className="flex flex-col items-center gap-8">
-              <div className="relative w-12 h-12 flex items-center justify-center">
-                <div className="absolute inset-0 bg-secondary/30 rounded-full animate-liquid-pulse"></div>
-                <div className="absolute inset-0 border-[0.5px] border-secondary/50 rounded-full animate-slow-spin"></div>
-                <div className="relative w-1.5 h-1.5 bg-primary rounded-full"></div>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 bg-transparent relative mt-[64px]">
+        <div className="w-full max-w-2xl flex flex-col items-center z-10">
+          <div className="text-center space-y-8 mb-16">
+            <div className="flex flex-col items-center">
+              <div className="relative w-16 h-16 flex items-center justify-center mb-8">
+                <div className="absolute inset-0 bg-accent-purple/10 rounded-full animate-liquid-pulse"></div>
+                <div className="absolute inset-0 border border-accent-purple/30 rounded-full animate-slow-spin"></div>
+                <div className="relative w-2 h-2 bg-accent-purple rounded-full"></div>
               </div>
-              <div className="space-y-2">
-                <h1 className="font-headline text-xl font-medium tracking-tight text-primary animate-breathing">
-                  Analyzing repository
+              
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-3 justify-center">
+                    <div className="w-8 h-[1px] bg-accent-orange animate-pulse"></div>
+                    <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
+                </div>
+                <h1 className="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white animate-breathing">
+                  Analyzing<br/>Repository
                 </h1>
-                <p className="font-body text-secondary text-[13px] tracking-tight max-w-[240px] mx-auto leading-relaxed opacity-60">
+                <p className="text-secondary font-body text-base leading-relaxed font-light max-w-sm mx-auto opacity-80">
                   Mapping structural architecture and functional logic pathways.
                 </p>
               </div>
             </div>
           </div>
-          <div className="w-48 h-[1px] bg-surface-container-lowest overflow-hidden relative">
-            <div className="absolute inset-0 w-1/3 h-full bg-tertiary animate-shimmer"></div>
+
+          <div className="w-64 h-[1px] bg-white/5 overflow-hidden relative mb-16">
+            <div className="absolute inset-0 w-1/3 h-full bg-accent-purple animate-shimmer"></div>
           </div>
-          <div className="mt-20 grid grid-cols-2 gap-[1px] bg-outline w-full">
-            <div className="p-6 bg-surface-container-lowest backdrop-blur-sm flex flex-col gap-1.5">
-              <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-secondary">Repository</span>
-              <span className="text-[12px] font-body tabular-nums text-primary truncate">{repoName}</span>
+
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="liquid-glass p-6 h-32 flex flex-col justify-between rounded-xl group">
+              <div className="flex justify-between items-start">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/40">Repository</span>
+                <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors">folder</span>
+              </div>
+              <span className="text-2xl font-headline font-bold tracking-tight text-white truncate">{repoName}</span>
             </div>
-            <div className="p-6 bg-surface-container-lowest backdrop-blur-sm flex flex-col gap-1.5">
-              <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-secondary">Source</span>
-              <span className="text-[12px] font-body truncate text-primary">rexplain-v2</span>
+            <div className="liquid-glass p-6 h-32 flex flex-col justify-between rounded-xl group">
+              <div className="flex justify-between items-start">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/40">Source</span>
+                <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors">cloud</span>
+              </div>
+              <span className="text-2xl font-headline font-bold tracking-tight text-white truncate">GitHub URL</span>
             </div>
           </div>
         </div>
         
         {/* Decorative Aesthetic Elements */}
-        <div className="fixed bottom-12 right-12 pointer-events-none opacity-[0.03]">
+        <div className="fixed bottom-12 right-12 pointer-events-none opacity-[0.02] text-white">
           <span className="material-symbols-outlined text-[15rem]">architecture</span>
         </div>
+        
+        {/* Footer (Mini) */}
+        <footer className="absolute bottom-8 left-0 right-0 text-center bg-transparent">
+            <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2024 • RExplain AI Systems</p>
+        </footer>
       </main>
-
-      <footer className="bg-transparent border-t border-outline">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 py-10 px-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-[13px] font-semibold text-primary font-headline tracking-tight">RExplain</span>
-            <p className="font-body text-[11px] tracking-tight text-secondary italic">Built for clarity.</p>
-          </div>
-          <div className="flex gap-10">
-            {["Github", "Privacy", "Terms", "Status"].map(l => (
-              <a key={l} className="font-body text-[12px] tracking-tight text-secondary hover:text-primary transition-colors" href="#">{l}</a>
-            ))}
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
@@ -661,7 +654,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
     { label: "Database", value: fw.database, icon: "database" },
   ];
 
-  const [splitPct, setSplitPct] = useState(38);
+  const [splitPct, setSplitPct] = useState(50);
   const [previewFile, setPreviewFile] = useState(null);
   const dragging = useRef(false);
   const containerRef = useRef(null);
@@ -699,8 +692,6 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </div>
             <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
                 <a className="text-white border-b-2 border-white pb-1" href="#">Analysis</a>
-                <a className="text-secondary hover:text-white transition-colors" href="#">Docs</a>
-                <a className="text-secondary hover:text-white transition-colors" href="#">Pricing</a>
             </nav>
         </div>
         <div className="flex items-center gap-4">
@@ -713,22 +704,9 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
       </header>
 
       <div ref={containerRef} className="flex flex-1 overflow-hidden" style={{ marginTop: '64px' }}>
-        {/* Left Side: AI Chat Interface */}
-        <aside style={{ width: `${splitPct}%` }} className="border-r border-white/5 flex flex-col bg-white/[0.01]">
-          <ChatSidebar repoUrl={repoUrl} ragReady={result.rag_ready} />
-        </aside>
-
-        {/* DIVIDER */}
-        <div
-          onMouseDown={onDividerDown}
-          className="w-1.5 flex-shrink-0 cursor-col-resize flex items-center justify-center z-10 transition-colors hover:bg-white/5"
-        >
-          <div className="w-0.5 h-10 rounded-full bg-white/10 pointer-events-none" />
-        </div>
-
-        {/* Right Side: Analysis Content */}
-        <main style={{ width: `${100 - splitPct}%` }} className="overflow-y-auto bg-transparent scroll-hide">
-          <div className="max-w-3xl mx-auto px-8 pt-20 pb-24">
+        {/* Left Side: Analysis Content */}
+        <main style={{ width: `${splitPct}%` }} className="overflow-y-auto bg-transparent scroll-hide border-r border-white/5">
+          <div className="w-full max-w-4xl mx-auto px-8 pt-20 pb-24">
             
             {/* Hero Analysis Header */}
             <section className="mb-16 space-y-4 animate-reveal-up">
@@ -910,6 +888,19 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
           </div>
         </main>
+
+        {/* DIVIDER */}
+        <div
+          onMouseDown={onDividerDown}
+          className="w-1.5 flex-shrink-0 cursor-col-resize flex items-center justify-center z-10 transition-colors hover:bg-white/5"
+        >
+          <div className="w-0.5 h-10 rounded-full bg-white/10 pointer-events-none" />
+        </div>
+
+        {/* Right Side: AI Chat Interface */}
+        <aside style={{ width: `${100 - splitPct}%` }} className="flex flex-col bg-white/[0.01]">
+          <ChatSidebar repoUrl={repoUrl} ragReady={result.rag_ready} />
+        </aside>
       </div>
     </div>
   );

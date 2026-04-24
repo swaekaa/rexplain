@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RExplain | Repository Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#000000",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#3b3b3b",
+                    "background": "#f9f9f7",
+                    "on-tertiary-fixed-variant": "#e2e2e2",
+                    "on-background": "#1a1c1b",
+                    "on-primary-container": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "outline-variant": "#c6c6c6",
+                    "on-primary-fixed-variant": "#e5e2e1",
+                    "secondary-fixed-dim": "#a4abbb",
+                    "on-secondary-fixed": "#151c27",
+                    "on-surface": "#1a1c1b",
+                    "surface-container-highest": "#e2e3e1",
+                    "tertiary-fixed-dim": "#474747",
+                    "tertiary-container": "#747474",
+                    "primary-container": "#3c3b3b",
+                    "inverse-primary": "#c8c6c5",
+                    "on-secondary-container": "#151c27",
+                    "on-tertiary-fixed": "#ffffff",
+                    "on-secondary-fixed-variant": "#353c48",
+                    "secondary": "#585f6c",
+                    "outline": "#777777",
+                    "inverse-on-surface": "#f1f1ef",
+                    "surface": "#f9f9f7",
+                    "secondary-container": "#ced4e4",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#dadad8",
+                    "on-surface-variant": "#474747",
+                    "surface-container-low": "#f4f4f2",
+                    "tertiary-fixed": "#5e5e5e",
+                    "primary-fixed-dim": "#474746",
+                    "surface-tint": "#5f5e5e",
+                    "inverse-surface": "#2f3130",
+                    "surface-variant": "#e2e3e1",
+                    "on-tertiary-container": "#ffffff",
+                    "error": "#ba1a1a",
+                    "secondary-fixed": "#c0c7d6",
+                    "on-error-container": "#410002",
+                    "surface-container-high": "#e8e8e6",
+                    "on-tertiary": "#e2e2e2",
+                    "on-error": "#ffffff",
+                    "on-primary": "#e5e2e1",
+                    "primary-fixed": "#5f5e5e",
+                    "on-primary-fixed": "#ffffff",
+                    "surface-bright": "#f9f9f7",
+                    "surface-container": "#eeeeec"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            },
+            "animation": {
+                "reveal-up": "revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                "draw-line": "drawLine 2s ease-in-out forwards"
+            },
+            "keyframes": {
+                revealUp: {
+                    "0%": { opacity: "0", transform: "translateY(20px)" },
+                    "100%": { opacity: "1", transform: "translateY(0)" }
+                },
+                drawLine: {
+                    "0%": { width: "0%" },
+                    "100%": { width: "100%" }
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f7; color: #1a1c1b; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; vertical-align: middle; }
+        
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .liquid-glass:hover {
+            transform: scale(1.01);
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05), 0 0 15px rgba(255,255,255,0.8);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logo-glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; }
+        .animate-delay-2 { animation-delay: 0.25s; }
+        .animate-delay-3 { animation-delay: 0.4s; }
+        .animate-delay-4 { animation-delay: 0.55s; }
+        .animate-delay-5 { animation-delay: 0.7s; }
+        .animate-delay-6 { animation-delay: 0.85s; }
+
+        .reveal-hidden {
+            opacity: 0;
+        }
+
+        .draw-container {
+            position: relative;
+            width: 100%;
+            height: 1px;
+            background: rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .draw-line-inner {
+            position: absolute;
+            height: 100%;
+            background: rgba(0,0,0,0.15);
+            width: 0;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-primary selection:text-surface-container-lowest">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-6 bg-stone-50/60 backdrop-blur-xl border-b border-stone-200/40">
+<div class="flex items-center gap-8">
+<div class="logo-glass">
+<span class="text-xl font-bold tracking-tighter text-stone-950 font-headline">RExplain</span>
+</div>
+<nav class="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
+<a class="text-stone-950 border-b-2 border-stone-950 pb-1" href="#">Explore</a>
+</nav>
+</div>
+</header>
+<div class="w-full lg:w-[55%] lg:border-r border-stone-200/60 min-h-screen">
+<main class="pt-40 pb-24 max-w-4xl mx-auto px-8">
+<!-- Hero Analysis Header -->
+<section class="mb-24 space-y-6 animate-reveal-up reveal-hidden">
+<div class="inline-flex items-center gap-3">
+<div class="w-12 h-[1px] bg-primary"></div>
+<span class="text-[10px] uppercase tracking-[0.4em] font-bold text-secondary">System Insight</span>
+</div>
+<h1 class="text-7xl font-headline font-bold tracking-tight leading-[0.9] text-primary">Repository<br/>Analysis</h1>
+<p class="text-secondary font-body max-w-xl text-xl leading-relaxed font-light">
+            A structural breakdown of <span class="text-primary font-medium border-b border-primary/20">facebook/react-demo</span>. Analysis completed in <span class="font-medium">4.2s</span>.
+        </p>
+</section>
+<!-- Repo Stats -->
+<section class="mb-16 animate-reveal-up animate-delay-1 reveal-hidden">
+<div class="liquid-glass p-12 flex flex-col md:flex-row md:items-end justify-between gap-12 shadow-sm">
+<div class="space-y-2">
+<span class="block text-[10px] uppercase tracking-[0.3em] text-secondary font-bold">Comprehensive Scan</span>
+<h2 class="text-5xl font-headline font-bold tracking-tight">108 <span class="text-2xl font-light text-stone-400">files</span></h2>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-5 py-2 bg-white/40 border border-white/60 text-stone-600 text-[10px] font-bold font-label tracking-[0.1em] uppercase">.tsx (42)</span>
+<span class="px-5 py-2 bg-white/40 border border-white/60 text-stone-600 text-[10px] font-bold font-label tracking-[0.1em] uppercase">.py (12)</span>
+<span class="px-5 py-2 bg-white/40 border border-white/60 text-stone-600 text-[10px] font-bold font-label tracking-[0.1em] uppercase">.json (28)</span>
+<span class="px-5 py-2 bg-white/40 border border-white/60 text-stone-600 text-[10px] font-bold font-label tracking-[0.1em] uppercase">.ipynb (26)</span>
+</div>
+</div>
+</section>
+<!-- Tech Stack -->
+<section class="mb-32 animate-reveal-up animate-delay-2 reveal-hidden">
+<div class="flex items-center gap-4 mb-10">
+<h3 class="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-bold whitespace-nowrap">Detected Ecosystem</h3>
+<div class="h-[1px] w-full bg-stone-200"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Backend -->
+<div class="liquid-glass p-8 h-56 flex flex-col justify-between group">
+<div class="flex justify-between items-start">
+<span class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Backend</span>
+<span class="material-symbols-outlined text-stone-300 group-hover:text-primary transition-colors" data-icon="terminal">terminal</span>
+</div>
+<div>
+<span class="text-3xl font-headline font-bold tracking-tight">Flask</span>
+<div class="h-0.5 w-0 group-hover:w-8 bg-primary transition-all duration-500 mt-2"></div>
+</div>
+</div>
+<!-- Frontend -->
+<div class="liquid-glass p-8 h-56 flex flex-col justify-between group">
+<div class="flex justify-between items-start">
+<span class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Frontend</span>
+<span class="material-symbols-outlined text-stone-300 group-hover:text-primary transition-colors" data-icon="web_asset">web_asset</span>
+</div>
+<div>
+<span class="text-3xl font-headline font-bold tracking-tight">React</span>
+<div class="h-0.5 w-0 group-hover:w-8 bg-primary transition-all duration-500 mt-2"></div>
+</div>
+</div>
+<!-- Database -->
+<div class="liquid-glass p-8 h-56 flex flex-col justify-between opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex justify-between items-start">
+<span class="text-[10px] font-bold uppercase tracking-widest text-stone-400">Database</span>
+<span class="material-symbols-outlined text-stone-300" data-icon="database">database</span>
+</div>
+<span class="text-2xl font-headline font-light italic text-stone-400 tracking-tight">Not detected</span>
+</div>
+</div>
+</section>
+<!-- AI Explanation -->
+<section class="mb-40 animate-reveal-up animate-delay-3 reveal-hidden">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-16">
+<div class="md:col-span-4">
+<div class="sticky top-40 space-y-4">
+<h3 class="text-3xl font-headline font-bold tracking-tight">AI Interpretation</h3>
+<p class="text-stone-500 text-sm font-body leading-relaxed font-light">
+                        Our neural engine analyzed the directory structure and logic flow to provide a narrative overview of the codebase intent.
+                    </p>
+</div>
+</div>
+<div class="md:col-span-8">
+<div class="liquid-glass p-16 shadow-2xl shadow-stone-200/50">
+<div class="prose prose-stone max-w-none">
+<p class="text-2xl font-body leading-[1.6] text-primary mb-10 font-light">
+                            This repository functions as a <span class="font-bold border-b-2 border-stone-200">hybrid data-science application</span>. The architecture suggests a separation between computational core and a modern presentation layer.
+                        </p>
+<p class="text-lg font-body leading-relaxed text-secondary mb-10 font-light">
+                            The logic flow is centralized within the <code class="bg-stone-100 px-2 py-1 rounded text-primary text-xs font-medium">/api</code> directory, which serves processed notebook data to the frontend via a RESTful pattern. Significant usage of <span class="text-primary font-bold">Pandas</span> was detected.
+                        </p>
+<div class="h-[1px] w-full bg-stone-100 mb-10"></div>
+<div class="flex items-center gap-4 text-stone-900">
+<span class="material-symbols-outlined text-stone-400" data-icon="verified">verified</span>
+<span class="text-[10px] font-bold uppercase tracking-[0.2em]">Logic Verified • Type Safe</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Architecture Diagram -->
+<section class="mb-40 animate-reveal-up animate-delay-4 reveal-hidden">
+<h3 class="text-[10px] uppercase tracking-[0.4em] text-stone-400 mb-16 font-bold text-center">System Topology</h3>
+<div class="relative liquid-glass p-24 flex flex-col md:flex-row items-center justify-center gap-32 border-none bg-stone-50/40 overflow-hidden">
+<!-- Visual Connection Line -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-1/2 h-[1px] relative overflow-hidden">
+<div class="absolute inset-0 bg-stone-200/60 dashed-line"></div>
+<div class="absolute inset-0 bg-white shadow-[0_0_10px_2px_rgba(0,0,0,0.1)] w-0 animate-draw-line animate-delay-6"></div>
+<div class="draw-container">
+<div class="draw-line-inner animate-draw-line animate-delay-6"></div>
+</div>
+</div>
+</div>
+<!-- Frontend Component -->
+<div class="z-10 liquid-glass border-stone-950 p-12 w-72 text-center shadow-xl">
+<span class="text-[10px] font-bold text-stone-400 block mb-6 uppercase tracking-[0.3em]">Client Side</span>
+<span class="font-headline font-bold text-xl tracking-tight">Frontend</span>
+<div class="mt-8 flex flex-col gap-3 text-[10px] text-stone-500 font-medium uppercase tracking-widest">
+<span>/src/components</span>
+<span>/src/hooks</span>
+</div>
+</div>
+<!-- Central Connector Node -->
+<div class="z-10 bg-primary text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl">
+<span class="material-symbols-outlined !text-xl" data-icon="sync_alt">sync_alt</span>
+</div>
+<!-- Backend Component -->
+<div class="z-10 liquid-glass border-stone-950 p-12 w-72 text-center shadow-xl">
+<span class="text-[10px] font-bold text-stone-400 block mb-6 uppercase tracking-[0.3em]">Server Side</span>
+<span class="font-headline font-bold text-xl tracking-tight">Backend</span>
+<div class="mt-8 flex flex-col gap-3 text-[10px] text-stone-500 font-medium uppercase tracking-widest">
+<span>/api/routes</span>
+<span>/scripts/worker</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Key Files -->
+<section class="mb-40 animate-reveal-up animate-delay-5 reveal-hidden">
+<div class="flex items-center gap-4 mb-10">
+<h3 class="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-bold whitespace-nowrap">Core Entry Points</h3>
+<div class="h-[1px] w-full bg-stone-200"></div>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<div class="group liquid-glass p-8 flex justify-between items-center hover:bg-white/80 transition-all duration-300 cursor-pointer">
+<div class="flex items-center gap-8">
+<div class="w-12 h-12 flex items-center justify-center bg-stone-100 group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-stone-400 group-hover:text-white" data-icon="description">description</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xl font-bold font-headline tracking-tight group-hover:translate-x-1 transition-transform">app.py</span>
+<span class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Flask entry point &amp; configuration</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-stone-300 group-hover:text-primary group-hover:translate-x-2 transition-all" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<div class="group liquid-glass p-8 flex justify-between items-center hover:bg-white/80 transition-all duration-300 cursor-pointer">
+<div class="flex items-center gap-8">
+<div class="w-12 h-12 flex items-center justify-center bg-stone-100 group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-stone-400 group-hover:text-white" data-icon="terminal">terminal</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xl font-bold font-headline tracking-tight group-hover:translate-x-1 transition-transform">package.json</span>
+<span class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Dependency tree &amp; build scripts</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-stone-300 group-hover:text-primary group-hover:translate-x-2 transition-all" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</section>
+<!-- README -->
+<section class="mb-24 animate-reveal-up animate-delay-6 reveal-hidden">
+<div class="flex items-center gap-4 mb-12">
+<h3 class="text-[10px] uppercase tracking-[0.3em] text-stone-400 font-bold whitespace-nowrap">Documentation Preview</h3>
+<div class="h-[1px] w-full bg-stone-200"></div>
+</div>
+<div class="liquid-glass p-16 max-w-4xl mx-auto shadow-2xl shadow-stone-200/40 relative">
+<div class="absolute top-0 right-0 p-8">
+<span class="text-[8px] font-bold uppercase tracking-[0.5em] text-stone-300">README.MD</span>
+</div>
+<div class="prose prose-stone prose-sm">
+<h2 class="font-headline text-4xl font-bold mb-10 tracking-tight text-primary">Overview</h2>
+<p class="text-xl text-stone-500 leading-relaxed mb-10 italic border-l-4 border-stone-200 pl-8 py-2 font-light">
+                    "A modern boilerplate for high-performance React applications with a Python-based analysis backend."
+                </p>
+<h4 class="font-headline font-bold text-xs uppercase tracking-[0.3em] text-stone-400 mt-16 mb-6">Getting Started</h4>
+<div class="bg-stone-900/5 p-8 border-l-2 border-stone-900 mb-8 overflow-x-auto">
+<pre class="text-[11px] text-stone-800 font-mono leading-relaxed">$ git clone https://github.com/facebook/react-demo
+$ pip install -r requirements.txt
+$ npm install &amp;&amp; npm start</pre>
+</div>
+<p class="text-stone-600 leading-loose mb-6 font-light text-base">
+                    Ensure you have configured the <code class="bg-stone-100 px-1.5 py-0.5 rounded text-primary text-xs font-medium">.env</code> file with the appropriate environment variables before running the development server. For production builds, refer to the <span class="underline underline-offset-4 font-medium text-primary cursor-pointer hover:opacity-70 transition-opacity">deployment guide</span>.
+                </p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white/40 backdrop-blur-md border-t border-stone-200/60 py-16 px-8">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 font-['Inter'] text-[10px] uppercase tracking-[0.2em] font-bold">
+<div class="logo-glass scale-90">
+<span class="text-lg font-bold tracking-tighter text-stone-950 font-headline">RExplain</span>
+</div>
+<div class="flex gap-10">
+<a class="text-stone-400 hover:text-stone-950 transition-colors" href="#">Github</a>
+<a class="text-stone-400 hover:text-stone-950 transition-colors" href="#">Privacy</a>
+<a class="text-stone-400 hover:text-stone-950 transition-colors" href="#">Terms</a>
+<a class="text-stone-400 hover:text-stone-950 transition-colors" href="#">Status</a>
+</div>
+<span class="text-stone-400">© 2024. Built for clarity.</span>
+</div>
+</footer>
+</div>
+</body></html>
