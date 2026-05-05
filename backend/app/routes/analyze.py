@@ -46,6 +46,7 @@ from app.services.repo_intelligence import (
 )
 from app.services.repo_metadata import fetch_repo_metadata
 import app.services.cache_db as cache_db
+from app.services.graph_builder import build_interactive_graph
 
 log = logging.getLogger("analyze")
 
@@ -106,9 +107,30 @@ def analyze_repo(request: RepoRequest):
                         log.info("[cache] hit  %s  (sha=%s)", repo_url, cached["sha"][:7])
                         rag_ready = _try_restore_rag(repo_url, cached)
                         result = dict(cached["analysis"])
-                        result["rag_ready"]     = rag_ready
-                        result["cache_hit"]     = True
-                        result["response_ms"]   = int((time.perf_counter() - t0) * 1000)
+                        result["rag_ready"]   = rag_ready
+                        result["cache_hit"]   = True
+
+                        # Rebuild interactive_graph if it's absent (cached before feature was added)
+                        # or empty (graph builder previously returned no nodes).
+                        graph = result.get("interactive_graph") or {}
+                        if not graph.get("nodes"):
+                            try:
+                                tree = result.get("scan_results", {}).get("file_paths", [])
+                                result["interactive_graph"] = build_interactive_graph(
+                                    framework_data      = result.get("framework_detection", {}),
+                                    scan_data           = result.get("scan_results", {}),
+                                    api_routes          = result.get("api_routes", []),
+                                    important_files     = result.get("important_files", []),
+                                    folder_explanations = result.get("folder_explanations", {}),
+                                    entry_points        = result.get("entry_points", []),
+                                    file_tree_paths     = tree or None,
+                                )
+                                print("[graph] rebuilt for cached result")
+                            except Exception as graph_err:
+                                print(f"[graph] rebuild skipped: {graph_err}")
+                                result["interactive_graph"] = {"nodes": [], "edges": []}
+
+                        result["response_ms"] = int((time.perf_counter() - t0) * 1000)
                         print(f"[cache] hit — served in {result['response_ms']} ms")
                         return result
                     else:
@@ -256,7 +278,22 @@ def analyze_repo(request: RepoRequest):
 
         print(f"[timing] TOTAL pipeline: {time.perf_counter() - t0:.2f}s")
 
-        # ── 9. Compose response ───────────────────────────────────────────────
+        # ── 9. Interactive graph ──────────────────────────────────────────────
+        try:
+            interactive_graph = build_interactive_graph(
+                framework_data=framework_data,
+                scan_data=scan_data,
+                api_routes=api_routes,
+                important_files=important_files,
+                folder_explanations=folder_explanations,
+                entry_points=entry_points,
+                file_tree_paths=tree_for_intel,
+            )
+        except Exception as graph_err:
+            print(f"[graph] build skipped: {graph_err}")
+            interactive_graph = {"nodes": [], "edges": []}
+
+        # ── 10. Compose response ──────────────────────────────────────────────
         result = {
             "repo_url":           repo_url,
             "scan_results":       scan_data,
@@ -273,6 +310,7 @@ def analyze_repo(request: RepoRequest):
             "metadata":           metadata,
             "rag_ready":          rag_ready,
             "cache_hit":          False,
+            "interactive_graph":  interactive_graph,
         }
 
         # ── 10. Persist to cache ──────────────────────────────────────────────

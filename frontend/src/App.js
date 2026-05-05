@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { LineChart, Line, BarChart, Bar, YAxis, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import InteractiveDiagram from "./InteractiveDiagram";
 import "./index.css";
 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
@@ -680,6 +681,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
   const [splitPct, setSplitPct] = useState(50);
   const [previewFile, setPreviewFile] = useState(null);
+  const [diagramView, setDiagramView] = useState("interactive");
   const dragging = useRef(false);
   const containerRef = useRef(null);
 
@@ -793,19 +795,58 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* System Diagram */}
             <section className="mb-16 animate-reveal-up animate-delay-3">
-              <SectionHeader label="System Diagram" />
-              <div className="liquid-glass p-8 rounded-xl overflow-x-auto scroll-hide">
-                <div className="min-w-max md:min-w-0 flex items-center justify-center">
-                  {result.diagram ? (
-                    <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded shadow-lg border border-white/5" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 py-12 opacity-50">
-                      <span className="material-symbols-outlined text-3xl text-secondary">schema</span>
-                      <p className="text-secondary font-body text-sm font-medium tracking-wide">No system diagram available</p>
-                    </div>
-                  )}
+              {/* Tab header */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-4 flex-1">
+                  <h3 className="text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold whitespace-nowrap">System Diagram</h3>
+                  <div className="h-[1px] w-full bg-white/5" />
+                </div>
+                <div className="flex items-center gap-1 bg-white/[0.03] border border-white/5 rounded-lg p-1 flex-shrink-0">
+                  <button
+                    onClick={() => setDiagramView("interactive")}
+                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${
+                      diagramView === "interactive"
+                        ? "bg-accent-purple text-white"
+                        : "text-secondary/40 hover:text-white"
+                    }`}
+                  >
+                    Interactive
+                  </button>
+                  <button
+                    onClick={() => setDiagramView("static")}
+                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${
+                      diagramView === "static"
+                        ? "bg-white/10 text-white"
+                        : "text-secondary/40 hover:text-white"
+                    }`}
+                  >
+                    Classic
+                  </button>
                 </div>
               </div>
+
+              {diagramView === "interactive" ? (
+                <div className="liquid-glass rounded-xl overflow-hidden">
+                  <InteractiveDiagram
+                    graphData={result.interactive_graph}
+                    fallbackData={result}
+                    onFileClick={(filePath) => setPreviewFile(filePath)}
+                  />
+                </div>
+              ) : (
+                <div className="liquid-glass p-8 rounded-xl overflow-x-auto scroll-hide">
+                  <div className="min-w-max md:min-w-0 flex items-center justify-center">
+                    {result.diagram ? (
+                      <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded shadow-lg border border-white/5" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-3 py-12 opacity-50">
+                        <span className="material-symbols-outlined text-3xl text-secondary">schema</span>
+                        <p className="text-secondary font-body text-sm font-medium tracking-wide">No system diagram available</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* AI Explanation */}
