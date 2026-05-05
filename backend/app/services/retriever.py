@@ -299,6 +299,34 @@ def build_store(repo_url: str, chunks: list[dict], model) -> VectorStore:
     return store
 
 
+def restore_store(repo_url: str, embeddings: np.ndarray, chunks: list[dict]) -> VectorStore:
+    """
+    Restore a VectorStore from pre-computed embeddings and chunks retrieved
+    from the database cache.  No model inference is performed.
+    """
+    key = _normalize_key(repo_url)
+    store = VectorStore()
+    store.add(embeddings, chunks)
+    _active_stores[key] = store
+    print(f"[rag] restored {store.size} chunks for {key} (from cache)")
+    return store
+
+
+def serialize_store(store: VectorStore) -> tuple[np.ndarray | None, list[dict]]:
+    """
+    Return (embeddings_array, chunks) for persistence.
+    embeddings_array is None if the store is empty.
+    """
+    if store.embeddings is None or not store.chunks:
+        return None, []
+    return store.embeddings, store.chunks
+
+
+def deserialize_store(repo_url: str, embeddings: np.ndarray, chunks: list[dict]) -> VectorStore:
+    """Alias of restore_store for symmetry with serialize_store."""
+    return restore_store(repo_url, embeddings, chunks)
+
+
 def get_store(repo_url: str) -> VectorStore | None:
     """Return the cached store for this repo, or None if not yet analyzed."""
     return _active_stores.get(_normalize_key(repo_url))

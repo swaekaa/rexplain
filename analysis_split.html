@@ -1,0 +1,338 @@
+<html class="dark" lang="en"><head></head><body class="antialiased selection:bg-accent-purple selection:text-white">```html
+
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RExplain | Repository Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#ffffff",
+                    "surface-container-lowest": "#1c1c1c",
+                    "tertiary": "#a855f7",
+                    "background": "#121212",
+                    "on-background": "#f3f3f1",
+                    "on-primary-container": "#ffffff",
+                    "secondary": "#a3a3a3",
+                    "outline": "rgba(255, 255, 255, 0.05)",
+                    "accent-purple": "#a855f7",
+                    "accent-orange": "#f97316"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            },
+            "animation": {
+                "reveal-up": "revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+                "draw-line": "drawLine 2s ease-in-out forwards",
+                "shine": "shine 12s ease-in-out infinite"
+            },
+            "keyframes": {
+                revealUp: {
+                    "0%": { opacity: "0", transform: "translateY(20px)" },
+                    "100%": { opacity: "1", transform: "translateY(0)" }
+                },
+                drawLine: {
+                    "0%": { width: "0%" },
+                    "100%": { width: "100%" }
+                },
+                shine: {
+                    "0%": { "background-position": "-100% center" },
+                    "100%": { "background-position": "100% center" }
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #121212; 
+            background-image: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), 
+                              radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
+            color: #f3f3f1; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; vertical-align: middle; }
+        
+        .liquid-glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .liquid-glass:hover {
+            transform: scale(1.01);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3), 0 0 15px rgba(168, 85, 247, 0.1);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-text {
+            background: linear-gradient(
+                120deg, 
+                #fff 30%, 
+                #a855f7 45%, 
+                #fff 50%, 
+                #f97316 55%, 
+                #fff 70%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 12s ease-in-out infinite;
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; }
+        .animate-delay-2 { animation-delay: 0.25s; }
+        .animate-delay-3 { animation-delay: 0.4s; }
+
+        .reveal-hidden {
+            opacity: 0;
+        }
+
+        .draw-container {
+            position: relative;
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        .draw-line-inner {
+            position: absolute;
+            height: 100%;
+            background: rgba(168, 85, 247, 0.3);
+            width: 0;
+        }
+
+        .chat-bubble-ai {
+            background: rgba(168, 85, 247, 0.08);
+            border-left: 3px solid #a855f7;
+            backdrop-filter: blur(8px);
+        }
+
+        .chat-bubble-user {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .scroll-hide::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scroll-hide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll-hide::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+    </style>
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-transparent">
+<div class="flex items-center gap-8">
+<div class="flex items-center">
+<span class="liquid-glass-text text-xl font-extrabold tracking-tighter font-headline pb-1">RExplain</span>
+</div>
+<nav class="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
+<a class="text-white border-b-2 border-white pb-1" href="#">Analysis</a>
+<a class="text-secondary hover:text-white transition-colors" href="#">Docs</a>
+<a class="text-secondary hover:text-white transition-colors" href="#">Pricing</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
+<span class="w-2 h-2 rounded-full bg-accent-orange animate-pulse"></span>
+<span class="text-[9px] font-bold uppercase tracking-widest text-accent-orange">Live Kernel</span>
+</div>
+<button class="px-5 py-2 text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-white">Sign In</button>
+</div>
+</header>
+<div class="flex h-screen pt-16">
+<!-- Left Side: AI Chat Interface -->
+<aside class="w-1/2 border-r border-white/5 flex flex-col bg-white/[0.01]">
+<div class="p-8 pb-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-accent-purple/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-accent-purple !text-lg" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary/40">Assistant Core</span>
+</div>
+<button class="text-secondary/40 hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="refresh">refresh</span>
+</button>
+</div>
+<!-- Chat History Area -->
+<div class="flex-1 overflow-y-auto px-8 py-4 space-y-6 scroll-hide">
+<div class="chat-bubble-ai p-5 rounded-xl max-w-[85%] animate-reveal-up">
+<p class="text-sm font-body leading-relaxed text-secondary">
+                        Hello. I've finished mapping <span class="font-bold text-accent-purple">facebook/react-demo</span>. It appears to be a dual-stack architecture with a Flask API and React frontend. What would you like to explore first?
+                    </p>
+</div>
+<div class="chat-bubble-user p-5 rounded-xl max-w-[85%] ml-auto animate-reveal-up animate-delay-1">
+<p class="text-sm font-body leading-relaxed text-secondary">
+                        Can you summarize the data flow between the Flask backend and the React components?
+                    </p>
+</div>
+<div class="chat-bubble-ai p-5 rounded-xl max-w-[85%] animate-reveal-up animate-delay-2">
+<p class="text-sm font-body leading-relaxed text-secondary">
+                        Data flows from the <code class="text-xs bg-white/5 px-1 rounded">/api</code> endpoints, which handle Pandas-based data processing, to the React client via asynchronous fetch calls. The client side uses hooks to manage the state of this processed information.
+                    </p>
+<div class="mt-4 flex gap-2">
+<span class="px-2 py-1 bg-accent-purple/10 border border-accent-purple/20 text-[9px] font-bold text-accent-purple uppercase rounded">Logic Flow</span>
+<span class="px-2 py-1 bg-accent-purple/10 border border-accent-purple/20 text-[9px] font-bold text-accent-purple uppercase rounded">Data Pipeline</span>
+</div>
+</div>
+</div>
+<!-- Input Field -->
+<div class="p-8 bg-transparent">
+<div class="relative group">
+<input class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-secondary/30 text-white font-body" placeholder="Ask about the repository architecture..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors">
+<span class="material-symbols-outlined !text-sm" data-icon="arrow_upward">arrow_upward</span>
+</button>
+</div>
+<p class="mt-4 text-[9px] text-secondary/30 text-center uppercase tracking-[0.2em] font-medium">Type <span class="text-accent-orange">/</span> to browse files or <span class="text-accent-orange">@</span> to mention components</p>
+</div>
+</aside>
+<!-- Right Side: Existing Repository Analysis Content -->
+<main class="w-1/2 overflow-y-auto bg-transparent scroll-hide">
+<div class="max-w-3xl mx-auto px-8 pt-20 pb-24">
+<!-- Hero Analysis Header -->
+<section class="mb-16 space-y-4 animate-reveal-up reveal-hidden">
+<div class="inline-flex items-center gap-3">
+<div class="w-8 h-[1px] bg-accent-orange"></div>
+<span class="text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
+</div>
+<h1 class="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white">Repository<br/>Analysis</h1>
+<p class="text-secondary font-body text-base leading-relaxed font-light">
+                        Breakdown of <span class="text-white font-medium border-b border-white/20">facebook/react-demo</span>. 
+                    </p>
+</section>
+<!-- Repo Stats -->
+<section class="mb-12 animate-reveal-up animate-delay-1 reveal-hidden">
+<div class="liquid-glass p-8 flex flex-col gap-6 shadow-sm">
+<div class="space-y-1">
+<span class="block text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold">Comprehensive Scan</span>
+<h2 class="text-4xl font-headline font-bold tracking-tight text-white">108 <span class="text-xl font-light text-secondary/40">files</span></h2>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-1.5 bg-white/5 border border-white/10 text-secondary text-[9px] font-bold font-label tracking-[0.1em] uppercase">.tsx (42)</span>
+<span class="px-4 py-1.5 bg-white/5 border border-white/10 text-secondary text-[9px] font-bold font-label tracking-[0.1em] uppercase">.py (12)</span>
+<span class="px-4 py-1.5 bg-white/5 border border-white/10 text-secondary text-[9px] font-bold font-label tracking-[0.1em] uppercase">.json (28)</span>
+</div>
+</div>
+</section>
+<!-- Tech Stack -->
+<section class="mb-16 animate-reveal-up animate-delay-2 reveal-hidden">
+<div class="flex items-center gap-4 mb-8">
+<h3 class="text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold whitespace-nowrap">Ecosystem</h3>
+<div class="h-[1px] w-full bg-white/5"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="liquid-glass p-6 h-40 flex flex-col justify-between group">
+<div class="flex justify-between items-start">
+<span class="text-[9px] font-bold uppercase tracking-widest text-secondary/40">Backend</span>
+<span class="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors" data-icon="terminal">terminal</span>
+</div>
+<span class="text-2xl font-headline font-bold tracking-tight text-white">Flask</span>
+</div>
+<div class="liquid-glass p-6 h-40 flex flex-col justify-between group">
+<div class="flex justify-between items-start">
+<span class="text-[9px] font-bold uppercase tracking-widest text-secondary/40">Frontend</span>
+<span class="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors" data-icon="web_asset">web_asset</span>
+</div>
+<span class="text-2xl font-headline font-bold tracking-tight text-white">React</span>
+</div>
+</div>
+</section>
+<!-- Architecture Diagram -->
+<section class="mb-16 animate-reveal-up animate-delay-3 reveal-hidden">
+<h3 class="text-[9px] uppercase tracking-[0.4em] text-secondary/40 mb-8 font-bold">System Topology</h3>
+<div class="relative liquid-glass p-12 flex flex-col items-center justify-center gap-12 overflow-hidden border-none bg-white/[0.02]">
+<!-- Visual Connection Line -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-full h-[1px] relative overflow-hidden px-12">
+<div class="draw-container">
+<div class="draw-line-inner animate-draw-line"></div>
+</div>
+</div>
+</div>
+<div class="flex w-full justify-between items-center z-10">
+<!-- Frontend Node -->
+<div class="liquid-glass p-6 w-40 text-center shadow-lg bg-white/[0.05] border-white/10">
+<span class="text-[8px] font-bold text-secondary/40 block mb-2 uppercase tracking-[0.2em]">Client</span>
+<span class="font-headline font-bold text-sm tracking-tight text-white">Frontend</span>
+</div>
+<!-- Central Connector -->
+<div class="bg-accent-purple text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-background z-20">
+<span class="material-symbols-outlined !text-base" data-icon="sync_alt">sync_alt</span>
+</div>
+<!-- Backend Node -->
+<div class="liquid-glass p-6 w-40 text-center shadow-lg bg-white/[0.05] border-white/10">
+<span class="text-[8px] font-bold text-secondary/40 block mb-2 uppercase tracking-[0.2em]">Server</span>
+<span class="font-headline font-bold text-sm tracking-tight text-white">Backend</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Key Files -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<h3 class="text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold whitespace-nowrap">Core Entry Points</h3>
+<div class="h-[1px] w-full bg-white/5"></div>
+</div>
+<div class="space-y-3">
+<div class="group liquid-glass p-5 flex justify-between items-center hover:bg-white/[0.05] transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center bg-white/5 group-hover:bg-accent-purple transition-colors rounded-lg">
+<span class="material-symbols-outlined text-secondary/40 group-hover:text-white" data-icon="description">description</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold font-headline tracking-tight text-white">app.py</span>
+<span class="text-[10px] text-secondary/40 font-medium uppercase tracking-wider">Flask entry point</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<div class="group liquid-glass p-5 flex justify-between items-center hover:bg-white/[0.05] transition-all cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 flex items-center justify-center bg-white/5 group-hover:bg-accent-purple transition-colors rounded-lg">
+<span class="material-symbols-outlined text-secondary/40 group-hover:text-white" data-icon="terminal">terminal</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold font-headline tracking-tight text-white">package.json</span>
+<span class="text-[10px] text-secondary/40 font-medium uppercase tracking-wider">Dependency tree</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</section>
+<!-- Footer (Mini) -->
+<footer class="pt-12 text-center bg-transparent">
+<p class="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2024 • RExplain AI Systems</p>
+</footer>
+</div>
+</main>
+</div>
+```</body></html>

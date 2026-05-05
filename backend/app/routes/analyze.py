@@ -1,4 +1,30 @@
+"""
+analyze.py  (Phase 14: PostgreSQL cache)
+-----------------------------------------
+Cache-first analysis endpoint.
+
+Flow
+----
+1. Check DB for repo_url
+2. Fetch latest commit SHA via GitHub API
+3a. SHA matches → return cached analysis + restore RAG store → done (<1 s)
+3b. SHA changed / not cached → run full pipeline → store result + RAG
+
+Safety
+------
+* Every DB operation is wrapped in try/except; failures fall back gracefully.
+* If DATABASE_URL is missing the route works exactly as before (no cache).
+
+Logs
+----
+  [cache] hit      — returned from DB, no pipeline
+  [cache] miss     — not in DB
+  [cache] stale    — SHA changed, re-analysing
+  [cache] updated  — new result written to DB
+"""
+
 import time
+import logging
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -19,6 +45,9 @@ from app.services.repo_intelligence import (
     detect_doc_links,
 )
 from app.services.repo_metadata import fetch_repo_metadata
+import app.services.cache_db as cache_db
+
+log = logging.getLogger("analyze")
 
 router = APIRouter(prefix="/analyze", tags=["analysis"])
 
@@ -27,28 +56,85 @@ class RepoRequest(BaseModel):
     repo_url: str
 
 
+# ── helpers ───────────────────────────────────────────────────────────────────
+
+def _normalize_url(url: str) -> str:
+    """Canonical form: lowercase, no trailing slash, no .git suffix."""
+    url = url.strip().rstrip("/")
+    if url.endswith(".git"):
+        url = url[:-4]
+    return url.lower()
+
+
+def _try_restore_rag(repo_url: str, cached: dict) -> bool:
+    """
+    Attempt to restore the in-memory RAG store from cached embeddings + chunks.
+    Returns True on success (chat will work immediately without re-embedding).
+    """
+    try:
+        embeddings = cached.get("embeddings")
+        chunks     = cached.get("chunks")
+        if embeddings is not None and chunks:
+            from app.services.retriever import restore_store
+            restore_store(repo_url, embeddings, chunks)
+            return True
+    except Exception as exc:
+        log.debug("[cache] RAG restore failed: %s", exc)
+    return False
+
+
+# ── route ─────────────────────────────────────────────────────────────────────
+
 @router.post("/")
 def analyze_repo(request: RepoRequest):
 
-    repo_url = request.repo_url
+    repo_url   = _normalize_url(request.repo_url)
     clone_path = None
 
     try:
         t0 = time.perf_counter()
 
-        # ── Phase 10 intelligence containers (populated per path) ─────────
+        # ── 1. Cache probe ────────────────────────────────────────────────────
+        if cache_db.is_available():
+            try:
+                cached = cache_db.get_cached_analysis(repo_url)
+                if cached is not None:
+                    # Fetch latest SHA to validate freshness
+                    latest_sha = cache_db.fetch_latest_commit_sha(repo_url)
+                    if latest_sha is None or latest_sha == cached["sha"]:
+                        # ── Cache HIT ─────────────────────────────────────────
+                        log.info("[cache] hit  %s  (sha=%s)", repo_url, cached["sha"][:7])
+                        rag_ready = _try_restore_rag(repo_url, cached)
+                        result = dict(cached["analysis"])
+                        result["rag_ready"]     = rag_ready
+                        result["cache_hit"]     = True
+                        result["response_ms"]   = int((time.perf_counter() - t0) * 1000)
+                        print(f"[cache] hit — served in {result['response_ms']} ms")
+                        return result
+                    else:
+                        log.info("[cache] stale %s  (stored=%s  latest=%s)",
+                                 repo_url, cached["sha"][:7], latest_sha[:7])
+                        print(f"[cache] stale — SHA changed, re-analysing")
+                else:
+                    log.info("[cache] miss %s", repo_url)
+                    print("[cache] miss — running full pipeline")
+            except Exception as exc:
+                log.warning("[cache] probe error — continuing without cache: %s", exc)
+        else:
+            # Fetch SHA anyway — stored for later upsert
+            pass
+
+        # Fetch SHA for storage (if probe path skipped it)
+        latest_sha = cache_db.fetch_latest_commit_sha(repo_url) or "unknown"
+
+        # ── Phase 10 intelligence containers ──────────────────────────────────
         file_tree_paths: list[str] | None = None
         file_contents_map: dict | None = None
 
-        # ── Fast path: GitHub API (no clone, no disk I/O) ─────────────────
-        # Tries GitHub Trees API + parallel raw file fetches.
-        # Completes in ~2–5 seconds for public repos.
-        # Returns (None, None) for private repos or rate-limited requests.
-
+        # ── 2. Fast path: GitHub API ───────────────────────────────────────────
         scan_data, file_contents = fetch_repo_fast(repo_url)
 
         if scan_data is not None and file_contents is not None:
-            # API path succeeded — detect frameworks from in-memory content
             print(f"[timing] fast fetch done in {time.perf_counter() - t0:.2f}s")
 
             t1 = time.perf_counter()
@@ -56,13 +142,11 @@ def analyze_repo(request: RepoRequest):
             print(f"[timing] framework detection done in {time.perf_counter() - t1:.2f}s "
                   f"(detected={framework_data})")
 
-            # Phase 10: use full file path list now embedded in scan_data
             file_contents_map = file_contents
-            file_tree_paths = scan_data.get("file_paths", list(file_contents.keys()))
+            file_tree_paths   = scan_data.get("file_paths", list(file_contents.keys()))
 
         else:
-            # ── Slow path: full clone fallback ─────────────────────────────
-            # Used when the repo is private or the GitHub API is unavailable.
+            # ── 3. Slow path: full clone fallback ──────────────────────────────
             print("[info] API path unavailable — falling back to clone")
 
             clone_path = clone_repository(repo_url)
@@ -77,11 +161,9 @@ def analyze_repo(request: RepoRequest):
             print(f"[timing] framework detection done in {time.perf_counter() - t2:.2f}s "
                   f"(detected={framework_data})")
 
-            # Build a minimal file_contents for intelligence (read key files)
             file_contents_map = {}
-            file_tree_paths = scan_data.get("key_files", [])
+            file_tree_paths   = scan_data.get("key_files", [])
 
-            # Attempt to read README from cloned path
             import os
             for readme_name in ("README.md", "readme.md", "README.MD", "README.rst", "README.txt"):
                 readme_path = os.path.join(clone_path, readme_name)
@@ -93,7 +175,6 @@ def analyze_repo(request: RepoRequest):
                     except OSError:
                         pass
 
-            # Read key Python/JS files for route detection
             for key_file in scan_data.get("key_files", []):
                 full_path = os.path.join(clone_path, key_file)
                 if os.path.exists(full_path):
@@ -103,34 +184,32 @@ def analyze_repo(request: RepoRequest):
                     except OSError:
                         pass
 
-        # ── Shared path: architecture + diagram + explanation ─────────────
+        # ── 4. Shared path: architecture + diagram + explanation ───────────────
         architecture = build_architecture(framework_data)
 
         repo_name = repo_url.rstrip("/").split("/")[-1].replace(".git", "")
 
-        # ── Phase 10: Intelligence enrichment ────────────────────────────────
+        # ── 5. Phase 10: Intelligence enrichment ──────────────────────────────
         t_intel = time.perf_counter()
 
         readme_content = extract_readme(file_contents_map or {})
 
-        # For important_files and folder_explanations we need the full tree.
-        # Use key_files from scan_data as best approximation when tree unavailable.
         tree_for_intel = (
             file_tree_paths
             if file_tree_paths
             else scan_data.get("key_files", [])
         )
 
-        important_files    = detect_important_files(tree_for_intel)
-        api_routes         = extract_api_routes(file_contents_map or {})
+        important_files     = detect_important_files(tree_for_intel)
+        api_routes          = extract_api_routes(file_contents_map or {})
         folder_explanations = explain_folders(tree_for_intel)
-        entry_points       = detect_entry_points(tree_for_intel)
-        doc_links          = detect_doc_links(tree_for_intel)
+        entry_points        = detect_entry_points(tree_for_intel)
+        doc_links           = detect_doc_links(tree_for_intel)
 
         print(f"[timing] intelligence done in {time.perf_counter() - t_intel:.2f}s "
               f"(routes={len(api_routes)}, files={len(important_files)})")
 
-        # ── Diagram (pass tree paths for richer clusters) ─────────────────
+        # ── 6. Diagram ────────────────────────────────────────────────────────
         t3 = time.perf_counter()
         diagram = generate_architecture_diagram(
             architecture,
@@ -141,15 +220,18 @@ def analyze_repo(request: RepoRequest):
 
         explanation = generate_repo_explanation(framework_data, scan_data)
 
-        # ── Phase 11: Build RAG vector store (non-blocking, non-fatal) ────────
-        t_rag = time.perf_counter()
-        rag_ready = False
-
-        # ── Fetch and cache metadata for the chatbot ──────────────────────────
+        # ── 7. Metadata ───────────────────────────────────────────────────────
         metadata = fetch_repo_metadata(repo_url, clone_path)
+
+        # ── 8. RAG embedding ──────────────────────────────────────────────────
+        t_rag = time.perf_counter()
+        rag_ready        = False
+        rag_embeddings   = None
+        rag_chunks_plain = None
+
         try:
             from app.services.embeddings import build_chunks, get_model
-            from app.services.retriever import build_store as rag_build_store
+            from app.services.retriever import build_store as rag_build_store, serialize_store
 
             rag_chunks = build_chunks(
                 file_contents_map or {},
@@ -161,33 +243,55 @@ def analyze_repo(request: RepoRequest):
                 },
             )
             rag_model = get_model()
-            rag_build_store(repo_url, rag_chunks, rag_model)
+            rag_store = rag_build_store(repo_url, rag_chunks, rag_model)
             rag_ready = True
             print(f"[timing] RAG index built in {time.perf_counter() - t_rag:.2f}s "
                   f"({len(rag_chunks)} chunks)")
+
+            # Serialise for DB storage
+            rag_embeddings, rag_chunks_plain = serialize_store(rag_store)
+
         except Exception as rag_err:
             print(f"[rag] index build skipped: {rag_err}")
 
         print(f"[timing] TOTAL pipeline: {time.perf_counter() - t0:.2f}s")
 
-        return {
-            "repo_url": repo_url,
-            "scan_results": scan_data,
+        # ── 9. Compose response ───────────────────────────────────────────────
+        result = {
+            "repo_url":           repo_url,
+            "scan_results":       scan_data,
             "framework_detection": framework_data,
-            "architecture": architecture,
-            "diagram": diagram,
-            "ai_explanation": explanation,
-            # ── Phase 10 additions ────────────────────────────────────────
-            "readme": readme_content,
-            "api_routes": api_routes,
-            "important_files": important_files,
+            "architecture":       architecture,
+            "diagram":            diagram,
+            "ai_explanation":     explanation,
+            "readme":             readme_content,
+            "api_routes":         api_routes,
+            "important_files":    important_files,
             "folder_explanations": folder_explanations,
-            "entry_points": entry_points,
-            "doc_links": doc_links,
-            "metadata": metadata,
-            # ── Phase 11: chat readiness flag ─────────────────────────────
-            "rag_ready": rag_ready,
+            "entry_points":       entry_points,
+            "doc_links":          doc_links,
+            "metadata":           metadata,
+            "rag_ready":          rag_ready,
+            "cache_hit":          False,
         }
+
+        # ── 10. Persist to cache ──────────────────────────────────────────────
+        if cache_db.is_available():
+            try:
+                ok = cache_db.upsert_analysis(
+                    repo_url   = repo_url,
+                    commit_sha = latest_sha,
+                    analysis   = result,
+                    embeddings = rag_embeddings,
+                    chunks     = rag_chunks_plain,
+                )
+                if ok:
+                    log.info("[cache] updated %s  (sha=%s)", repo_url, latest_sha[:7])
+                    print(f"[cache] updated — stored in DB")
+            except Exception as exc:
+                log.warning("[cache] upsert error (non-fatal): %s", exc)
+
+        return result
 
     except RepoNotAccessibleError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -199,5 +303,4 @@ def analyze_repo(request: RepoRequest):
         raise HTTPException(status_code=422, detail=f"Clone failed: {e}")
 
     finally:
-        # Only runs if clone fallback was used
         delete_repository(clone_path)

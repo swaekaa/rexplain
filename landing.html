@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#ffffff",
+                    "surface-container-lowest": "#1c1c1c",
+                    "tertiary": "#a855f7", /* Vibrant Purple accent */
+                    "accent-orange": "#f97316", /* Vibrant Orange accent */
+                    "background": "#121212",
+                    "on-background": "#f3f3f1",
+                    "secondary": "#a3a3a3",
+                    "outline": "rgba(255, 255, 255, 0.05)"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.5rem",
+                    "xl": "1rem",
+                    "2xl": "1.5rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope", "sans-serif"],
+                    "body": ["Inter", "sans-serif"],
+                    "label": ["Inter", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #121212;
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), 
+                              radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
+            color: #f3f3f1;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .liquid-glass-text {
+            background: linear-gradient(
+                120deg, 
+                #fff 30%, 
+                #a855f7 45%, 
+                #fff 50%, 
+                #f97316 55%, 
+                #fff 70%
+            );
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 12s ease-in-out infinite, fadeInTitle 2.5s ease-out forwards;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+            opacity: 0;
+        }
+        @keyframes shine {
+            0% { background-position: -100% center; }
+            100% { background-position: 100% center; }
+        }
+        @keyframes fadeInTitle {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass-card {
+            background: #1c1c1c;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .architectural-shadow {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .search-container {
+            animation: slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+        }
+        .search-container:focus-within {
+            background: #242424;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            transform: scale(1.01);
+            border-color: rgba(168, 85, 247, 0.3);
+        }
+        .hero-sub {
+            animation: slideUpFade 2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+        }
+    </style>
+</head>
+<body class="selection:bg-tertiary selection:text-white antialiased overflow-x-hidden">
+<!-- TopNavBar Navigation Shell -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-12 py-8 bg-transparent">
+<div class="text-xl font-extrabold tracking-tighter text-primary font-headline pb-1">RExplain</div>
+<div class="hidden md:flex items-center space-x-10 font-headline font-semibold text-xs tracking-[0.2em] uppercase">
+<a class="text-secondary hover:text-white transition-colors" href="#">Explore</a>
+<a class="text-secondary hover:text-white transition-colors" href="#">Docs</a>
+<a class="text-secondary hover:text-white transition-colors" href="#">Pricing</a>
+</div>
+<button class="text-primary font-bold text-xs px-5 py-2 hover:text-tertiary transition-colors duration-200 font-headline uppercase tracking-[0.2em]">Sign In</button>
+</nav>
+<!-- Main Canvas -->
+<main class="min-h-screen pt-48 pb-32 px-6 flex flex-col items-center">
+<!-- Architectural Breadcrumb / Marker -->
+<div class="w-12 h-[1px] bg-tertiary/40 mb-16 opacity-0 animate-[fadeInTitle_2s_ease-out_0.8s_forwards]"></div>
+<!-- Hero Section -->
+<div class="max-w-4xl w-full text-center mb-24">
+<h1 class="liquid-glass-text font-headline text-8xl md:text-[140px] font-extrabold tracking-tighter mb-8 leading-tight pb-4">
+            RExplain
+        </h1>
+<p class="hero-sub font-body text-secondary text-lg md:text-2xl tracking-tight font-light max-w-xl mx-auto leading-relaxed">
+            Unfold the complexity of any GitHub repository with clarity and intent.
+        </p>
+</div>
+<!-- Search / Input Area -->
+<div class="w-full max-w-2xl relative group mb-48 search-container">
+<div class="absolute inset-0 bg-tertiary/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"></div>
+<div class="relative glass-card rounded-2xl p-3 flex items-center gap-2">
+<div class="pl-5 flex items-center text-secondary/40">
+<span class="material-symbols-outlined text-[22px]">link</span>
+</div>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-white font-body text-lg placeholder:text-secondary/20 placeholder:font-light py-5" placeholder="paste-github-repo-url-here" type="text"/>
+<button class="bg-primary hover:bg-white text-background font-headline font-extrabold px-10 py-5 rounded-xl transition-all duration-500 ease-out flex items-center gap-3 text-xs uppercase tracking-widest group/btn overflow-hidden relative">
+<span class="relative z-10 flex items-center gap-3">
+                    Analyze
+                    <span class="material-symbols-outlined text-[18px] transition-transform group-hover/btn:translate-x-1">arrow_forward</span>
+</span>
+</button>
+</div>
+<!-- Metadata / Hints -->
+<div class="mt-10 flex justify-center gap-12 items-center text-[10px] font-headline font-bold uppercase tracking-[0.4em] text-secondary/30">
+<div class="flex items-center gap-3 hover:text-tertiary/60 transition-colors cursor-default">
+<span class="w-1 h-1 bg-tertiary/40 rounded-full"></span>
+<span>Zero Install</span>
+</div>
+<div class="flex items-center gap-3 hover:text-accent-orange/60 transition-colors cursor-default">
+<span class="w-1 h-1 bg-accent-orange/40 rounded-full"></span>
+<span>Markdown</span>
+</div>
+<div class="flex items-center gap-3 hover:text-white transition-colors cursor-default">
+<span class="w-1 h-1 bg-secondary/20 rounded-full"></span>
+<span>AI Logic</span>
+</div>
+</div>
+</div>
+<!-- Secondary Visual Anchor (Bento Style Preview) -->
+<div class="max-w-6xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 px-4 mb-48">
+<!-- Feature 1: The Documentation -->
+<div class="md:col-span-7 glass-card rounded-3xl p-12 flex flex-col justify-between overflow-hidden relative group">
+<div class="relative z-10">
+<span class="text-[10px] font-headline font-bold uppercase tracking-[0.3em] text-tertiary mb-6 block">The Process</span>
+<h3 class="font-headline text-4xl font-extrabold text-white mb-6 leading-tight tracking-tight">Instant Architecture<br/>Mapping</h3>
+<p class="font-body text-secondary text-lg font-light leading-relaxed max-w-sm">We traverse your repository's dependency graph to visualize how components interact, saving hours of manual audit.</p>
+</div>
+<div class="mt-16 architectural-shadow rounded-2xl overflow-hidden translate-y-6 group-hover:translate-y-2 transition-transform duration-700 ease-out border border-white/5">
+<img alt="Abstract visualization of complex software architecture" class="w-full h-64 object-cover grayscale opacity-50 contrast-150 brightness-75 group-hover:grayscale-0 group-hover:opacity-80 transition-all duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANIUqkQKetZNqCvI31fkSSD4lQdFAmcu8sn6ZXPDectSxl--1dcR0eKgRsT6lUZkPuYbSXMHqC5CKgmm2oF2SarZWja038lDMSytaTrXN3QxdXJ1mn_00on3JyLMCIf42Ue46SkTRrKV03HeV_VivCBznNORm8_yPBAQ5RoSdns3LnK4ZulsgLqerjraBSDsUHjkhTyp08RtFDezrKwiRvis3ELhaJajrSU__Gr3Ww_Xg0NSePUQSVGJrfYFUm4SRPSW29qVWAVCc"/>
+</div>
+</div>
+<!-- Feature 2: Clarity -->
+<div class="md:col-span-5 glass-card rounded-3xl p-12 flex flex-col group">
+<div class="flex-1">
+<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-tertiary to-accent-orange flex items-center justify-center mb-10 shadow-lg group-hover:shadow-tertiary/20 transition-all duration-500">
+<span class="material-symbols-outlined text-white text-3xl">auto_awesome</span>
+</div>
+<h3 class="font-headline text-4xl font-extrabold text-white mb-6 tracking-tight">Deep Semantics</h3>
+<p class="font-body text-secondary text-lg font-light leading-relaxed">Go beyond syntax. Understand the "why" behind the code structures and design patterns used in the project.</p>
+</div>
+<div class="mt-12 flex flex-wrap gap-3">
+<span class="px-4 py-2 bg-white/5 text-[10px] font-headline font-bold uppercase tracking-widest rounded-lg border border-white/5 text-secondary hover:text-white transition-colors cursor-default">React</span>
+<span class="px-4 py-2 bg-white/5 text-[10px] font-headline font-bold uppercase tracking-widest rounded-lg border border-white/5 text-secondary hover:text-white transition-colors cursor-default">TypeScript</span>
+<span class="px-4 py-2 bg-white/5 text-[10px] font-headline font-bold uppercase tracking-widest rounded-lg border border-white/5 text-secondary hover:text-white transition-colors cursor-default">Rust</span>
+</div>
+</div>
+</div>
+<!-- Minimalist Testimonial Anchor -->
+<section class="max-w-4xl w-full mb-24 px-8">
+<div class="glass-card p-16 rounded-3xl text-center relative overflow-hidden group border-none">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-tertiary to-accent-orange opacity-40 group-hover:w-32 transition-all duration-700"></div>
+<blockquote class="font-headline text-3xl font-medium text-white leading-snug tracking-tight mb-10 italic opacity-90">
+                "The most efficient way to onboard new engineers to a complex legacy codebase I've ever seen. It turned a week-long process into minutes."
+            </blockquote>
+<cite class="block font-headline text-[11px] font-extrabold uppercase tracking-[0.4em] text-tertiary/60 not-italic">
+                — Lead Architect, Modern Systems
+            </cite>
+</div>
+</section>
+</main>
+<!-- Footer Shell -->
+<footer class="bg-transparent py-20 px-12">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+<div class="flex flex-col md:flex-row items-center gap-12">
+<span class="font-extrabold text-white font-headline text-xl tracking-tighter">RExplain</span>
+<span class="text-secondary/30 font-body text-xs font-medium tracking-widest uppercase">© 2024 RExplain. Built for clarity.</span>
+</div>
+<div class="flex gap-10">
+<a class="text-secondary/50 font-headline font-bold text-[10px] uppercase tracking-[0.25em] hover:text-tertiary transition-all ease-in-out" href="#">Github</a>
+<a class="text-secondary/50 font-headline font-bold text-[10px] uppercase tracking-[0.25em] hover:text-tertiary transition-all ease-in-out" href="#">Privacy</a>
+<a class="text-secondary/50 font-headline font-bold text-[10px] uppercase tracking-[0.25em] hover:text-tertiary transition-all ease-in-out" href="#">Terms</a>
+<a class="text-secondary/50 font-headline font-bold text-[10px] uppercase tracking-[0.25em] hover:text-tertiary transition-all ease-in-out" href="#">Status</a>
+</div>
+</div>
+</footer>
+</body></html>

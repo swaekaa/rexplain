@@ -11,13 +11,26 @@ try:
 except ImportError:
     print("[env] python-dotenv not installed — reading env vars from OS")
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from app.routes.analyze import router as analyze_router
 from app.routes.chat import router as chat_router
 from app.routes.files import router as files_router
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="RExplain API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialise PostgreSQL cache on startup (non-fatal if DB is absent)."""
+    try:
+        from app.services import cache_db
+        cache_db.init_db()
+    except Exception as exc:
+        print(f"[cache] startup init skipped: {exc}")
+    yield  # application runs here
+
+
+app = FastAPI(title="RExplain API", lifespan=lifespan)
 
 app.include_router(analyze_router)
 app.include_router(chat_router)

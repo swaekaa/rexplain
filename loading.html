@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RExplain | Loading</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=Manrope:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#3b3b3b",
+                        "background": "#fafaf9",
+                        "on-tertiary-fixed-variant": "#e2e2e2",
+                        "on-background": "#1a1c1b",
+                        "on-primary-container": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c6c6c6",
+                        "on-primary-fixed-variant": "#e5e2e1",
+                        "secondary-fixed-dim": "#a4abbb",
+                        "on-secondary-fixed": "#151c27",
+                        "on-surface": "#1a1c1b",
+                        "surface-container-highest": "#e2e3e1",
+                        "tertiary-fixed-dim": "#474747",
+                        "tertiary-container": "#747474",
+                        "primary-container": "#3c3b3b",
+                        "inverse-primary": "#c8c6c5",
+                        "on-secondary-container": "#151c27",
+                        "on-tertiary-fixed": "#ffffff",
+                        "on-secondary-fixed-variant": "#353c48",
+                        "secondary": "#585f6c",
+                        "outline": "#777777",
+                        "inverse-on-surface": "#f1f1ef",
+                        "surface": "#fafaf9",
+                        "secondary-container": "#ced4e4",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dadad8",
+                        "on-surface-variant": "#474747",
+                        "surface-container-low": "#f4f4f2",
+                        "tertiary-fixed": "#5e5e5e",
+                        "primary-fixed-dim": "#474746",
+                        "surface-tint": "#5f5e5e",
+                        "inverse-surface": "#2f3130",
+                        "surface-variant": "#e2e3e1",
+                        "on-tertiary-container": "#ffffff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#c0c7d6",
+                        "on-error-container": "#410002",
+                        "surface-container-high": "#e8e8e6",
+                        "on-tertiary": "#e2e2e2",
+                        "on-error": "#ffffff",
+                        "on-primary": "#e5e2e1",
+                        "primary-fixed": "#5f5e5e",
+                        "on-primary-fixed": "#ffffff",
+                        "surface-bright": "#fafaf9",
+                        "surface-container": "#f1f1ef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    "animation": {
+                        "shimmer": "shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+                        "liquid-pulse": "liquid-pulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+                        "breathing": "breathing 3s ease-in-out infinite",
+                        "slow-spin": "spin 8s linear infinite"
+                    },
+                    "keyframes": {
+                        "shimmer": {
+                            "0%": { "transform": "translateX(-100%)" },
+                            "100%": { "transform": "translateX(200%)" }
+                        },
+                        "liquid-pulse": {
+                            "0%, 100%": { "transform": "scale(1)", "opacity": "0.3", "filter": "blur(8px)" },
+                            "50%": { "transform": "scale(1.4)", "opacity": "0.6", "filter": "blur(12px)" }
+                        },
+                        "breathing": {
+                            "0%, 100%": { "opacity": "1" },
+                            "50%": { "opacity": "0.5" }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' 0, 'opsz' 24;
+        }
+        .liquid-glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary selection:text-white antialiased">
+<!-- TopNavBar: Translucent Glass Shell -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-6 bg-white/40 dark:bg-stone-900/40 backdrop-blur-xl border-b border-stone-200/30">
+<div class="flex items-center gap-12">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 liquid-glass rounded-full flex items-center justify-center">
+<div class="w-1.5 h-1.5 bg-stone-950 rounded-full"></div>
+</div>
+<span class="text-lg font-semibold tracking-[-0.03em] text-stone-950 dark:text-stone-50 font-headline">RExplain</span>
+</div>
+<nav class="hidden md:flex gap-8">
+<a class="text-[13px] text-stone-500 hover:text-stone-950 transition-colors font-medium tracking-tight" href="#">Explore</a>
+<a class="text-[13px] text-stone-500 hover:text-stone-950 transition-colors font-medium tracking-tight" href="#">Docs</a>
+<a class="text-[13px] text-stone-500 hover:text-stone-950 transition-colors font-medium tracking-tight" href="#">Pricing</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-stone-950 dark:text-stone-50 font-medium tracking-tight text-[13px] hover:opacity-60 transition-opacity">Sign In</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="min-h-screen flex flex-col items-center justify-center px-6 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.02)_0%,transparent_100%)]">
+<!-- Loading State Container -->
+<div class="w-full max-w-sm flex flex-col items-center">
+<div class="text-center space-y-6 mb-12">
+<div class="flex flex-col items-center gap-8">
+<!-- Architectural Loader with Liquid Pulse -->
+<div class="relative w-12 h-12 flex items-center justify-center">
+<!-- Calm pulsing 'liquid' background -->
+<div class="absolute inset-0 bg-stone-200 rounded-full animate-liquid-pulse"></div>
+<!-- Outer structural ring -->
+<div class="absolute inset-0 border-[0.5px] border-stone-200 rounded-full animate-slow-spin"></div>
+<!-- Core indicator -->
+<div class="relative w-1.5 h-1.5 bg-stone-950 rounded-full"></div>
+</div>
+<div class="space-y-2">
+<h1 class="font-headline text-xl font-medium tracking-tight text-stone-900 animate-breathing">
+                            Analyzing repository
+                        </h1>
+<p class="font-body text-stone-400 text-[13px] tracking-tight max-w-[240px] mx-auto leading-relaxed opacity-60">
+                            Mapping structural architecture and functional logic pathways.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Minimalist Loading Indicator -->
+<div class="w-48 h-[1px] bg-stone-100 overflow-hidden relative">
+<div class="absolute inset-0 w-1/3 h-full bg-stone-300 animate-shimmer"></div>
+</div>
+<!-- Context Metadata Display -->
+<div class="mt-20 grid grid-cols-2 gap-[1px] bg-stone-100 border border-stone-100 w-full">
+<div class="p-6 bg-white/50 backdrop-blur-sm flex flex-col gap-1.5">
+<span class="text-[10px] font-medium uppercase tracking-[0.15em] text-stone-400">Task ID</span>
+<span class="text-[12px] font-body tabular-nums text-stone-600">REQ-8829-X</span>
+</div>
+<div class="p-6 bg-white/50 backdrop-blur-sm flex flex-col gap-1.5">
+<span class="text-[10px] font-medium uppercase tracking-[0.15em] text-stone-400">Source</span>
+<span class="text-[12px] font-body truncate text-stone-600">studio-v3</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Decorative Aesthetic Elements -->
+<div class="fixed bottom-12 right-12 pointer-events-none opacity-[0.03]">
+<span class="material-symbols-outlined text-[15rem]">architecture</span>
+</div>
+<!-- Footer: Silent Design -->
+<footer class="bg-transparent border-t border-stone-100">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 py-10 px-8">
+<div class="flex flex-col gap-1">
+<span class="text-[13px] font-semibold text-stone-950 font-headline tracking-tight">RExplain</span>
+<p class="font-body text-[11px] tracking-tight text-stone-400 italic">Built for clarity.</p>
+</div>
+<div class="flex gap-10">
+<a class="font-body text-[12px] tracking-tight text-stone-400 hover:text-stone-950 transition-colors" href="#">Github</a>
+<a class="font-body text-[12px] tracking-tight text-stone-400 hover:text-stone-950 transition-colors" href="#">Privacy</a>
+<a class="font-body text-[12px] tracking-tight text-stone-400 hover:text-stone-950 transition-colors" href="#">Terms</a>
+<a class="font-body text-[12px] tracking-tight text-stone-400 hover:text-stone-950 transition-colors" href="#">Status</a>
+</div>
+</div>
+</footer>
+</body></html>
