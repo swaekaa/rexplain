@@ -61,29 +61,26 @@ def _build_prompt(question: str, chunks: list[dict]) -> tuple[str, str]:
     context_str = "\n\n---\n\n".join(context_blocks)
 
     system_prompt = (
-        "You are a precise repository analysis assistant. "
-        "Your ONLY job is to answer questions about a specific GitHub repository "
-        "based strictly on the code and documentation excerpts provided to you.\n\n"
+        "You are RExplain, an intelligent assistant that helps developers understand GitHub repositories. "
+        "You have access to retrieved code and documentation excerpts from a specific repository.\n\n"
         "Rules you MUST follow:\n"
-        "1. Answer ONLY from the repository evidence provided. Do NOT use any external knowledge.\n"
-        "2. Infer answers from CODE too — not just prose docs. For example:\n"
-        "   - A model name can be found in import statements, variable names, config dicts, or comments.\n"
-        "   - Accuracy/metrics may appear as Python variables, print() calls, or log strings.\n"
-        "   - Parameter counts can be inferred from architecture definitions.\n"
-        "   If the answer requires a small inference from the code, make it and note your reasoning.\n"
-        "3. Only set answer to exactly \"Not enough repository evidence found.\" if the context\n"
-        "   contains ZERO relevant code, comments, or documentation about the topic.\n"
-        "4. Be specific — quote relevant code, function names, file paths where possible.\n"
-        "5. Keep answers concise but complete (2–6 sentences typically).\n"
-        "6. You MUST always respond with valid JSON in exactly this format:\n"
+        "1. If the retrieved context contains relevant evidence, use it to give a precise, grounded answer. "
+        "   Quote code, function names, and file paths where helpful.\n"
+        "2. If the question is conversational (e.g. 'hello', 'thanks', 'how are you'), respond naturally and helpfully "
+        "   as a friendly assistant — no need to reference the repository.\n"
+        "3. If the context is not relevant to the question, answer from your general software engineering knowledge. "
+        "   Briefly note that you couldn't find specific evidence in this repository.\n"
+        "4. NEVER respond with 'Not enough repository evidence found.' — always provide value.\n"
+        "5. Keep answers concise but complete (2-6 sentences typically).\n"
+        "6. You MUST always respond with valid JSON in exactly this format (no markdown fences):\n"
         "{\n"
         '  "answer": "Your answer here.",\n'
-        '  "sources": ["path/to/file1.py", "path/to/file2.ts"],\n'
+        '  "sources": ["path/to/file1.py"],\n'
         '  "confidence": "high"\n'
         "}\n"
-        "confidence must be one of: high, medium, low\n"
-        "sources must only list file paths from the provided context.\n"
-        "Do NOT wrap the JSON in markdown code fences."
+        "confidence must be one of: high, medium, low.\n"
+        "sources must only list file paths that were actually useful from the provided context. "
+        "Use an empty array if none were relevant."
     )
 
     user_prompt = (
@@ -123,8 +120,13 @@ def _parse_response(raw: str, chunks: list[dict]) -> dict:
             parsed = {}
 
     answer = parsed.get("answer", "").strip()
-    if not answer:
-        answer = "Not enough repository evidence found."
+    # If LLM still returned the old refusal string, replace with a sensible default
+    if not answer or "not enough repository evidence" in answer.lower():
+        answer = (
+            "I couldn't find specific evidence for this in the repository. "
+            "Try asking about a specific file, function, framework, or API route "
+            "that exists in this codebase."
+        )
 
     sources = parsed.get("sources", [])
     if not isinstance(sources, list):
@@ -162,11 +164,29 @@ def generate_answer(question: str, chunks: list[dict]) -> dict:
         }
     """
     if not chunks:
-        return {
-            "answer": "Not enough repository evidence found.",
-            "sources": [],
-            "confidence": "low",
-        }
+        # No RAG context — fall back to a general LLM answer
+        system_prompt = (
+            "You are a knowledgeable software engineering assistant. "
+            "The user is asking about a GitHub repository that could not be indexed. "
+            "Answer the question as helpfully as possible using your general knowledge about "
+            "software development, common frameworks, and coding patterns. "
+            "Be honest that you are answering without direct access to the specific repository code. "
+            "Respond with valid JSON in exactly this format (no markdown fences):\n"
+            '{"answer": "...", "sources": [], "confidence": "low"}'
+        )
+        client = _get_client()
+        completion = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": question},
+            ],
+            temperature=0.4,
+            max_tokens=512,
+            stream=False,
+        )
+        raw = completion.choices[0].message.content or ""
+        return _parse_response(raw, [])
 
     system_prompt, user_prompt = _build_prompt(question, chunks)
 
@@ -205,9 +225,34 @@ def stream_answer_tokens(question: str, chunks: list[dict]) -> Generator[str, No
         media_type="text/event-stream"
     """
     if not chunks:
-        yield 'data: Not enough repository evidence found.\n\n'
+        # No RAG context — fall back to a general LLM answer (streaming)
+        system_prompt = (
+            "You are a knowledgeable software engineering assistant. "
+            "The user is asking about a GitHub repository that could not be indexed. "
+            "Answer the question as helpfully as possible using your general knowledge about "
+            "software development, common frameworks, and coding patterns. "
+            "Be honest that you are answering without direct access to the specific repository code. "
+            "Keep your answer concise (2-5 sentences)."
+        )
+        client = _get_client()
+        stream = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": question},
+            ],
+            temperature=0.4,
+            max_tokens=512,
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            token = getattr(delta, "content", None) or ""
+            if token:
+                safe = token.replace("\n", "\\n")
+                yield f"data: {safe}\n\n"
         yield 'data: [META] {"sources": [], "confidence": "low"}\n\n'
-        yield 'data: [DONE]\n\n'
+        yield "data: [DONE]\n\n"
         return
 
     system_prompt, user_prompt = _build_prompt(question, chunks)

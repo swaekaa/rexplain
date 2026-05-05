@@ -457,54 +457,48 @@ function ChatSidebar({ repoUrl, ragReady }) {
 
   useEffect(() => () => esRef.current?.close(), []);
 
-  const _blockingAsk = async (q, replacePlaceholderId) => {
-    try {
-      const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
-      const newMsg = {
-        role: "assistant",
-        text: res.data.answer,
-        sources: res.data.sources || [],
-        confidence: res.data.confidence || "medium",
-        _settled: false,
-        _id: Date.now(),
-      };
-      if (replacePlaceholderId) {
-        setMessages(prev => prev.map(m => m._id === replacePlaceholderId ? newMsg : m));
-      } else {
-        setMessages(prev => [...prev, newMsg]);
-      }
-    } catch (err) {
-      const errMsg = {
-        role: "error",
-        text: err?.response?.data?.detail || "Something went wrong. Check your API KEY.",
-        _id: Date.now(),
-      };
-      if (replacePlaceholderId) {
-        setMessages(prev => prev.map(m => m._id === replacePlaceholderId ? errMsg : m));
-      } else {
-        setMessages(prev => [...prev, errMsg]);
-      }
-    } finally {
-      setAsking(false);
-      setStreaming(false);
-    }
-  };
-
   const ask = async () => {
     const q = input.trim();
+    // Strict guard: one active request at a time
     if (!q || asking) return;
-    setMessages(prev => [...prev, { role: "user", text: q, _id: Date.now() }]);
+
+    // 1. Add exactly ONE user message
+    const userMsgId = Date.now();
+    setMessages(prev => [...prev, { role: "user", text: q, _id: userMsgId }]);
     setInput("");
     setAsking(true);
 
+    // 2. Always add exactly ONE assistant placeholder
+    const placeholderId = userMsgId + 1;
+    setMessages(prev => [...prev, {
+      role: "assistant", text: "", sources: [], confidence: "medium",
+      _streaming: true, _id: placeholderId,
+    }]);
+
+    // Helper: resolve the placeholder with a final message
+    const resolve = (text, sources = [], confidence = "medium") => {
+      setMessages(prev => prev.map(m =>
+        m._id === placeholderId
+          ? { ...m, text, sources, confidence, _streaming: false, _settled: false }
+          : m
+      ));
+      setAsking(false);
+      setStreaming(false);
+    };
+
+    const resolveError = (text) => {
+      setMessages(prev => prev.map(m =>
+        m._id === placeholderId
+          ? { role: "error", text, _id: placeholderId }
+          : m
+      ));
+      setAsking(false);
+      setStreaming(false);
+    };
+
+    // 3. Try streaming first (SSE), fall back to blocking POST
     if (typeof EventSource !== "undefined" && ragReady) {
       setStreaming(true);
-      const placeholderIdx = Date.now() + 1;
-      setMessages(prev => [...prev, {
-        role: "assistant", text: "", sources: [], confidence: "medium",
-        _streaming: true, _id: placeholderIdx,
-      }]);
-
       let accText = "";
       const streamUrl = `http://127.0.0.1:8000/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
       const es = new EventSource(streamUrl);
@@ -514,71 +508,67 @@ function ChatSidebar({ repoUrl, ragReady }) {
         const data = e.data;
         if (data === "[DONE]") {
           es.close();
-          setAsking(false);
-          setStreaming(false);
-
           let finalText = accText;
           try {
-            const cleaned = accText.trim()
-              .replace(/^```(?:json)?\s*/m, "")
-              .replace(/```\s*$/m, "")
-              .trim();
+            const cleaned = accText.trim().replace(/^```(?:json)?\s*/m, "").replace(/```\s*$/m, "").trim();
             const parsed = JSON.parse(cleaned);
             if (parsed && typeof parsed.answer === "string" && parsed.answer.trim()) {
               finalText = parsed.answer.trim();
             }
           } catch (_) {
             const m = accText.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
-            if (m) {
-              finalText = m[1]
-                .replace(/\\n/g, "\n")
-                .replace(/\\t/g, "\t")
-                .replace(/\\"/g, '\"')
-                .replace(/\\\\/g, "\\");
-            }
+            if (m) finalText = m[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
           }
-
+          // Preserve sources/confidence already set by [META] — only update text + settle flag
           setMessages(prev => prev.map(m =>
-            m._id === placeholderIdx
+            m._id === placeholderId
               ? { ...m, text: finalText, _streaming: false, _settled: false }
               : m
           ));
+          setAsking(false);
+          setStreaming(false);
           return;
         }
         if (data.startsWith("[META] ")) {
           try {
             const meta = JSON.parse(data.slice(7));
             setMessages(prev => prev.map(m =>
-              m._id === placeholderIdx
-                ? { ...m, sources: meta.sources || [], confidence: meta.confidence || "medium" }
-                : m
+              m._id === placeholderId ? { ...m, sources: meta.sources || [], confidence: meta.confidence || "medium" } : m
             ));
           } catch (_) { }
           return;
         }
-        const token = data.replace(/\\n/g, "\n");
-        accText += token;
+        accText += data.replace(/\\n/g, "\n");
         setMessages(prev => prev.map(m =>
-          m._id === placeholderIdx ? { ...m, text: accText } : m
+          m._id === placeholderId ? { ...m, text: accText } : m
         ));
       };
 
-      es.onerror = () => {
+      es.onerror = async () => {
         es.close();
-        if (!accText) {
-          _blockingAsk(q, placeholderIdx);
+        if (accText) {
+          // Already have partial text — settle it
+          resolve(accText);
         } else {
-          setAsking(false);
-          setStreaming(false);
-          setMessages(prev => prev.map(m =>
-            m._id === placeholderIdx ? { ...m, _streaming: false, _settled: true } : m
-          ));
+          // SSE failed with nothing — fall back to blocking POST
+          try {
+            const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
+            resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
+          } catch (err) {
+            resolveError(err?.response?.data?.detail || "Something went wrong.");
+          }
         }
       };
       return;
     }
 
-    _blockingAsk(q, null);
+    // 4. Non-streaming path (no EventSource or RAG not ready)
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
+      resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
+    } catch (err) {
+      resolveError(err?.response?.data?.detail || "Something went wrong.");
+    }
   };
 
   const handleKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); } };
@@ -586,7 +576,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
   const latestAssistantIdx = messages.reduce((acc, m, i) => m.role === "assistant" ? i : acc, -1);
 
   return (
-    <div className="flex flex-col h-full bg-white/[0.01]">
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }} className="bg-white/[0.01]">
       <div className="p-8 pb-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-accent-purple/20 flex items-center justify-center">
@@ -679,7 +669,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
     { label: "Database", value: fw.database, icon: "database" },
   ];
 
-  const [splitPct, setSplitPct] = useState(50);
+  const [splitPct, setSplitPct] = useState(75);
   const [previewFile, setPreviewFile] = useState(null);
   const [diagramView, setDiagramView] = useState("interactive");
   const dragging = useRef(false);
@@ -697,7 +687,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
       if (!dragging.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setSplitPct(Math.min(65, Math.max(25, pct)));
+      setSplitPct(Math.min(85, Math.max(55, pct)));
     };
     const onUp = () => {
       dragging.current = false;
@@ -730,9 +720,9 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
       </header>
 
       <div ref={containerRef} className="flex flex-1 overflow-hidden" style={{ marginTop: '64px' }}>
-        {/* Left Side: Analysis Content */}
-        <main style={{ width: `${splitPct}%` }} className="overflow-y-auto bg-transparent scroll-hide border-r border-white/5">
-          <div className="w-full max-w-4xl mx-auto px-8 pt-20 pb-24">
+        {/* Left Side: Analysis Content (60%) */}
+        <main style={{ flex: '0 0 55%', width: '55%', overflowY: 'auto' }} className="bg-transparent scroll-hide border-r border-white/5">
+          <div className="w-full px-6 pt-20 pb-24">
             
             {/* Hero Analysis Header */}
             <section className="mb-16 space-y-4 animate-reveal-up">
@@ -989,8 +979,8 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
           <div className="w-0.5 h-10 rounded-full bg-white/10 pointer-events-none" />
         </div>
 
-        {/* Right Side: AI Chat Interface */}
-        <aside style={{ width: `${100 - splitPct}%` }} className="flex flex-col bg-white/[0.01]">
+        {/* Right Side: AI Chat (40%) */}
+        <aside style={{ flex: '0 0 45%', width: '45%', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ChatSidebar repoUrl={repoUrl} ragReady={result.rag_ready} />
         </aside>
       </div>

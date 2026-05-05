@@ -32,17 +32,6 @@ def answer_question(question: str, retrieved_chunks: list[dict]) -> dict:
             "confidence": "high" | "medium" | "low"
         }
     """
-    if not retrieved_chunks:
-        return {
-            "answer": (
-                "Not enough repository evidence found. "
-                "Try rephrasing your question or ask about a specific file, "
-                "function, or feature in this repository."
-            ),
-            "sources": [],
-            "confidence": "low",
-        }
-
     try:
         return generate_answer(question, retrieved_chunks)
     except Exception as exc:
