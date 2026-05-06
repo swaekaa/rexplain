@@ -13,7 +13,7 @@
  *  - Graceful fallback when graph data is empty
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -539,6 +539,17 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
   const [edges, setEdges, onEdgesChange] = useEdgesState(rawEdges);
   const [selectedNode, setSelectedNode] = useState(null);
 
+  // ── Prevent parent scroll pane from stealing wheel events ────────────────────
+  // Must use a non-passive listener so we can call stopPropagation().
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const stopWheel = (e) => e.stopPropagation();
+    el.addEventListener("wheel", stopWheel, { passive: false });
+    return () => el.removeEventListener("wheel", stopWheel);
+  }, []);
+
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(prev => prev?.id === node.id ? null : node);
   }, []);
@@ -573,7 +584,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
   }
 
   return (
-    <div style={{ position: "relative", height: 520, width: "100%", borderRadius: 12, overflow: "hidden" }}>
+    <div ref={containerRef} style={{ position: "relative", height: 520, width: "100%", borderRadius: 12, overflow: "hidden" }}>
       {/* Force React Flow control buttons to be visible regardless of global CSS resets */}
       <style>{`
         .react-flow__controls {
@@ -622,6 +633,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         fitViewOptions={{ padding: 0.15 }}
         minZoom={0.2}
         maxZoom={2.5}
+        preventScrolling
         proOptions={{ hideAttribution: true }}
         style={{ background: "#0d1117" }}
         defaultEdgeOptions={{ type: "smoothstep" }}
