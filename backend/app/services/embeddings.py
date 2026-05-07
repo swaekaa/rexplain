@@ -33,20 +33,29 @@ _model = None
 _MODEL_NAME = "all-MiniLM-L6-v2"
 
 
-def get_model():
-    """Lazy-load the SentenceTransformer model (once per process)."""
+def preload_model():
+    """Load the model at startup and warm it up."""
     global _model
     if _model is None:
-        print(f"[rag] loading embedding model: {_MODEL_NAME}")
+        print(f"[startup] loading model: {_MODEL_NAME}...")
         try:
             from sentence_transformers import SentenceTransformer
+            # Disable symlinks warning or other noisy logs if desired
             _model = SentenceTransformer(_MODEL_NAME)
-            print(f"[rag] model loaded OK")
-        except ImportError:
-            raise RuntimeError(
-                "sentence-transformers is not installed. "
-                "Run: pip install sentence-transformers"
-            )
+            # Lazy warm-up
+            _model.encode(["warmup"])
+            print("[startup] model loaded and warmed up")
+        except Exception as e:
+            print(f"[startup] model load failed: {e}")
+            _model = "FAILED"
+
+def get_model():
+    """Return the preloaded model, or raise an error if it failed to load."""
+    global _model
+    if _model is None:
+        preload_model()
+    if _model == "FAILED":
+        raise RuntimeError("Embedding model failed to load at startup")
     return _model
 
 

@@ -21,15 +21,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialise PostgreSQL cache on startup (non-fatal if DB is absent)."""
+    """Initialise PostgreSQL cache and AI models on startup."""
     try:
         from app.services import cache_db
         cache_db.init_db()
     except Exception as exc:
         print(f"[cache] startup init skipped: {exc}")
+        
+    try:
+        from app.services.embeddings import preload_model
+        preload_model()
+    except Exception as exc:
+        print(f"[startup] model preload failed: {exc}")
+        
     yield  # application runs here
-
-
 app = FastAPI(title="RExplain API", lifespan=lifespan)
 
 app.include_router(analyze_router)

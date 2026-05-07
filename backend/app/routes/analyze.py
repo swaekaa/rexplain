@@ -88,7 +88,9 @@ def _try_restore_rag(repo_url: str, cached: dict) -> bool:
 
 @router.post("/")
 def analyze_repo(request: RepoRequest):
-
+    print(f"\n[analyze] START processing request for {request.repo_url}")
+    t_start = time.perf_counter()
+    
     repo_url   = _normalize_url(request.repo_url)
     clone_path = None
 
@@ -346,3 +348,4 @@ def analyze_repo(request: RepoRequest):
 
     finally:
         delete_repository(clone_path)
+        print(f"[analyze] END processing request in {time.perf_counter() - t_start:.2f}s")
