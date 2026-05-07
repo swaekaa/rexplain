@@ -233,12 +233,16 @@ def analyze_repo(request: RepoRequest):
 
         # ── 6. Diagram ────────────────────────────────────────────────────────
         t3 = time.perf_counter()
-        diagram = generate_architecture_diagram(
-            architecture,
-            repo_name,
-            file_tree_paths=tree_for_intel,
-        )
-        print(f"[timing] diagram done in {time.perf_counter() - t3:.2f}s")
+        try:
+            diagram = generate_architecture_diagram(
+                architecture,
+                repo_name,
+                file_tree_paths=tree_for_intel,
+            )
+            print(f"[timing] diagram done in {time.perf_counter() - t3:.2f}s")
+        except Exception as diag_err:
+            print(f"[diagram] generation skipped: {diag_err}")
+            diagram = None
 
         explanation = generate_repo_explanation(framework_data, scan_data)
 

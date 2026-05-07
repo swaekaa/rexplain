@@ -108,11 +108,12 @@ def generate_architecture_diagram(
     file_tree_paths    : full list of repo paths from GitHub Trees API (optional).
                          When provided, clusters are populated from real folder names.
     """
-    base_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../../../repos")
-    )
-
-    output_file = os.path.join(base_dir, f"{repo_name}_architecture")
+    import tempfile
+    base_dir = tempfile.gettempdir()
+    
+    # Safe temp naming without slashes
+    safe_name = repo_name.replace('/', '_').replace('\\', '_')
+    output_file = os.path.join(base_dir, f"{safe_name}_architecture")
 
     # ── Global graph attributes ──────────────────────────────────────────────
     dot = Digraph(
