@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: rexplain-backend
+    env: python
+    rootDir: backend
+    buildCommand: apt-get update && apt-get install -y graphviz && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    autoDeploy: true
