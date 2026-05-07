@@ -1037,18 +1037,21 @@ export default function App() {
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
     let attempts = 0;
-    while (attempts < 2) {
+    while (attempts < 3) {
       try {
         console.log("API URL:", API_URL);
-        const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() });
+        const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
+          timeout: 180000, // 3 minutes — analysis can take time
+        });
         setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
         break; // success
       } catch (err) {
         console.error(err);
         attempts++;
-        if (attempts < 2 && (!err.response || err.message === "Network Error" || err.code === "ERR_NETWORK")) {
-          console.log("Network error, retrying for Render cold start in 4 seconds...");
-          await new Promise(r => setTimeout(r, 4000));
+        const isNetworkErr = !err.response || err.message === "Network Error" || err.code === "ERR_NETWORK" || err.code === "ECONNABORTED";
+        if (attempts < 3 && isNetworkErr) {
+          console.log(`Network error (attempt ${attempts}/3), retrying in 8s for Render cold start...`);
+          await new Promise(r => setTimeout(r, 8000));
         } else {
           setError(err?.response?.data?.detail || "Backend not reachable. Try again.");
           break; // final error
