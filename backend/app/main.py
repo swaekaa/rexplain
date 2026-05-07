@@ -38,7 +38,7 @@ app.include_router(files_router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # temporary (for testing)
+    allow_origins=["*"],  # allow all for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

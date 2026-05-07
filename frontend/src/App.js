@@ -5,6 +5,9 @@ import { LineChart, Line, BarChart, Bar, YAxis, ResponsiveContainer, Tooltip, XA
 import InteractiveDiagram from "./InteractiveDiagram";
 import "./index.css";
 
+// ─── Environment & API Config ───────────────────────────────────────────────
+const API_URL = import.meta.env?.VITE_API_URL || process.env.REACT_APP_API_URL || "https://rexplain.onrender.com";
+
 // ─── Shared Footer ─────────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -46,13 +49,26 @@ function FilePreviewModal({ repoUrl, filePath, onClose }) {
 
   useEffect(() => {
     async function fetchFile() {
-      try {
-        const res = await axios.post("http://127.0.0.1:8000/files/content", { repo_url: repoUrl, file_path: filePath });
-        setContent(res.data.content);
-      } catch (err) {
-        setError(err?.response?.data?.detail || "Failed to load file.");
-      } finally {
-        setLoading(false);
+      let attempts = 0;
+      while (attempts < 2) {
+        try {
+          console.log("API URL:", API_URL);
+          const res = await axios.post(`${API_URL}/files/content`, { repo_url: repoUrl, file_path: filePath });
+          setContent(res.data.content);
+          setLoading(false);
+          return;
+        } catch (err) {
+          console.error(err);
+          attempts++;
+          if (attempts < 2 && (!err.response || err.message === "Network Error" || err.code === "ERR_NETWORK")) {
+            console.log("Network error, retrying for Render cold start in 4 seconds...");
+            await new Promise(r => setTimeout(r, 4000));
+          } else {
+            setError(err?.response?.data?.detail || "Backend not reachable. Try again.");
+            setLoading(false);
+            return;
+          }
+        }
       }
     }
     fetchFile();
@@ -500,7 +516,8 @@ function ChatSidebar({ repoUrl, ragReady }) {
     if (typeof EventSource !== "undefined" && ragReady) {
       setStreaming(true);
       let accText = "";
-      const streamUrl = `http://127.0.0.1:8000/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
+      console.log("API URL:", API_URL);
+      const streamUrl = `${API_URL}/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
       const es = new EventSource(streamUrl);
       esRef.current = es;
 
@@ -552,10 +569,12 @@ function ChatSidebar({ repoUrl, ragReady }) {
         } else {
           // SSE failed with nothing — fall back to blocking POST
           try {
-            const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
+            console.log("API URL:", API_URL);
+            const res = await axios.post(`${API_URL}/chat/`, { repo_url: repoUrl, question: q });
             resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
           } catch (err) {
-            resolveError(err?.response?.data?.detail || "Something went wrong.");
+            console.error(err);
+            resolveError(err?.response?.data?.detail || "Backend not reachable. Try again.");
           }
         }
       };
@@ -564,10 +583,12 @@ function ChatSidebar({ repoUrl, ragReady }) {
 
     // 4. Non-streaming path (no EventSource or RAG not ready)
     try {
-      const res = await axios.post("http://127.0.0.1:8000/chat/", { repo_url: repoUrl, question: q });
+      console.log("API URL:", API_URL);
+      const res = await axios.post(`${API_URL}/chat/`, { repo_url: repoUrl, question: q });
       resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
     } catch (err) {
-      resolveError(err?.response?.data?.detail || "Something went wrong.");
+      console.error(err);
+      resolveError(err?.response?.data?.detail || "Backend not reachable. Try again.");
     }
   };
 
@@ -1015,14 +1036,26 @@ export default function App() {
     if (!repoUrl.trim()) return;
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
-    try {
-      const res = await axios.post("http://127.0.0.1:8000/analyze/", { repo_url: repoUrl.trim() });
-      setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
-    } catch (err) {
-      setError(err?.response?.data?.detail || err?.message || "Failed to analyze repository.");
-    } finally {
-      setLoading(false);
+    let attempts = 0;
+    while (attempts < 2) {
+      try {
+        console.log("API URL:", API_URL);
+        const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() });
+        setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
+        break; // success
+      } catch (err) {
+        console.error(err);
+        attempts++;
+        if (attempts < 2 && (!err.response || err.message === "Network Error" || err.code === "ERR_NETWORK")) {
+          console.log("Network error, retrying for Render cold start in 4 seconds...");
+          await new Promise(r => setTimeout(r, 4000));
+        } else {
+          setError(err?.response?.data?.detail || "Backend not reachable. Try again.");
+          break; // final error
+        }
+      }
     }
+    setLoading(false);
   };
 
   const reset = () => { setResult(null); setError(null); };
