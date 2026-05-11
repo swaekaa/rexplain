@@ -27,13 +27,33 @@ from __future__ import annotations
 
 import re
 import math
-from collections import Counter
+from collections import Counter, OrderedDict
 
 import numpy as np
 
 # ── In-memory store registry ─────────────────────────────────────────────────
 
-_active_stores: dict[str, "VectorStore"] = {}
+class LRUActiveStores:
+    def __init__(self, capacity: int = 1):
+        self.cache = OrderedDict()
+        self.capacity = capacity
+        
+    def get(self, key: str) -> "VectorStore | None":
+        if key not in self.cache:
+            return None
+        self.cache.move_to_end(key)
+        return self.cache[key]
+        
+    def put(self, key: str, value: "VectorStore") -> None:
+        self.cache[key] = value
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.capacity:
+            old_key, _ = self.cache.popitem(last=False)
+            print(f"[rag] evicted store {old_key} from memory")
+            import gc
+            gc.collect()
+
+_active_stores = LRUActiveStores(capacity=1)
 
 
 def _normalize_key(repo_url: str) -> str:
@@ -282,7 +302,7 @@ def build_store(repo_url: str, chunks: list[dict], model) -> VectorStore:
     store = VectorStore()
 
     if not chunks:
-        _active_stores[key] = store
+        _active_stores.put(key, store)
         return store
 
     texts = [c["text"] for c in chunks]
@@ -293,7 +313,7 @@ def build_store(repo_url: str, chunks: list[dict], model) -> VectorStore:
         convert_to_numpy=True,
     )
     store.add(np.array(embeddings, dtype=np.float32), chunks)
-    _active_stores[key] = store
+    _active_stores.put(key, store)
 
     print(f"[rag] stored {store.size} chunks for {key}")
     return store
@@ -307,7 +327,7 @@ def restore_store(repo_url: str, embeddings: np.ndarray, chunks: list[dict]) -> 
     key = _normalize_key(repo_url)
     store = VectorStore()
     store.add(embeddings, chunks)
-    _active_stores[key] = store
+    _active_stores.put(key, store)
     print(f"[rag] restored {store.size} chunks for {key} (from cache)")
     return store
 

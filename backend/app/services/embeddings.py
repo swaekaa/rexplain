@@ -67,13 +67,21 @@ INCLUDE_EXTS = {
     ".toml", ".cfg", ".sh", ".txt",
 }
 
+# Exclude large auto-generated or binary files
+SKIP_EXTS = {
+    ".lock", "-lock.json", ".csv", ".tsv", ".ipynb", 
+    ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".pdf",
+    ".zip", ".tar", ".gz", ".sqlite", ".db"
+}
+
 SKIP_DIRS = {
     "node_modules", ".git", "dist", "build", "venv",
     "__pycache__", ".next", "coverage", ".dist",
-    "static", "assets", ".mypy_cache",
+    "static", "assets", ".mypy_cache", "logs", "tmp", "data"
 }
 
-MAX_FILE_CHARS = 60_000   # raised from 40k so large READMEs aren't truncated
+MAX_FILE_CHARS = 20_000   # reduced from 60k to save memory
+MAX_CHUNKS_PER_REPO = 200 # limit to prevent RAM exhaustion
 
 # README file names (case-insensitive)
 _README_NAMES = {"readme.md", "readme.rst", "readme.txt", "readme"}
@@ -130,7 +138,7 @@ def _chunk_python(content: str, path: str) -> list[dict]:
     if starts[0] > 0:
         preamble = "\n".join(lines[: starts[0]]).strip()
         if len(preamble) > 30:
-            chunks.append({"path": path, "text": preamble[:2_500], "type": "module"})
+            chunks.append({"path": path, "text": preamble[:800], "type": "module"})
 
     for idx, start in enumerate(starts):
         # 3-line overlap from previous block
@@ -138,9 +146,9 @@ def _chunk_python(content: str, path: str) -> list[dict]:
         end = starts[idx + 1] if idx + 1 < len(starts) else len(lines)
         text = "\n".join(lines[overlap_start:end]).strip()
         if len(text) > 30:
-            chunks.append({"path": path, "text": text[:2_500], "type": "function"})
+            chunks.append({"path": path, "text": text[:800], "type": "function"})
 
-    return chunks or [{"path": path, "text": content[:2_000], "type": "file"}]
+    return chunks or [{"path": path, "text": content[:800], "type": "file"}]
 
 
 def _chunk_js(content: str, path: str) -> list[dict]:
@@ -158,9 +166,9 @@ def _chunk_js(content: str, path: str) -> list[dict]:
     for part in parts:
         text = part.strip()
         if len(text) > 30:
-            chunks.append({"path": path, "text": text[:2_500], "type": "function"})
+            chunks.append({"path": path, "text": text[:800], "type": "function"})
 
-    return _add_overlap(chunks, 120) or [{"path": path, "text": content[:2_000], "type": "file"}]
+    return _add_overlap(chunks, 120) or [{"path": path, "text": content[:800], "type": "file"}]
 
 
 def _chunk_markdown(content: str, path: str, fine_grained: bool = False) -> list[dict]:
@@ -226,15 +234,15 @@ def _chunk_markdown(content: str, path: str, fine_grained: bool = False) -> list
                 chunks.append({"path": path, "text": para_buf, "type": "section"})
         else:
             # Standard mode: keep sections together, sub-split only if very large
-            if len(text) > 1_800:
-                for i in range(0, len(text), 1_500):
-                    sub = text[i: i + 1_800].strip()
+            if len(text) > 800:
+                for i in range(0, len(text), 700):
+                    sub = text[i: i + 800].strip()
                     if sub:
                         chunks.append({"path": path, "text": sub, "type": "section"})
             else:
                 chunks.append({"path": path, "text": text, "type": "section"})
 
-    return _add_overlap(chunks, 100) or [{"path": path, "text": content[:2_000], "type": "file"}]
+    return _add_overlap(chunks, 100) or [{"path": path, "text": content[:800], "type": "file"}]
 
 
 def _chunk_generic(content: str, path: str) -> list[dict]:
@@ -294,6 +302,10 @@ def build_chunks(
 
         is_readme = _is_readme(path)
 
+        # Ensure we don't process massive lockfiles or binaries that snuck in
+        if any(path.endswith(se) for se in SKIP_EXTS):
+            continue
+
         try:
             file_chunks = chunk_file(path, content)
             # Tag README chunks for retriever boosting
@@ -301,6 +313,10 @@ def build_chunks(
                 for c in file_chunks:
                     c["is_readme"] = True
             all_chunks.extend(file_chunks)
+            if len(all_chunks) >= MAX_CHUNKS_PER_REPO:
+                print(f"[rag] hit max chunks ({MAX_CHUNKS_PER_REPO}), truncating remaining files")
+                all_chunks = all_chunks[:MAX_CHUNKS_PER_REPO]
+                break
         except Exception as exc:
             print(f"[rag] chunk error for {path}: {exc}")
 

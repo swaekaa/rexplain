@@ -25,6 +25,9 @@ Logs
 
 import time
 import logging
+import gc
+import psutil
+import os
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -348,4 +351,27 @@ def analyze_repo(request: RepoRequest):
 
     finally:
         delete_repository(clone_path)
+        
+        # Free memory and log usage
+        # Clean up local variables that hold large data
+        try:
+            rag_chunks_len = len(rag_chunks_plain) if 'rag_chunks_plain' in locals() else 0
+            emb_size = rag_embeddings.nbytes / 1024 / 1024 if 'rag_embeddings' in locals() and hasattr(rag_embeddings, 'nbytes') else 0
+            
+            # Explicitly delete large variables
+            if 'rag_embeddings' in locals(): del rag_embeddings
+            if 'rag_chunks_plain' in locals(): del rag_chunks_plain
+            if 'file_contents' in locals(): del file_contents
+            if 'interactive_graph' in locals(): del interactive_graph
+            
+            gc.collect()
+            
+            process = psutil.Process(os.getpid())
+            mem_info = process.memory_info()
+            mem_mb = mem_info.rss / 1024 / 1024
+            
+            log.info(f"[memory] After analysis: RAM={mem_mb:.2f}MB, Chunks={rag_chunks_len}, EmbSize={emb_size:.2f}MB")
+        except Exception as e:
+            log.warning(f"[memory] Logging failed: {e}")
+
         print(f"[analyze] END processing request in {time.perf_counter() - t_start:.2f}s")
