@@ -19,6 +19,27 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+class LoggingRetry(Retry):
+    def increment(self, *args, **kwargs):
+        print("[github] retrying request")
+        return super().increment(*args, **kwargs)
+
+def get_github_session() -> requests.Session:
+    session = requests.Session()
+    retry_strategy = LoggingRetry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+github_session = get_github_session()
 
 # ---------------------------------------------------------------------------
 # GitHub auth token (raises rate limit from 60 → 5000 req/hr)
@@ -73,8 +94,8 @@ IMPORTANT_NAMES = {
 }
 
 # Network timeouts
-TREE_TIMEOUT = 8    # seconds — GitHub Trees API
-FILE_TIMEOUT = 5    # seconds — per raw file fetch
+TREE_TIMEOUT = (10, 30)    # seconds — GitHub Trees API
+FILE_TIMEOUT = (10, 30)    # seconds — per raw file fetch
 MAX_FILE_WORKERS = 10  # parallel HTTP workers for priority files
 
 
@@ -96,11 +117,11 @@ def _fetch_raw_file(owner: str, repo: str, path: str) -> tuple[str, str | None]:
     """
     url = f"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}"
     try:
-        r = requests.get(url, timeout=FILE_TIMEOUT, headers=_auth_headers())
+        r = github_session.get(url, timeout=FILE_TIMEOUT, headers=_auth_headers())
         if r.status_code == 200:
             return path, r.text
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[github] raw file fetch failed for {path}: {e}")
     return path, None
 
 
@@ -117,7 +138,7 @@ def _fetch_file_tree(owner: str, repo: str) -> list[str] | None:
         f"/git/trees/HEAD?recursive=1"
     )
     try:
-        r = requests.get(url, timeout=TREE_TIMEOUT, headers=_auth_headers())
+        r = github_session.get(url, timeout=TREE_TIMEOUT, headers=_auth_headers())
         if r.status_code == 200:
             data = r.json()
             return [
@@ -127,6 +148,8 @@ def _fetch_file_tree(owner: str, repo: str) -> list[str] | None:
             ]
         else:
             print(f"[github] tree API returned {r.status_code}: {r.text[:200]}")
+    except requests.exceptions.Timeout:
+        print(f"[github] fetch timeout")
     except Exception as e:
         print(f"[github] tree API error: {e}")
     return None

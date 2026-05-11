@@ -35,10 +35,78 @@ from app.services.repo_metadata import (
     stream_metadata_answer,
     get_cached_metadata,
 )
+import app.services.cache_db as cache_db
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
+def _try_restore_store(repo_url: str):
+    """
+    Attempt to restore the RAG vector store from the PostgreSQL cache.
+    Called when get_store() returns None (e.g. after a server restart).
+    Returns the restored VectorStore on success, None on failure.
+    """
+    if not cache_db.is_available():
+        return None
+    try:
+        print(f"[rag] store missing for {repo_url} — attempting DB restore")
+        cached = cache_db.get_cached_analysis(repo_url)
+        if cached is None:
+            print(f"[rag] repo not found in DB cache: {repo_url}")
+            return None
+        embeddings = cached.get("embeddings")
+        chunks     = cached.get("chunks")
+        if embeddings is None or not chunks:
+            print(f"[rag] DB cache has no embeddings/chunks for {repo_url}")
+            return None
+        from app.services.retriever import restore_store
+        print(f"[rag] restoring embeddings")
+        store = restore_store(repo_url, embeddings, chunks)
+        print(f"[rag] restore successful")
+        print(f"[rag] restored {store.size} chunks from DB for {repo_url}")
+        return store
+    except Exception as exc:
+        print(f"[rag] DB restore failed: {exc}")
+        return None
+
+def _trigger_lightweight_rebuild(repo_url: str):
+    print(f"[rag] triggering lightweight rebuild for {repo_url}")
+    from app.services.github_fetcher import fetch_repo_fast
+    from app.services.embeddings import build_chunks, get_model
+    from app.services.retriever import build_store, serialize_store
+    import app.services.cache_db as cache_db
+    
+    scan_data, file_contents = fetch_repo_fast(repo_url)
+    if not file_contents:
+        print("[rag] lightweight rebuild failed — could not fetch files")
+        return None
+    
+    extra_context = {}
+    cached = cache_db.get_cached_analysis(repo_url) if cache_db.is_available() else None
+    if cached and cached.get("analysis"):
+        analysis = cached["analysis"]
+        extra_context = {
+            "ai_explanation": analysis.get("ai_explanation", ""),
+            "folder_explanations": analysis.get("folder_explanations", {}),
+            "api_routes": analysis.get("api_routes", []),
+            "important_files": analysis.get("important_files", []),
+        }
+
+    chunks = build_chunks(file_contents, extra_context=extra_context)
+    model = get_model()
+    store = build_store(repo_url, chunks, model)
+    
+    if cached:
+        emb, chk = serialize_store(store)
+        cache_db.upsert_analysis(
+            repo_url=repo_url,
+            commit_sha=cached.get("sha", "unknown"),
+            analysis=cached.get("analysis", {}),
+            embeddings=emb,
+            chunks=chk
+        )
+    
+    return store
 class ChatRequest(BaseModel):
     repo_url: str
     question: str
@@ -61,7 +129,16 @@ def chat(request: ChatRequest):
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
+    print(f"[chat] request — repo={repo_url}")
+
     store = get_store(repo_url)
+    if store is None or store.size == 0:
+        print(f"[rag] in-memory store missing — trying DB restore")
+        store = _try_restore_store(repo_url)
+        
+    if store is None or store.size == 0:
+        store = _trigger_lightweight_rebuild(repo_url)
+
     if store is None or store.size == 0:
         raise HTTPException(
             status_code=404,
@@ -70,6 +147,8 @@ def chat(request: ChatRequest):
                 "Please run an analysis first, then ask questions."
             ),
         )
+
+    print(f"[rag] repo found in store — {store.size} chunks")
 
     if is_metadata_question(question):
         metadata = get_cached_metadata(repo_url)
@@ -103,7 +182,16 @@ def chat_stream(
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
+    print(f"[chat/stream] request — repo={repo_url}")
+
     store = get_store(repo_url)
+    if store is None or store.size == 0:
+        print(f"[rag] in-memory store missing (stream) — trying DB restore")
+        store = _try_restore_store(repo_url)
+        
+    if store is None or store.size == 0:
+        store = _trigger_lightweight_rebuild(repo_url)
+
     if store is None or store.size == 0:
         raise HTTPException(
             status_code=404,
@@ -112,6 +200,8 @@ def chat_stream(
                 "Please run an analysis first, then ask questions."
             ),
         )
+
+    print(f"[rag] repo found in store (stream) — {store.size} chunks")
 
     if is_metadata_question(question):
         metadata = get_cached_metadata(repo_url)

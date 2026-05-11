@@ -160,10 +160,13 @@ def fetch_latest_commit_sha(repo_url: str) -> Optional[str]:
         if github_token:
             headers["Authorization"] = f"Bearer {github_token}"
 
+        from app.services.github_fetcher import github_session
         url = f"https://api.github.com/repos/{owner}/{repo}/commits/HEAD"
-        r = requests.get(url, headers=headers, timeout=6)
+        r = github_session.get(url, headers=headers, timeout=(10, 30))
         if r.status_code == 200:
             return r.json().get("sha")
+    except requests.exceptions.Timeout:
+        log.debug("[github] fetch timeout")
     except Exception as exc:
         log.debug("[cache] SHA fetch error: %s", exc)
     return None
@@ -283,6 +286,10 @@ def upsert_analysis(
             )
             conn.execute(stmt)
             conn.commit()
+            
+        if embeddings is not None:
+            print("[cache] embeddings saved")
+            
         return True
     except Exception as exc:
         log.warning("[cache] upsert error: %s", exc)
