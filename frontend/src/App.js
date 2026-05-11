@@ -181,15 +181,15 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         <div className="w-12 h-[1px] bg-outline mb-12 animate-reveal-up"></div>
 
         <div className="max-w-5xl w-full text-center mb-16 relative z-10">
-          <h1 className="font-headline font-extrabold text-primary mb-8 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up animate-delay-1" style={{ fontSize: "clamp(4rem, 12vw, 9rem)" }}>
+          <h1 className="font-headline font-extrabold text-primary mb-8 leading-[0.95] tracking-tighter liquid-glass-text" style={{ fontSize: "clamp(4rem, 12vw, 9rem)" }}>
             RExplain
           </h1>
-          <p className="font-body text-secondary text-lg md:text-2xl tracking-tight font-light max-w-2xl mx-auto leading-relaxed animate-reveal-up animate-delay-2">
+          <p className="font-body text-secondary text-lg md:text-2xl tracking-tight font-light max-w-2xl mx-auto leading-relaxed animate-reveal-up" style={{ animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository with clarity and intent. A minimalist approach to deep codebase analysis.
           </p>
         </div>
 
-        <div className="w-full max-w-2xl relative group mb-24 animate-reveal-up animate-delay-3 z-10">
+        <div className="w-full max-w-2xl relative group mb-24 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
           <div className="absolute -inset-1 bg-gradient-to-r from-tertiary to-accent-orange rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
           <div className="relative flex items-center bg-surface-container-lowest border border-outline rounded-full p-2 pl-6 shadow-2xl">
             <span className="material-symbols-outlined text-secondary mr-3" style={{ fontSize: 22 }}>search</span>
@@ -219,7 +219,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
 
         {/* Feature Grid */}
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 animate-reveal-up animate-delay-4 px-4">
+        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 animate-reveal-up px-4" style={{ animationDelay: '0.6s' }}>
           <div className="liquid-glass p-8 rounded-2xl flex flex-col justify-between h-64 group hover:bg-surface-container-lowest/50">
             <div className="flex justify-between items-start">
               <div className="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center">
@@ -474,6 +474,16 @@ function ChatSidebar({ repoUrl, ragReady }) {
 
   useEffect(() => () => esRef.current?.close(), []);
 
+  const handleResetChat = () => {
+    setMessages([]);
+    setInput("");
+    setAsking(false);
+    setStreaming(false);
+    if (esRef.current) {
+        esRef.current.close();
+    }
+  };
+
   const ask = async () => {
     const q = input.trim();
     // Strict guard: one active request at a time
@@ -609,14 +619,14 @@ function ChatSidebar({ repoUrl, ragReady }) {
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }} className="bg-white/[0.01]">
       <div className="p-8 pb-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
         <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-accent-purple/20 flex items-center justify-center">
+            <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-white transition-colors flex items-center justify-center p-1 rounded-md hover:bg-white/5">
+                <span className="material-symbols-outlined">refresh</span>
+            </button>
+            <div className="w-8 h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-2">
                 <span className="material-symbols-outlined text-accent-purple !text-lg">auto_awesome</span>
             </div>
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary/40">Assistant Core</span>
         </div>
-        <button className="text-secondary/40 hover:text-white transition-colors">
-            <span className="material-symbols-outlined">refresh</span>
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-hide">
@@ -717,16 +727,27 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
       if (!dragging.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const pct = ((e.clientX - rect.left) / rect.width) * 100;
-      setSplitPct(Math.min(85, Math.max(55, pct)));
+      // Limits: analysis minimum 45%, chatbot minimum 20%
+      setSplitPct(Math.min(80, Math.max(45, pct)));
     };
     const onUp = () => {
-      dragging.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+      if (dragging.current) {
+        dragging.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
@@ -749,9 +770,12 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
         </div>
       </header>
 
-      <div ref={containerRef} className="flex flex-1 overflow-hidden" style={{ marginTop: '64px' }}>
-        {/* Left Side: Analysis Content (60%) */}
-        <main style={{ flex: '0 0 55%', width: '55%', overflowY: 'auto' }} className="bg-transparent scroll-hide border-r border-white/5">
+      <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: '64px' }}>
+        {/* Left Side: Analysis Content */}
+        <main 
+          style={isMobile ? { width: '100%', flex: '1 1 auto', height: '50vh' } : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }} 
+          className="bg-transparent scroll-hide border-b md:border-b-0 md:border-r border-white/5"
+        >
           <div className="w-full px-6 pt-20 pb-24">
             
             {/* Hero Analysis Header */}
@@ -769,7 +793,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </section>
 
             {/* Repo Stats */}
-            <section className="mb-12 animate-reveal-up animate-delay-1">
+            <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
                 <div className="liquid-glass p-8 flex flex-col gap-6 shadow-sm rounded-xl">
                     <div className="space-y-1">
                         <span className="block text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold">Comprehensive Scan</span>
@@ -789,7 +813,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* File Types Graph */}
             {langs.length > 0 && (
-              <section className="mb-12 animate-reveal-up animate-delay-1">
+              <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
                   <SectionHeader label="File Distribution" />
                   <div className="liquid-glass p-6 rounded-xl">
                       <FileTypesGraph langs={langs} />
@@ -798,7 +822,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             )}
 
             {/* Tech Stack */}
-            <section className="mb-16 animate-reveal-up animate-delay-2">
+            <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
                 <SectionHeader label="Ecosystem" />
                 <div className="grid grid-cols-3 gap-4">
                   {stackItems.map(({ label, value, icon }) => (
@@ -814,7 +838,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </section>
 
             {/* System Diagram */}
-            <section className="mb-16 animate-reveal-up animate-delay-3">
+            <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
               {/* Tab header */}
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-4 flex-1">
@@ -870,7 +894,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </section>
 
             {/* AI Explanation */}
-            <section className="mb-16 animate-reveal-up animate-delay-3">
+            <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
               <SectionHeader label="AI Interpretation" />
               <div className="liquid-glass p-8 rounded-xl">
                 <p className="text-sm font-body leading-[1.75] text-white mb-5 font-light">{result.ai_explanation}</p>
@@ -896,7 +920,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* API Routes */}
             {result.api_routes?.length > 0 && (
-              <section className="mb-16 animate-reveal-up animate-delay-3">
+              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label={`API Surface · ${result.api_routes.length} routes`} />
                 <div className="flex flex-col gap-2">
                   {result.api_routes.slice(0, 10).map((route, i) => {
@@ -917,7 +941,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Key Files */}
             {result.important_files?.length > 0 && (
-              <section className="mb-16 animate-reveal-up animate-delay-3">
+              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                   <SectionHeader label="Core Entry Points" />
                   <div className="space-y-3">
                     {result.important_files.slice(0, 6).map((file, i) => {
@@ -946,7 +970,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Commit Activity */}
             {result.metadata?.commits?.length > 0 && (
-              <section className="mb-16 animate-reveal-up animate-delay-3">
+              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label={`Commit Activity · ${result.metadata.total_commits || result.metadata.commits.length} commits`} />
                 <div className="liquid-glass p-6 rounded-xl">
                   <CommitGraph commits={result.metadata.commits} />
@@ -967,7 +991,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Entry Points */}
             {result.entry_points?.length > 0 && (
-              <section className="mb-16 animate-reveal-up animate-delay-3">
+              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label="Entry Points" />
                 <div className="flex flex-wrap gap-2">
                   {result.entry_points.map(ep => (
@@ -983,7 +1007,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* README */}
             {result.readme && (
-              <section className="mb-16 animate-reveal-up animate-delay-3">
+              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label="README · Documentation" />
                 <div className="liquid-glass p-8 rounded-xl">
                   <div className="readme-prose">
@@ -1002,15 +1026,17 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
         </main>
 
         {/* DIVIDER */}
-        <div
-          onMouseDown={onDividerDown}
-          className="w-1.5 flex-shrink-0 cursor-col-resize flex items-center justify-center z-10 transition-colors hover:bg-white/5"
-        >
-          <div className="w-0.5 h-10 rounded-full bg-white/10 pointer-events-none" />
-        </div>
+        {!isMobile && (
+            <div
+            onMouseDown={onDividerDown}
+            className="w-1.5 flex-shrink-0 cursor-col-resize flex items-center justify-center z-10 transition-colors hover:bg-white/5"
+            >
+            <div className="w-0.5 h-10 rounded-full bg-white/10 pointer-events-none" />
+            </div>
+        )}
 
-        {/* Right Side: AI Chat (40%) */}
-        <aside style={{ flex: '0 0 45%', width: '45%', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {/* Right Side: AI Chat */}
+        <aside style={isMobile ? { width: '100%', flex: '1 1 auto', height: '50vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : { flex: `0 0 ${100 - splitPct}%`, width: `${100 - splitPct}%`, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
         </aside>
       </div>
