@@ -1,196 +1,161 @@
-# RExplain
+# RExplain 🔍
 
-> Unfold the complexity of any GitHub repository with clarity and intent.
+> **AI-Powered GitHub Repository Analysis Platform**
 
-RExplain is a full-stack GitHub repository analysis platform. Paste any public repo URL and get an instant breakdown of its architecture, tech stack, API surface, key files, and README — rendered in a minimal glassmorphism interface.
+**[🚀 Live Demo → rexplain.vercel.app](https://rexplain.vercel.app)**
+
+RExplain automatically explains any GitHub repository using static analysis, architecture extraction, and Retrieval-Augmented Generation (RAG) — making it dramatically faster to understand large codebases without reading every file manually.
+
+Simply paste a GitHub URL and get an instant, AI-powered breakdown of the codebase.
 
 ---
 
-## Live Demo
+## ✨ What It Does
 
-| Service | URL |
+| Feature | Description |
 |---|---|
-| Frontend | http://localhost:3000 |
-| Backend API | http://127.0.0.1:8000 |
-| API Docs | http://127.0.0.1:8000/docs |
+| 🧠 **Framework Detection** | Detects FastAPI, Flask, Django, React, Vue, Angular, SQLAlchemy, PostgreSQL, MongoDB, and more |
+| 🏗️ **Architecture Diagrams** | Generates dependency graphs and visual architecture diagrams |
+| 📄 **README Extraction** | Fetches and renders the repository README with syntax-highlighted code blocks |
+| 📊 **Commit Analytics** | Visualizes commit history, frequency, and contribution graphs |
+| 🤖 **AI Chatbot (RAG)** | Ask natural-language questions about any repository |
+| ⚡ **Instant Reloads** | PostgreSQL-backed cache skips re-analysis on unchanged repositories |
 
 ---
 
-## Features
-
-### Phase 10 — Intelligent Repository Understanding
-- **README Detection** — extracts and renders README in clean markdown
-- **API Route Extraction** — regex-based detection for FastAPI, Flask, Express.js, Django
-- **Important File Detection** — identifies Dockerfiles, CI workflows, lock files, IaC configs
-- **Folder Purpose Explanation** — maps 80+ folder names to human-readable descriptions
-- **Clustered Architecture Diagram** — Graphviz subgraph clusters (Frontend / Backend / Database / Infra) populated from real folder names
-- **Fast-fail for Private Repos** — `git ls-remote` pre-check returns HTTP 403 in ~2s instead of a 30s timeout
-- **Minimalist Glass UI** — full redesign matching Stitch design system (Manrope + Inter, glassmorphism, Tailwind)
-
-### Core Features (Phases 1–9)
-- GitHub Trees API fast path (~2–5s for public repos, no clone needed)
-- Shallow clone fallback for edge cases
-- Framework detection: React, Next.js, Vue, Angular, FastAPI, Flask, Django, Express, SQLAlchemy, Prisma, MongoDB, and more
-- AI-generated repository explanation
-- Graphviz architecture diagram (base64 PNG)
-- Language breakdown + file stats
-
----
-
-## Tech Stack
+## 🧱 Tech Stack
 
 ### Backend
-| Package | Version | Purpose |
-|---|---|---|
-| FastAPI | 0.135.3 | API framework |
-| Uvicorn | 0.42.0 | ASGI server |
-| Graphviz | 0.21 | Architecture diagram generation |
-| Requests | 2.33.1 | GitHub Trees API + raw file fetches |
-| GitPython | 3.1.46 | Clone fallback |
-| Pydantic | 2.12.5 | Request/response validation |
+- **FastAPI** — REST API framework
+- **PostgreSQL + SQLAlchemy** — persistent storage and ORM
+- **SentenceTransformers** (`all-MiniLM-L6-v2`) — embedding generation
+- **Groq API** — LLM inference
+- **Graphviz** — architecture diagram rendering
+- **GitHub REST API** — repository metadata and tree fetching
+- **Docker** — containerized deployment
 
 ### Frontend
-| Package | Purpose |
+- **React + Vite** — fast frontend build
+- **TailwindCSS** — utility-first styling
+- **Framer Motion** — animations
+- **React Markdown** — README rendering
+- **Axios** — HTTP client
+
+---
+
+## 🚀 How It Works
+
+```
+GitHub URL
+   ↓
+Repository metadata extraction
+   ↓
+Selective file fetching (GitHub Tree API)
+   ↓
+Framework detection
+   ↓
+Architecture generation
+   ↓
+README + intelligence extraction
+   ↓
+RAG indexing
+   ↓
+Interactive AI chat
+```
+
+---
+
+## 🔑 Key Engineering Decisions
+
+### GitHub Tree API + Selective Fetching
+Instead of cloning entire repositories (which causes bottlenecks for large repos, binaries, `node_modules`, and datasets), RExplain:
+
+- Fetches the repository tree structure via the GitHub API
+- Identifies and selectively retrieves only important files — `README`, `package.json`, `requirements.txt`, route files, configs, and manifests
+- Falls back to a shallow clone (`depth=1`) only if the API is unavailable
+
+**Result:** Fast analysis regardless of repository size, with no large clone delays.
+
+### Persistent Embedding Cache
+Embeddings and chunk metadata are stored in PostgreSQL so repeated loads are instant:
+
+1. Fetch the latest commit SHA and compare with the cached SHA
+2. If **unchanged** → restore embeddings and chunks, skip full analysis
+3. If **changed** → run the full pipeline and persist the new state
+
+### Startup Model Loading
+The embedding model loads once at backend startup rather than per-request, eliminating timeout issues during AI chat.
+
+---
+
+## 🤖 AI Chatbot (RAG)
+
+Users can ask natural-language questions about any analyzed repository:
+
+- *"What frameworks are used?"*
+- *"Where is the database set up?"*
+- *"How does authentication work?"*
+- *"What are the main API routes?"*
+
+**How it works:**
+1. Repository files are chunked and embedded using `all-MiniLM-L6-v2`
+2. On each question, relevant chunks are retrieved via semantic similarity search
+3. Retrieved context is passed to an LLM (Groq) for a grounded, repository-specific answer
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────┐
+│        React Frontend           │  ← Vercel
+│  (Analysis Panel + AI Chat)     │
+└────────────────┬────────────────┘
+                 │ HTTPS
+┌────────────────▼────────────────┐
+│        FastAPI Backend          │  ← Render (Docker)
+│  Analysis · RAG · Cache Layer   │
+└──────┬──────────────────┬───────┘
+       │                  │
+┌──────▼──────┐   ┌───────▼──────┐
+│  PostgreSQL  │   │  GitHub API  │
+│  (Render)    │   │  Groq API    │
+└─────────────┘   └──────────────┘
+```
+
+---
+
+## ☁️ Deployment
+
+| Layer | Platform |
 |---|---|
-| React 18 | UI framework |
-| Axios | API calls |
-| react-markdown | README rendering |
-| Tailwind CSS (CDN) | Utility-first styling |
-| Manrope + Inter | Typography |
-| Material Symbols Outlined | Icons |
+| Frontend | [Vercel](https://vercel.com) |
+| Backend | [Render](https://render.com) (Docker) |
+| Database | Render PostgreSQL |
+
+Docker is used for the backend because Graphviz requires system-level installation, which Render's standard Python runtime does not support natively.
 
 ---
 
-## Project Structure
+## ⚠️ Known Limitations
 
-```
-rexplain/
-├── backend/
-│   ├── app/
-│   │   ├── routes/
-│   │   │   └── analyze.py          # Main analysis pipeline
-│   │   ├── services/
-│   │   │   ├── github_fetcher.py   # GitHub Trees API fast path
-│   │   │   ├── repo_cloner.py      # Clone fallback + private repo detection
-│   │   │   ├── repo_scanner.py     # Local file tree scanner
-│   │   │   ├── dependency_parser.py # Framework detection
-│   │   │   ├── architecture_builder.py # Architecture graph builder
-│   │   │   ├── diagram_generator.py    # Graphviz clustered diagram
-│   │   │   ├── ai_explainer.py         # AI explanation engine
-│   │   │   └── repo_intelligence.py    # Phase 10: README, routes, files, folders
-│   │   └── main.py
-│   ├── requirements.txt
-│   └── repos/              # Temp clone storage (git-ignored)
-└── frontend/
-    ├── public/
-│   │   └── index.html      # Tailwind CDN + fonts + CSS tokens
-    └── src/
-        ├── App.js          # Landing / Loading / Analysis views
-        ├── index.css       # Minimal reset + readme-prose styles
-        └── App.css         # (unused)
-```
+- **GitHub API Timeouts** — Very large repositories may be slower to analyze; retry logic and graceful fallbacks are in place
+- **Cold Starts** — Render's free tier sleeps inactive services; the first request after inactivity may take a few seconds longer
 
 ---
 
-## Setup & Running
+## 🗺️ Roadmap
 
-### Backend
-
-```bash
-cd backend
-python -m venv venv
-venv/Scripts/python -m pip install -r requirements.txt
-venv/Scripts/python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-Open **http://localhost:3000** — paste any public GitHub URL and click **Analyze**.
+- [ ] **Interactive Diagrams** — Replace Graphviz with React Flow for clickable, interactive dependency graphs
+- [ ] **Advanced RAG** — Hybrid retrieval, AST-aware chunking, reranking, and source citations
+- [ ] **Streaming Responses** — Real-time streaming AI chat
+- [ ] **Multi-Repository Analysis** — Analyze microservice ecosystems and org-wide dependency relationships
+- [ ] **Background Workers** — Celery + Redis for async job pipelines
 
 ---
 
-## API
 
-### `POST /analyze/`
 
-**Request:**
-```json
-{ "repo_url": "https://github.com/owner/repo" }
-```
-
-**Response:**
-```json
-{
-  "repo_url": "...",
-  "scan_results": {
-    "total_files": 95,
-    "languages": { ".py": 42, ".js": 18 },
-    "key_files": ["requirements.txt", "package.json"],
-    "file_paths": ["src/App.js", "backend/main.py"]
-  },
-  "framework_detection": {
-    "backend_framework": "FastAPI",
-    "frontend_framework": "React",
-    "database": null
-  },
-  "architecture": {
-    "nodes": ["React", "FastAPI"],
-    "edges": [["React", "FastAPI"]],
-    "fe_fw_name": "React",
-    "be_fw_name": "FastAPI",
-    "db_fw_name": null
-  },
-  "diagram": "data:image/png;base64,...",
-  "ai_explanation": "...",
-  "readme": "# Project Title\n...",
-  "api_routes": ["GET /users", "POST /login"],
-  "important_files": ["Dockerfile", ".github/workflows/ci.yml"],
-  "folder_explanations": {
-    "routes": "API Endpoints — Defines HTTP route handlers.",
-    "services": "Business Logic — Core application logic."
-  }
-}
-```
-
-**Error Responses:**
-| Status | Meaning |
-|---|---|
-| 403 | Repository is private or does not exist |
-| 408 | Clone timed out (repo too large) |
-| 422 | Git clone failed |
-
----
-
-## Phases
-
-| Phase | Description | Status |
-|---|---|---|
-| 1 | Backend foundation (FastAPI boilerplate) | ✅ |
-| 2 | Repository cloning (GitPython + subprocess) | ✅ |
-| 3 | Repository scanner | ✅ |
-| 4 | Framework detection | ✅ |
-| 5 | Architecture builder | ✅ |
-| 6 | Graphviz diagram generation | ✅ |
-| 7 | AI explanation engine | ✅ |
-| 8 | Frontend UI (React + Axios) | ✅ |
-| 9 | Production cleanup + clone optimization (GitHub Trees API fast path) | ✅ |
-| 10 | Intelligent repo understanding + Stitch UI redesign | ✅ |
-
----
-
-## Notes
-
-- Only **public** repositories are supported. Private repos return HTTP 403 immediately.
-- The GitHub Trees API fast path avoids cloning entirely for public repos (~2–5s).
-- Large repos (>1000 files) may be slower on the clone fallback path.
-- The Graphviz diagram requires `graphviz` system binaries to be installed and on `PATH`.
-
----
-
-*Built for clarity.*
+<p align="center">
+  <a href="https://rexplain.vercel.app">🚀 Try it live at rexplain.vercel.app</a>
+</p>
