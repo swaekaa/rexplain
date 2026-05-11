@@ -6,10 +6,31 @@ import InteractiveDiagram from "./InteractiveDiagram";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
-// NOTE: This project uses Create React App (not Vite).
-// Use REACT_APP_API_URL in frontend/.env (CRA convention).
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+const API_URL = import.meta.env ? import.meta.env.VITE_API_URL : process.env.REACT_APP_API_URL;
 console.log("[RExplain] API_URL resolved to:", API_URL);
+
+// ─── Axios Interceptor for Render Cold Starts ────────────────────────────────
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const { config, response } = error;
+    if (!config || !config.retry) {
+      config.retry = 0;
+    }
+    
+    // Render free tier sleeping returns 502 Bad Gateway or timeouts
+    const isRenderColdStart = !response || response.status === 502 || response.status === 503 || error.code === 'ECONNABORTED';
+    
+    if (isRenderColdStart && config.retry < 3) {
+      config.retry += 1;
+      console.log(`[RExplain] Backend may be sleeping. Retrying request (${config.retry}/3) in 5s...`);
+      window.dispatchEvent(new CustomEvent("backend-waking-up"));
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      return axios(config);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
 function Footer() {
@@ -286,6 +307,14 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 
 // ─── Loading State ──────────────────────────────────────────────────────────
 function LoadingState({ repoUrl, theme }) {
+  const [waking, setWaking] = useState(false);
+  
+  useEffect(() => {
+    const handleWaking = () => setWaking(true);
+    window.addEventListener("backend-waking-up", handleWaking);
+    return () => window.removeEventListener("backend-waking-up", handleWaking);
+  }, []);
+
   const repoName = repoUrl ? repoUrl.split("/").slice(-2).join("/") : "repository";
   return (
     <div className="bg-background text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col">
@@ -316,10 +345,10 @@ function LoadingState({ repoUrl, theme }) {
                     <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white animate-breathing">
-                  Analyzing<br/>Repository
+                  {waking ? "Waking Backend" : "Analyzing"}<br/>Repository
                 </h1>
                 <p className="text-secondary font-body text-sm md:text-base leading-relaxed font-light max-w-sm mx-auto opacity-80 px-4">
-                  Mapping structural architecture and functional logic pathways.
+                  {waking ? "Render free tier takes ~50s to wake up. Retrying..." : "Mapping structural architecture and functional logic pathways."}
                 </p>
               </div>
             </div>

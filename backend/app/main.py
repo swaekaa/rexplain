@@ -14,7 +14,7 @@ except ImportError:
 import threading
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.routes.analyze import router as analyze_router
 from app.routes.chat import router as chat_router
@@ -46,10 +46,21 @@ async def lifespan(app: FastAPI):
     yield  # application runs here
 app = FastAPI(title="RExplain API", lifespan=lifespan)
 
+# ── Logging Middleware for Debugging ──────────────────────────────────────────
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    origin = request.headers.get("origin")
+    print(f"[debug] incoming request from origin: {origin} to {request.url.path}")
+    response = await call_next(request)
+    return response
+
 # ── CORS must be added before routers so it wraps all routes ────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all for local dev
+    allow_origins=[
+        "https://YOUR_VERCEL_DOMAIN.vercel.app",  # Add your specific Vercel URL here
+        "*"  # temporarily allow all for debugging cross-device setup
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
