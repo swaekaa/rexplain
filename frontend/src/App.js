@@ -6,7 +6,10 @@ import InteractiveDiagram from "./InteractiveDiagram";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
-const API_URL = import.meta.env?.VITE_API_URL || process.env.REACT_APP_API_URL || "https://rexplain.onrender.com";
+// NOTE: This project uses Create React App (not Vite).
+// Use REACT_APP_API_URL in frontend/.env (CRA convention).
+const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+console.log("[RExplain] API_URL resolved to:", API_URL);
 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
 function Footer() {
@@ -49,26 +52,19 @@ function FilePreviewModal({ repoUrl, filePath, onClose }) {
 
   useEffect(() => {
     async function fetchFile() {
-      let attempts = 0;
-      while (attempts < 2) {
-        try {
-          console.log("API URL:", API_URL);
-          const res = await axios.post(`${API_URL}/files/content`, { repo_url: repoUrl, file_path: filePath });
-          setContent(res.data.content);
-          setLoading(false);
-          return;
-        } catch (err) {
-          console.error(err);
-          attempts++;
-          if (attempts < 2 && (!err.response || err.message === "Network Error" || err.code === "ERR_NETWORK")) {
-            console.log("Network error, retrying for Render cold start in 4 seconds...");
-            await new Promise(r => setTimeout(r, 4000));
-          } else {
-            setError(err?.response?.data?.detail || "Backend not reachable. Try again.");
-            setLoading(false);
-            return;
-          }
+      try {
+        console.log("API URL:", API_URL);
+        const res = await axios.post(`${API_URL}/files/content`, { repo_url: repoUrl, file_path: filePath });
+        console.log("Response:", res.data);
+        setContent(res.data.content);
+        setLoading(false);
+      } catch (err) {
+        console.error("API Error:", err);
+        if (err.response) {
+          console.error("Backend response:", err.response.data);
         }
+        setError(err.response?.data?.detail || "Backend not reachable. Try again.");
+        setLoading(false);
       }
     }
     fetchFile();
@@ -157,7 +153,7 @@ function FileTypesGraph({ langs }) {
 }
 
 // ─── Landing Page ──────────────────────────────────────────────────────────
-function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme }) {
+function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus }) {
   const handleKey = (e) => { if (e.key === "Enter") onAnalyze(); };
   return (
     <div className="bg-background text-on-background font-body selection:bg-tertiary selection:text-white antialiased min-h-screen">
@@ -169,6 +165,11 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Explore</a>
           </nav>
+        </div>
+        <div className="flex items-center">
+          <span className={`text-xs font-bold px-3 py-1 rounded-full ${healthStatus === 'Backend connected' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+            {healthStatus}
+          </span>
         </div>
       </header>
 
@@ -571,10 +572,14 @@ function ChatSidebar({ repoUrl, ragReady }) {
           try {
             console.log("API URL:", API_URL);
             const res = await axios.post(`${API_URL}/chat/`, { repo_url: repoUrl, question: q });
+            console.log("Response:", res.data);
             resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
           } catch (err) {
-            console.error(err);
-            resolveError(err?.response?.data?.detail || "Backend not reachable. Try again.");
+            console.error("API Error:", err);
+            if (err.response) {
+              console.error("Backend response:", err.response.data);
+            }
+            resolveError(err.response?.data?.detail || "Backend not reachable. Try again.");
           }
         }
       };
@@ -585,10 +590,14 @@ function ChatSidebar({ repoUrl, ragReady }) {
     try {
       console.log("API URL:", API_URL);
       const res = await axios.post(`${API_URL}/chat/`, { repo_url: repoUrl, question: q });
+      console.log("Response:", res.data);
       resolve(res.data.answer, res.data.sources || [], res.data.confidence || "medium");
     } catch (err) {
-      console.error(err);
-      resolveError(err?.response?.data?.detail || "Backend not reachable. Try again.");
+      console.error("API Error:", err);
+      if (err.response) {
+        console.error("Backend response:", err.response.data);
+      }
+      resolveError(err.response?.data?.detail || "Backend not reachable. Try again.");
     }
   };
 
@@ -656,17 +665,17 @@ function ChatSidebar({ repoUrl, ragReady }) {
         <div className="relative group">
             <input 
               className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-secondary/30 text-white font-body" 
-              placeholder={ragReady ? "Ask about the repository architecture..." : "Analyze repo to enable chat..."}
+              placeholder="Ask about the repository architecture..."
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
-              disabled={asking || !ragReady}
+              disabled={asking}
             />
             <button 
               className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50 disabled:bg-white/50"
               onClick={ask}
-              disabled={asking || !input.trim() || !ragReady}
+              disabled={asking || !input.trim()}
             >
                 <span className="material-symbols-outlined !text-sm">arrow_upward</span>
             </button>
@@ -1002,7 +1011,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
         {/* Right Side: AI Chat (40%) */}
         <aside style={{ flex: '0 0 45%', width: '45%', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <ChatSidebar repoUrl={repoUrl} ragReady={result.rag_ready} />
+          <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
         </aside>
       </div>
     </div>
@@ -1021,6 +1030,27 @@ function SectionHeader({ label }) {
 
 // ─── App Root ───────────────────────────────────────────────────────────────
 export default function App() {
+  const [healthStatus, setHealthStatus] = useState("Checking backend...");
+
+  useEffect(() => {
+    async function checkHealth() {
+      try {
+        console.log("API URL:", API_URL);
+        const res = await axios.get(`${API_URL}/health`);
+        console.log("Response:", res.data);
+        if (res.data.status === "ok") {
+          setHealthStatus("Backend connected");
+        } else {
+          setHealthStatus("Backend offline");
+        }
+      } catch (err) {
+        console.error("API Error:", err);
+        setHealthStatus("Backend offline");
+      }
+    }
+    checkHealth();
+  }, []);
+
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
   useEffect(() => {
     localStorage.setItem("theme", theme);
@@ -1036,27 +1066,22 @@ export default function App() {
     if (!repoUrl.trim()) return;
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
-    let attempts = 0;
-    while (attempts < 3) {
-      try {
-        console.log("API URL:", API_URL);
-        const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
-          timeout: 180000, // 3 minutes — analysis can take time
-        });
-        setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
-        break; // success
-      } catch (err) {
-        console.error(err);
-        attempts++;
-        const isNetworkErr = !err.response || err.message === "Network Error" || err.code === "ERR_NETWORK" || err.code === "ECONNABORTED";
-        if (attempts < 3 && isNetworkErr) {
-          console.log(`Network error (attempt ${attempts}/3), retrying in 8s for Render cold start...`);
-          await new Promise(r => setTimeout(r, 8000));
-        } else {
-          setError(err?.response?.data?.detail || "Backend not reachable. Try again.");
-          break; // final error
-        }
+    try {
+      console.log("API URL:", API_URL);
+      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
+        timeout: 60000,
+      });
+      console.log("Response:", res.data);
+      setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
+    } catch (err) {
+      console.error("API Error:", err);
+      if (err.response) {
+        console.error("Backend response:", err.response.data);
       }
+      setError(
+        err.response?.data?.detail ||
+        "Backend not reachable. Try again."
+      );
     }
     setLoading(false);
   };
@@ -1065,5 +1090,5 @@ export default function App() {
 
   if (loading) return <LoadingState repoUrl={repoUrl} />;
   if (result) return <AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} />;
-  return <LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} />;
+  return <LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} />;
 }

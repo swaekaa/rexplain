@@ -46,17 +46,18 @@ async def lifespan(app: FastAPI):
     yield  # application runs here
 app = FastAPI(title="RExplain API", lifespan=lifespan)
 
-app.include_router(analyze_router)
-app.include_router(chat_router)
-app.include_router(files_router)
-
+# ── CORS must be added before routers so it wraps all routes ────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allow all for now
+    allow_origins=["*"],  # allow all for local dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(analyze_router)
+app.include_router(chat_router)
+app.include_router(files_router)
 
 
 @app.get("/")
@@ -66,7 +67,4 @@ def root():
 
 @app.get("/health")
 def health():
-    """Lightweight health check Render pings — always responds fast."""
-    from app.services.embeddings import _model
-    model_status = "ready" if (_model and _model != "FAILED") else "loading"
-    return JSONResponse({"status": "ok", "model": model_status})
+    return {"status": "ok"}

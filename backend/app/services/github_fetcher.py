@@ -21,6 +21,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
 # ---------------------------------------------------------------------------
+# GitHub auth token (raises rate limit from 60 → 5000 req/hr)
+# ---------------------------------------------------------------------------
+
+def _auth_headers() -> dict:
+    token = os.environ.get("GITHUB_TOKEN", "")
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+# ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
@@ -85,7 +96,7 @@ def _fetch_raw_file(owner: str, repo: str, path: str) -> tuple[str, str | None]:
     """
     url = f"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}"
     try:
-        r = requests.get(url, timeout=FILE_TIMEOUT)
+        r = requests.get(url, timeout=FILE_TIMEOUT, headers=_auth_headers())
         if r.status_code == 200:
             return path, r.text
     except Exception:
@@ -105,9 +116,8 @@ def _fetch_file_tree(owner: str, repo: str) -> list[str] | None:
         f"https://api.github.com/repos/{owner}/{repo}"
         f"/git/trees/HEAD?recursive=1"
     )
-    headers = {"Accept": "application/vnd.github.v3+json"}
     try:
-        r = requests.get(url, timeout=TREE_TIMEOUT, headers=headers)
+        r = requests.get(url, timeout=TREE_TIMEOUT, headers=_auth_headers())
         if r.status_code == 200:
             data = r.json()
             return [
@@ -115,8 +125,10 @@ def _fetch_file_tree(owner: str, repo: str) -> list[str] | None:
                 for item in data.get("tree", [])
                 if item["type"] == "blob"
             ]
-    except Exception:
-        pass
+        else:
+            print(f"[github] tree API returned {r.status_code}: {r.text[:200]}")
+    except Exception as e:
+        print(f"[github] tree API error: {e}")
     return None
 
 
