@@ -156,54 +156,56 @@ function FileTypesGraph({ langs }) {
 function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus }) {
   const handleKey = (e) => { if (e.key === "Enter") onAnalyze(); };
   return (
-    <div className="bg-background text-on-background font-body selection:bg-tertiary selection:text-white antialiased min-h-screen">
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-6 bg-transparent">
-        <div className="flex items-center gap-8">
+    <div className="bg-background text-on-background font-body selection:bg-tertiary selection:text-white antialiased min-h-[100dvh]">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-4 md:py-6 bg-transparent">
+        <div className="flex items-center gap-4 md:gap-8">
           <div className="flex items-center">
-            <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Explore</a>
           </nav>
         </div>
         <div className="flex items-center">
-          <span className={`text-xs font-bold px-3 py-1 rounded-full ${healthStatus === 'Backend connected' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+          <span className={`text-[10px] md:text-xs font-bold px-2 md:px-3 py-1 rounded-full ${healthStatus === 'Backend connected' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
             {healthStatus}
           </span>
         </div>
       </header>
 
-      <main className="min-h-screen pt-40 pb-24 flex flex-col items-center justify-center px-6 relative overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.08)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(249,115,22,0.05)_0%,transparent_50%)]">
+      <main className="min-h-[100dvh] pt-32 md:pt-40 pb-24 flex flex-col items-center justify-center px-4 md:px-6 relative overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.08)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(249,115,22,0.05)_0%,transparent_50%)]">
         {/* Abstract glowing background elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-tertiary/10 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-orange/5 rounded-full blur-[150px] pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 md:w-96 h-64 md:h-96 bg-tertiary/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-accent-orange/5 rounded-full blur-[100px] md:blur-[150px] pointer-events-none"></div>
 
-        <div className="w-12 h-[1px] bg-outline mb-12 animate-reveal-up"></div>
+        <div className="w-12 h-[1px] bg-outline mb-8 md:mb-12 animate-reveal-up"></div>
 
-        <div className="max-w-5xl w-full text-center mb-16 relative z-10">
-          <h1 className="font-headline font-extrabold text-primary mb-8 leading-[0.95] tracking-tighter liquid-glass-text" style={{ fontSize: "clamp(4rem, 12vw, 9rem)" }}>
+        <div className="max-w-5xl w-full text-center mb-12 md:mb-16 relative z-10">
+          <h1 className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[0.95] tracking-tighter liquid-glass-text" style={{ fontSize: "clamp(3.5rem, 12vw, 9rem)" }}>
             RExplain
           </h1>
-          <p className="font-body text-secondary text-lg md:text-2xl tracking-tight font-light max-w-2xl mx-auto leading-relaxed animate-reveal-up" style={{ animationDelay: '0.2s' }}>
+          <p className="font-body text-secondary text-base md:text-2xl tracking-tight font-light max-w-2xl mx-auto leading-relaxed animate-reveal-up px-4" style={{ animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository with clarity and intent. A minimalist approach to deep codebase analysis.
           </p>
         </div>
 
-        <div className="w-full max-w-2xl relative group mb-24 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
+        <div className="w-full max-w-2xl relative group mb-16 md:mb-24 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
           <div className="absolute -inset-1 bg-gradient-to-r from-tertiary to-accent-orange rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-          <div className="relative flex items-center bg-surface-container-lowest border border-outline rounded-full p-2 pl-6 shadow-2xl">
-            <span className="material-symbols-outlined text-secondary mr-3" style={{ fontSize: 22 }}>search</span>
-            <input 
-              className="w-full bg-transparent border-none text-on-background placeholder:text-secondary focus:outline-none focus:ring-0 font-body text-lg py-3" 
-              placeholder="paste-github-repo-url-here" 
-              type="text"
-              value={repoUrl}
-              onChange={e => setRepoUrl(e.target.value)}
-              onKeyDown={handleKey}
-              disabled={loading}
-            />
+          <div className="relative flex flex-col md:flex-row items-center bg-surface-container-lowest border border-outline rounded-3xl md:rounded-full p-2 md:pl-6 shadow-2xl gap-2 md:gap-0">
+            <div className="flex w-full items-center pl-4 md:pl-0">
+                <span className="material-symbols-outlined text-secondary mr-3" style={{ fontSize: 22 }}>search</span>
+                <input 
+                className="w-full bg-transparent border-none text-on-background placeholder:text-secondary focus:outline-none focus:ring-0 font-body text-base md:text-lg py-3" 
+                placeholder="paste-github-repo-url-here" 
+                type="text"
+                value={repoUrl}
+                onChange={e => setRepoUrl(e.target.value)}
+                onKeyDown={handleKey}
+                disabled={loading}
+                />
+            </div>
             <button 
-              className="ml-4 bg-on-background text-background px-8 py-3 rounded-full font-headline font-bold hover:scale-105 transition-transform duration-300 flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+              className="w-full md:w-auto md:ml-4 bg-on-background text-background px-8 py-3 rounded-2xl md:rounded-full font-headline font-bold hover:scale-105 transition-transform duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
               onClick={onAnalyze} 
               disabled={loading || !repoUrl.trim()}
             >
@@ -220,7 +222,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 
         {/* Feature Grid */}
         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 animate-reveal-up px-4" style={{ animationDelay: '0.6s' }}>
-          <div className="liquid-glass p-8 rounded-2xl flex flex-col justify-between h-64 group hover:bg-surface-container-lowest/50">
+          <div className="liquid-glass p-6 md:p-8 rounded-2xl flex flex-col justify-between h-auto md:h-64 group hover:bg-surface-container-lowest/50 gap-4 md:gap-0">
             <div className="flex justify-between items-start">
               <div className="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-tertiary">hub</span>
@@ -228,12 +230,12 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <span className="text-[10px] uppercase tracking-widest text-secondary font-bold group-hover:text-tertiary transition-colors">01</span>
             </div>
             <div>
-              <h3 className="font-headline text-2xl font-bold text-primary mb-3">Structural Mapping</h3>
+              <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-2 md:mb-3">Structural Mapping</h3>
               <p className="font-body text-sm text-secondary leading-relaxed font-light">Visualizes dependencies and component relationships instantly, skipping hours of manual auditing.</p>
             </div>
           </div>
 
-          <div className="liquid-glass p-8 rounded-2xl flex flex-col justify-between h-64 group hover:bg-surface-container-lowest/50">
+          <div className="liquid-glass p-6 md:p-8 rounded-2xl flex flex-col justify-between h-auto md:h-64 group hover:bg-surface-container-lowest/50 gap-4 md:gap-0">
             <div className="flex justify-between items-start">
               <div className="w-10 h-10 rounded-full bg-accent-orange/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-accent-orange">auto_awesome</span>
@@ -241,12 +243,12 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <span className="text-[10px] uppercase tracking-widest text-secondary font-bold group-hover:text-accent-orange transition-colors">02</span>
             </div>
             <div>
-              <h3 className="font-headline text-2xl font-bold text-primary mb-3">Semantic Analysis</h3>
+              <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-2 md:mb-3">Semantic Analysis</h3>
               <p className="font-body text-sm text-secondary leading-relaxed font-light">Understands the 'why' behind the codebase, identifying core logic patterns across multiple languages.</p>
             </div>
           </div>
 
-          <div className="liquid-glass p-8 rounded-2xl flex flex-col justify-between h-64 group hover:bg-surface-container-lowest/50">
+          <div className="liquid-glass p-6 md:p-8 rounded-2xl flex flex-col justify-between h-auto md:h-64 group hover:bg-surface-container-lowest/50 gap-4 md:gap-0">
             <div className="flex justify-between items-start">
               <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary">terminal</span>
@@ -254,7 +256,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <span className="text-[10px] uppercase tracking-widest text-secondary font-bold group-hover:text-primary transition-colors">03</span>
             </div>
             <div>
-              <h3 className="font-headline text-2xl font-bold text-primary mb-3">Zero Config</h3>
+              <h3 className="font-headline text-xl md:text-2xl font-bold text-primary mb-2 md:mb-3">Zero Config</h3>
               <p className="font-body text-sm text-secondary leading-relaxed font-light">Paste a URL and explore. No installation, no complex setup required. Just immediate architectural insight.</p>
             </div>
           </div>
@@ -286,11 +288,11 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 function LoadingState({ repoUrl, theme }) {
   const repoName = repoUrl ? repoUrl.split("/").slice(-2).join("/") : "repository";
   return (
-    <div className="bg-background text-on-background font-body antialiased h-screen overflow-hidden flex flex-col">
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-transparent backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center gap-8">
+    <div className="bg-background text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-4 md:gap-8">
             <div className="flex items-center">
-                <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+                <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
             </div>
             <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
                 <a className="text-white border-b-2 border-white pb-1" href="#">Analysis</a>
@@ -308,15 +310,15 @@ function LoadingState({ repoUrl, theme }) {
                 <div className="relative w-2 h-2 bg-accent-purple rounded-full"></div>
               </div>
               
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-3 justify-center">
-                    <div className="w-8 h-[1px] bg-accent-orange animate-pulse"></div>
-                    <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
+              <div className="space-y-4 md:space-y-6">
+                <div className="inline-flex items-center gap-2 md:gap-3 justify-center">
+                    <div className="w-6 md:w-8 h-[1px] bg-accent-orange animate-pulse"></div>
+                    <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
                 </div>
-                <h1 className="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white animate-breathing">
+                <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-white animate-breathing">
                   Analyzing<br/>Repository
                 </h1>
-                <p className="text-secondary font-body text-base leading-relaxed font-light max-w-sm mx-auto opacity-80">
+                <p className="text-secondary font-body text-sm md:text-base leading-relaxed font-light max-w-sm mx-auto opacity-80 px-4">
                   Mapping structural architecture and functional logic pathways.
                 </p>
               </div>
@@ -617,19 +619,19 @@ function ChatSidebar({ repoUrl, ragReady }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%" }} className="bg-white/[0.01]">
-      <div className="p-8 pb-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
-        <div className="flex items-center gap-3">
-            <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-white transition-colors flex items-center justify-center p-1 rounded-md hover:bg-white/5">
+      <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-white/5 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+            <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-white transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-white/5 active:scale-95">
                 <span className="material-symbols-outlined">refresh</span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-2">
-                <span className="material-symbols-outlined text-accent-purple !text-lg">auto_awesome</span>
+            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-1 md:ml-2">
+                <span className="material-symbols-outlined text-accent-purple !text-base md:!text-lg">auto_awesome</span>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary/40">Assistant Core</span>
+            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-secondary/40">Assistant Core</span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-hide">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 space-y-4 md:space-y-6 scroll-hide">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 opacity-50">
             <span className="material-symbols-outlined text-3xl text-secondary">forum</span>
@@ -671,19 +673,23 @@ function ChatSidebar({ repoUrl, ragReady }) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="p-6 bg-transparent border-t border-white/5 flex-shrink-0">
+      <div className="p-4 md:p-6 bg-transparent border-t border-white/5 flex-shrink-0 pb-[env(safe-area-inset-bottom,16px)]">
         <div className="relative group">
-            <input 
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-secondary/30 text-white font-body" 
-              placeholder="Ask about the repository architecture..."
-              type="text"
+            <textarea 
+              rows={1}
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 md:py-4 pl-4 md:pl-5 pr-12 md:pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-secondary/30 text-white font-body resize-none overflow-hidden min-h-[48px] max-h-[120px]" 
+              placeholder="Ask about architecture..."
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => {
+                  setInput(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+              }}
               onKeyDown={handleKey}
               disabled={asking}
             />
             <button 
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50 disabled:bg-white/50"
+              className="absolute right-2 md:right-3 bottom-2 md:top-1/2 md:-translate-y-1/2 w-8 h-8 bg-white text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50 disabled:bg-white/50 active:scale-95"
               onClick={ask}
               disabled={asking || !input.trim()}
             >
@@ -751,54 +757,54 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
   }, []);
 
   return (
-    <div className="bg-background text-on-background font-body antialiased h-screen overflow-hidden flex flex-col">
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-transparent backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center gap-8">
+    <div className="bg-background text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-4 md:gap-8">
             <div className="flex items-center">
-                <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+                <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
             </div>
             <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
                 <a className="text-white border-b-2 border-white pb-1" href="#">Analysis</a>
             </nav>
         </div>
-        <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
+        <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
                 <span className="w-2 h-2 rounded-full bg-accent-orange animate-pulse"></span>
                 <span className="text-[9px] font-bold uppercase tracking-widest text-accent-orange">Live Kernel</span>
             </div>
-            <button onClick={onReset} className="px-5 py-2 text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-white">New Analysis</button>
+            <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-white border border-white/10 md:border-none rounded-lg md:rounded-none bg-white/5 md:bg-transparent active:scale-95">New Analysis</button>
         </div>
       </header>
 
-      <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: '64px' }}>
+      <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
         {/* Left Side: Analysis Content */}
         <main 
-          style={isMobile ? { width: '100%', flex: '1 1 auto', height: '50vh' } : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }} 
+          style={isMobile ? { width: '100%', flex: '55 1 0', overflowY: 'auto' } : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }} 
           className="bg-transparent scroll-hide border-b md:border-b-0 md:border-r border-white/5"
         >
-          <div className="w-full px-6 pt-20 pb-24">
+          <div className="w-full px-4 md:px-6 pt-8 md:pt-20 pb-24 max-w-[100vw] overflow-x-hidden">
             
             {/* Hero Analysis Header */}
-            <section className="mb-16 space-y-4 animate-reveal-up">
-                <div className="inline-flex items-center gap-3">
-                    <div className="w-8 h-[1px] bg-accent-orange"></div>
-                    <span className="text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
+            <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
+                <div className="inline-flex items-center gap-2 md:gap-3">
+                    <div className="w-6 md:w-8 h-[1px] bg-accent-orange"></div>
+                    <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
                 </div>
-                <h1 className="text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/50">
+                <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/50 break-words">
                     Repository<br/>Analysis
                 </h1>
-                <p className="text-secondary font-body text-base leading-relaxed font-light">
-                    Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-white/10 pb-[1px] hover:border-accent-purple transition-colors duration-300">{repoName}</a>. Analyzed in <span className="font-medium text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{result._elapsed || "~5"}s</span>.
+                <p className="text-secondary font-body text-sm md:text-base leading-relaxed font-light break-words">
+                    Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-white/10 pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">{result._elapsed || "~5"}s</span>.
                 </p>
             </section>
 
             {/* Repo Stats */}
-            <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
-                <div className="liquid-glass p-8 flex flex-col gap-6 shadow-sm rounded-xl">
+            <section className="mb-8 md:mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
+                <div className="liquid-glass p-6 md:p-8 flex flex-col gap-4 md:gap-6 shadow-sm rounded-xl">
                     <div className="space-y-1">
-                        <span className="block text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold">Comprehensive Scan</span>
-                        <h2 className="text-4xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60">
-                          {scan.total_files?.toLocaleString() || 0} <span className="text-xl font-light text-secondary/40 drop-shadow-none">files</span>
+                        <span className="block text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-secondary/40 font-bold">Comprehensive Scan</span>
+                        <h2 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60">
+                          {scan.total_files?.toLocaleString() || 0} <span className="text-lg md:text-xl font-light text-secondary/40 drop-shadow-none">files</span>
                         </h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -822,16 +828,16 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             )}
 
             {/* Tech Stack */}
-            <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
+            <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
                 <SectionHeader label="Ecosystem" />
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                   {stackItems.map(({ label, value, icon }) => (
-                    <div key={label} className="liquid-glass p-6 h-40 flex flex-col justify-between group rounded-xl">
-                        <div className="flex justify-between items-start">
+                    <div key={label} className="liquid-glass p-5 md:p-6 h-auto sm:h-40 flex sm:flex-col justify-between items-center sm:items-stretch group rounded-xl gap-2 sm:gap-0">
+                        <div className="flex sm:justify-between items-center sm:items-start w-full sm:w-auto gap-3 sm:gap-0">
+                            <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors order-first sm:order-last">{icon}</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/40">{label}</span>
-                            <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-purple transition-colors">{icon}</span>
                         </div>
-                        <span className="text-2xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 group-hover:from-accent-purple group-hover:to-accent-orange transition-all duration-500">{value || "Not detected"}</span>
+                        <span className="text-xl md:text-2xl font-headline font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60 group-hover:from-accent-purple group-hover:to-accent-orange transition-all duration-500 w-full text-right sm:text-left truncate">{value || "Not detected"}</span>
                     </div>
                   ))}
                 </div>
@@ -894,17 +900,17 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </section>
 
             {/* AI Explanation */}
-            <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+            <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
               <SectionHeader label="AI Interpretation" />
-              <div className="liquid-glass p-8 rounded-xl">
+              <div className="liquid-glass p-6 md:p-8 rounded-xl">
                 <p className="text-sm font-body leading-[1.75] text-white mb-5 font-light">{result.ai_explanation}</p>
                 {result.folder_explanations && Object.keys(result.folder_explanations).length > 0 && (
                   <div className="flex flex-col gap-3 mb-4">
                     {Object.entries(result.folder_explanations).slice(0, 4).map(([folder, desc]) => {
                       const [label] = desc.split(" — ");
                       return (
-                        <div key={folder} className="flex items-center gap-3 text-sm">
-                          <code className="text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 px-2 py-1 text-white rounded">/{folder}</code>
+                        <div key={folder} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm">
+                          <code className="w-fit text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 px-2 py-1 text-white rounded">/{folder}</code>
                           <span className="text-secondary font-light">{label}</span>
                         </div>
                       );
@@ -913,25 +919,25 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 )}
                 <div className="flex items-center gap-3 border-t border-white/5 pt-4">
                   <span className="material-symbols-outlined text-secondary/40 text-sm">verified</span>
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-secondary/40">Static Analysis • Pattern Detection</span>
+                  <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.2em] text-secondary/40">Static Analysis • Pattern Detection</span>
                 </div>
               </div>
             </section>
 
             {/* API Routes */}
             {result.api_routes?.length > 0 && (
-              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label={`API Surface · ${result.api_routes.length} routes`} />
                 <div className="flex flex-col gap-2">
                   {result.api_routes.slice(0, 10).map((route, i) => {
                     const [method, ...rest] = route.split(" ");
                     const cls = methodBg(method);
                     return (
-                      <div key={i} className="liquid-glass p-4 rounded-lg flex items-center gap-4">
-                        <span className={`text-[9px] font-headline font-bold uppercase tracking-widest px-3 py-1 rounded border ${cls} min-w-[54px] text-center`}>
+                      <div key={i} className="liquid-glass p-3 md:p-4 rounded-lg flex items-center gap-3 md:gap-4 overflow-hidden">
+                        <span className={`flex-shrink-0 text-[8px] md:text-[9px] font-headline font-bold uppercase tracking-widest px-2 md:px-3 py-1 rounded border ${cls} min-w-[48px] md:min-w-[54px] text-center`}>
                           {method}
                         </span>
-                        <code className="text-sm text-secondary font-mono truncate">{rest.join(" ")}</code>
+                        <code className="text-xs md:text-sm text-secondary font-mono truncate">{rest.join(" ")}</code>
                       </div>
                     );
                   })}
@@ -941,24 +947,24 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Key Files */}
             {result.important_files?.length > 0 && (
-              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                   <SectionHeader label="Core Entry Points" />
                   <div className="space-y-3">
                     {result.important_files.slice(0, 6).map((file, i) => {
                       const name = file.split("/").pop();
                       const icon = name.includes("Dockerfile") ? "deployed_code" : file.startsWith(".github") ? "hub" : name.endsWith(".json") ? "data_object" : name.endsWith(".py") ? "terminal" : "description";
                       return (
-                        <div key={i} onClick={() => setPreviewFile(file)} className="group liquid-glass p-5 rounded-xl flex justify-between items-center hover:bg-white/[0.05] transition-all cursor-pointer">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 flex items-center justify-center bg-white/5 group-hover:bg-accent-purple transition-colors rounded-lg">
-                                    <span className="material-symbols-outlined text-secondary/40 group-hover:text-white">{icon}</span>
+                        <div key={i} onClick={() => setPreviewFile(file)} className="group liquid-glass p-4 md:p-5 rounded-xl flex justify-between items-center hover:bg-white/[0.05] transition-all cursor-pointer">
+                            <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                                <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/5 group-hover:bg-accent-purple transition-colors rounded-lg">
+                                    <span className="material-symbols-outlined text-secondary/40 group-hover:text-white text-sm md:text-base">{icon}</span>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-bold font-headline tracking-tight text-white">{name}</span>
-                                    <span className="text-[10px] text-secondary/40 font-medium uppercase tracking-wider">{file}</span>
+                                <div className="flex flex-col overflow-hidden">
+                                    <span className="text-sm font-bold font-headline tracking-tight text-white truncate">{name}</span>
+                                    <span className="text-[9px] md:text-[10px] text-secondary/40 font-medium uppercase tracking-wider truncate">{file}</span>
                                 </div>
                             </div>
-                            <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all">arrow_forward</span>
+                            <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all flex-shrink-0 ml-2">arrow_forward</span>
                         </div>
                       )
                     })}
@@ -970,11 +976,11 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Commit Activity */}
             {result.metadata?.commits?.length > 0 && (
-              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label={`Commit Activity · ${result.metadata.total_commits || result.metadata.commits.length} commits`} />
-                <div className="liquid-glass p-6 rounded-xl">
+                <div className="liquid-glass p-4 md:p-6 rounded-xl">
                   <CommitGraph commits={result.metadata.commits} />
-                  <div className="mt-6 flex flex-col gap-3">
+                  <div className="mt-4 md:mt-6 flex flex-col gap-3">
                     {result.metadata.commits.slice(0, 4).map((c, i) => (
                       <div key={i} className="flex items-start gap-3 pb-3 border-b border-white/5 last:border-0 last:pb-0">
                         <div className="w-1.5 h-1.5 rounded-full bg-accent-purple mt-2 flex-shrink-0" />
@@ -991,14 +997,14 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Entry Points */}
             {result.entry_points?.length > 0 && (
-              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label="Entry Points" />
                 <div className="flex flex-wrap gap-2">
                   {result.entry_points.map(ep => (
                     <div key={ep} onClick={() => setPreviewFile(ep)}
-                      className="liquid-glass px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-colors">
-                      <span className="material-symbols-outlined text-accent-purple !text-base">play_circle</span>
-                      <span className="text-sm font-medium text-white font-body">{ep}</span>
+                      className="liquid-glass px-3 md:px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-colors">
+                      <span className="material-symbols-outlined text-accent-purple !text-sm md:!text-base">play_circle</span>
+                      <span className="text-xs md:text-sm font-medium text-white font-body truncate">{ep}</span>
                     </div>
                   ))}
                 </div>
@@ -1007,10 +1013,10 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* README */}
             {result.readme && (
-              <section className="mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
                 <SectionHeader label="README · Documentation" />
-                <div className="liquid-glass p-8 rounded-xl">
-                  <div className="readme-prose">
+                <div className="liquid-glass p-4 md:p-8 rounded-xl overflow-x-auto">
+                  <div className="readme-prose max-w-none text-sm md:text-base">
                     <ReactMarkdown>{result.readme}</ReactMarkdown>
                   </div>
                 </div>
