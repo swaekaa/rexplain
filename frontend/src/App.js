@@ -6,7 +6,10 @@ import InteractiveDiagram from "./InteractiveDiagram";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
-const API_URL = import.meta.env ? import.meta.env.VITE_API_URL : process.env.REACT_APP_API_URL;
+const API_URL =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_URL)
+    ? import.meta.env.VITE_API_URL
+    : (process.env.REACT_APP_API_URL || "http://127.0.0.1:8000");
 console.log("[RExplain] API_URL resolved to:", API_URL);
 
 // ─── Axios Interceptor for Render Cold Starts ────────────────────────────────
@@ -690,15 +693,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
           </div>
         ))}
 
-        {asking && !streaming && (
-          <div className="flex justify-start">
-            <div className="p-4 rounded-xl bg-white/5 flex gap-1 items-center">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-secondary animate-breathing" style={{ animationDelay: `${i * 0.2}s` }} />
-              ))}
-            </div>
-          </div>
-        )}
+
         <div ref={bottomRef} />
       </div>
 

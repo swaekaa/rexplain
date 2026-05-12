@@ -226,6 +226,7 @@ def build_interactive_graph(
     nodes: list[dict] = []
     edges: list[dict] = []
     edge_counter = [0]
+    seen_node_ids: set[str] = set()  # O(1) duplicate guard
 
     def _edge(source: str, target: str, label: str = "", animated: bool = False,
                edge_type: str = "tier-flow") -> None:
@@ -315,6 +316,7 @@ def build_interactive_graph(
         lid = _safe_id("layer", layer)
         layer_ids[layer] = lid
         y_counter[layer] = 0
+        seen_node_ids.add(lid)
         nodes.append({
             "id":   lid,
             "type": "layerNode",
@@ -383,9 +385,9 @@ def build_interactive_graph(
         if not layer or layer not in layer_ids:
             continue
         fid = _safe_id("folder", folder)
-        # Avoid duplicate node ids
-        if any(n["id"] == fid for n in nodes):
+        if fid in seen_node_ids:
             continue
+        seen_node_ids.add(fid)
 
         desc = folder_explanations.get(folder, f"/{folder} directory")
         folder_y[layer] = folder_y.get(layer, 0) + 110
@@ -445,8 +447,9 @@ def build_interactive_graph(
             continue
 
         fid = _safe_id("file", file_path)
-        if any(n["id"] == fid for n in nodes):
+        if fid in seen_node_ids:
             continue
+        seen_node_ids.add(fid)
 
         file_y[layer] = file_y.get(layer, 0) + 100
 

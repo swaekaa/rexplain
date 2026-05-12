@@ -28,6 +28,7 @@ import logging
 import gc
 import psutil
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -251,20 +252,19 @@ def analyze_repo(request: RepoRequest):
 
         explanation = generate_repo_explanation(framework_data, scan_data)
 
-        # ── 7. Metadata ───────────────────────────────────────────────────────
-        metadata = fetch_repo_metadata(repo_url, clone_path)
-
-        # ── 8. RAG embedding ──────────────────────────────────────────────────
-        t_rag = time.perf_counter()
+        # ── 7 + 8. Metadata fetch + RAG embedding in parallel ────────────────
+        t_rag            = time.perf_counter()
         rag_ready        = False
         rag_embeddings   = None
         rag_chunks_plain = None
 
-        try:
-            from app.services.embeddings import build_chunks, get_model
-            from app.services.retriever import build_store as rag_build_store, serialize_store
+        def _do_metadata():
+            return fetch_repo_metadata(repo_url, clone_path)
 
-            rag_chunks = build_chunks(
+        def _do_rag():
+            from app.services.embeddings import build_chunks, get_model
+            from app.services.retriever import build_store as _build_store, serialize_store
+            _chunks = build_chunks(
                 file_contents_map or {},
                 extra_context={
                     "ai_explanation":      explanation,
@@ -273,17 +273,28 @@ def analyze_repo(request: RepoRequest):
                     "important_files":     important_files,
                 },
             )
-            rag_model = get_model()
-            rag_store = rag_build_store(repo_url, rag_chunks, rag_model)
-            rag_ready = True
-            print(f"[timing] RAG index built in {time.perf_counter() - t_rag:.2f}s "
-                  f"({len(rag_chunks)} chunks)")
+            _model  = get_model()
+            _store  = _build_store(repo_url, _chunks, _model)
+            _emb, _chk = serialize_store(_store)
+            return _store, _emb, _chk, _chunks
 
-            # Serialise for DB storage
-            rag_embeddings, rag_chunks_plain = serialize_store(rag_store)
+        metadata = {}
+        with ThreadPoolExecutor(max_workers=2) as _ex:
+            _mfut = _ex.submit(_do_metadata)
+            _rfut = _ex.submit(_do_rag)
 
-        except Exception as rag_err:
-            print(f"[rag] index build skipped: {rag_err}")
+            try:
+                metadata = _mfut.result(timeout=20)
+            except Exception as _me:
+                print(f"[metadata] fetch failed (non-fatal): {_me}")
+
+            try:
+                _rag_store, rag_embeddings, rag_chunks_plain, rag_chunks = _rfut.result(timeout=120)
+                rag_ready = True
+                print(f"[timing] RAG index built in {time.perf_counter() - t_rag:.2f}s "
+                      f"({len(rag_chunks)} chunks)")
+            except Exception as _re:
+                print(f"[rag] index build skipped: {_re}")
 
         print(f"[timing] TOTAL pipeline: {time.perf_counter() - t0:.2f}s")
 

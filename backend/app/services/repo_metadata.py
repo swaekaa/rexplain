@@ -81,6 +81,15 @@ def get_local_git_metadata(clone_path: str) -> dict:
     
     return metadata
 
+def _auth_headers() -> dict:
+    """Return GitHub auth headers (adds token if GITHUB_TOKEN is set)."""
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def get_github_metadata(repo_url: str) -> dict:
     """Extract metadata from GitHub API if it's a GitHub repo."""
     metadata = {}
@@ -89,48 +98,63 @@ def get_github_metadata(repo_url: str) -> dict:
 
     try:
         owner, repo = _parse_github_url(repo_url)
-        url = f"https://api.github.com/repos/{owner}/{repo}"
-        headers = {"Accept": "application/vnd.github.v3+json"}
-        r = requests.get(url, headers=headers, timeout=5)
-        if r.status_code == 200:
-            data = r.json()
-            metadata["stars"] = data.get("stargazers_count", 0)
-            metadata["forks"] = data.get("forks_count", 0)
-            metadata["open_issues"] = data.get("open_issues_count", 0)
-            license_data = data.get("license")
-            if license_data:
-                metadata["license"] = license_data.get("name", "Unknown")
-            metadata["description"] = data.get("description", "")
-            metadata["default_branch"] = data.get("default_branch", "main")
-            
-            # Fetch total commits using per_page=1 and Link header
-            commits_count_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=1"
-            count_res = requests.get(commits_count_url, headers=headers, timeout=5)
-            if count_res.status_code == 200:
-                if "Link" in count_res.headers:
-                    link_header = count_res.headers["Link"]
-                    match = re.search(r'[&?]page=(\d+)[^>]*>;\s*rel="last"', link_header)
-                    if match:
-                        metadata["total_commits"] = int(match.group(1))
-                    else:
-                        metadata["total_commits"] = len(count_res.json())
-                else:
-                    metadata["total_commits"] = len(count_res.json())
+        headers = _auth_headers()
 
-            # Fetch latest 10 commits
-            commits_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=10"
-            cr = requests.get(commits_url, headers=headers, timeout=5)
+        # ── 1. Repo info (stars, forks, license, description) ────────────────
+        r = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}",
+            headers=headers,
+            timeout=4,
+        )
+        if r.status_code != 200:
+            print(f"[metadata] repo info returned {r.status_code}")
+            return metadata
+
+        data = r.json()
+        metadata["stars"] = data.get("stargazers_count", 0)
+        metadata["forks"] = data.get("forks_count", 0)
+        metadata["open_issues"] = data.get("open_issues_count", 0)
+        license_data = data.get("license")
+        if license_data:
+            metadata["license"] = license_data.get("name", "Unknown")
+        metadata["description"] = data.get("description", "")
+        metadata["default_branch"] = data.get("default_branch", "main")
+
+        # ── 2. Commit count via Link header trick ─────────────────────────────
+        try:
+            count_res = requests.get(
+                f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=1",
+                headers=headers,
+                timeout=4,
+            )
+            if count_res.status_code == 200:
+                link_header = count_res.headers.get("Link", "")
+                match = re.search(r'[&?]page=(\d+)[^>]*>;\s*rel="last"', link_header)
+                if match:
+                    metadata["total_commits"] = int(match.group(1))
+        except Exception as e:
+            print(f"[metadata] commit count fetch error (non-fatal): {e}")
+
+        # ── 3. Latest 10 commits ──────────────────────────────────────────────
+        try:
+            cr = requests.get(
+                f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=10",
+                headers=headers,
+                timeout=4,
+            )
             if cr.status_code == 200:
-                commits_data = cr.json()
                 commits_list = []
-                for c in commits_data:
+                for c in cr.json():
                     commits_list.append({
-                        "hash": c.get("sha", ""),
+                        "hash":    c.get("sha", ""),
                         "message": c.get("commit", {}).get("message", "").split("\n")[0],
-                        "author": c.get("commit", {}).get("author", {}).get("name", ""),
-                        "date": c.get("commit", {}).get("author", {}).get("date", "")
+                        "author":  c.get("commit", {}).get("author", {}).get("name", ""),
+                        "date":    c.get("commit", {}).get("author", {}).get("date", ""),
                     })
                 metadata["commits"] = commits_list
+        except Exception as e:
+            print(f"[metadata] commits fetch error (non-fatal): {e}")
+
     except Exception as e:
         print(f"[metadata] GitHub API error: {e}")
 

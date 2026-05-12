@@ -1,0 +1,27 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Local dev
+.env
+.env.*
+
+# Repos cloned locally during dev
+repos/
+
+# HuggingFace local model cache (not used in prod — we use HF API)
+hf_cache/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore

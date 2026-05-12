@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: rexplain-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free           # change to "starter" if you upgrade
+    region: oregon       # pick the region closest to your users
+
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false         # set this manually in the Render dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rexplain-db
+          property: connectionString
+      - key: GITHUB_TOKEN
+        sync: false         # optional but strongly recommended (5000 req/hr vs 60)
+      - key: HF_API_TOKEN
+        sync: false         # required for embedding on Render (no local GPU)
+      - key: PORT
+        value: "10000"
+
+    healthCheckPath: /health
+
+databases:
+  - name: rexplain-db
+    plan: free
+    region: oregon

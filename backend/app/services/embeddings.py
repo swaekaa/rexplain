@@ -27,36 +27,96 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-# ── Model singleton ───────────────────────────────────────────────────────────
+# ── Embedding backend ─────────────────────────────────────────────────────────
+# Uses HuggingFace Inference API when HF_API_TOKEN is set (production/Render),
+# falls back to local SentenceTransformer for local development.
 
-_model = None
-_MODEL_NAME = "all-MiniLM-L6-v2"
+import os
+import time
+import requests as _requests
+
+_HF_API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+_hf_token = None
+_local_model = None
+_use_hf_api = False
 
 
 def preload_model():
-    """Load the model at startup and warm it up."""
-    global _model
-    if _model is None:
-        print(f"[startup] loading model: {_MODEL_NAME}...")
+    """Detect which backend to use and warm it up."""
+    global _hf_token, _local_model, _use_hf_api
+
+    token = os.environ.get("HF_API_TOKEN", "")
+    if token:
+        _hf_token = token
+        _use_hf_api = True
+        print("[startup] Embedding backend: HuggingFace Inference API (remote, no torch)")
+        # Warm-up ping
+        try:
+            _embed_via_api(["warmup"])
+            print("[startup] HF API warm-up OK")
+        except Exception as e:
+            print(f"[startup] HF API warm-up failed (will retry on first request): {e}")
+    else:
+        print("[startup] HF_API_TOKEN not set — loading local SentenceTransformer")
         try:
             from sentence_transformers import SentenceTransformer
-            # Disable symlinks warning or other noisy logs if desired
-            _model = SentenceTransformer(_MODEL_NAME)
-            # Lazy warm-up
-            _model.encode(["warmup"])
-            print("[startup] model loaded and warmed up")
+            _local_model = SentenceTransformer("all-MiniLM-L6-v2")
+            _local_model.encode(["warmup"])
+            print("[startup] local model loaded and warmed up")
         except Exception as e:
-            print(f"[startup] model load failed: {e}")
-            _model = "FAILED"
+            print(f"[startup] local model load failed: {e}")
+            _local_model = "FAILED"
+
+
+def _embed_via_api(texts: list[str]) -> list[list[float]]:
+    """Call HuggingFace Inference API; returns list of embedding vectors."""
+    headers = {"Authorization": f"Bearer {_hf_token}"}
+    # Batch in groups of 32 to avoid oversized payloads
+    MAX_BATCH = 32
+    all_vecs: list[list[float]] = []
+    for i in range(0, len(texts), MAX_BATCH):
+        batch = texts[i : i + MAX_BATCH]
+        for attempt in range(2):  # max 2 attempts
+            resp = _requests.post(
+                _HF_API_URL,
+                headers=headers,
+                json={"inputs": batch, "options": {"wait_for_model": True}},
+                timeout=(10, 30),  # 10s connect, 30s read
+            )
+            if resp.status_code == 503:
+                # Model is loading — wait (capped at 15s) and retry once
+                wait = min(int(resp.headers.get("X-Wait-For-Model", "15")), 15)
+                print(f"[hf-api] model loading, waiting {wait}s (attempt {attempt+1})")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            all_vecs.extend(resp.json())
+            break
+        else:
+            raise RuntimeError("HF API unavailable after 2 attempts")
+    return all_vecs
+
+
+def get_embeddings(texts: list[str]):
+    """Return numpy float32 array of shape (N, 384)."""
+    import numpy as np
+    if _use_hf_api:
+        vecs = _embed_via_api(texts)
+        return np.array(vecs, dtype=np.float32)
+    else:
+        if _local_model is None:
+            preload_model()
+        if _local_model == "FAILED":
+            raise RuntimeError("Embedding model failed to load")
+        return _local_model.encode(texts, convert_to_numpy=True).astype(np.float32)
+
 
 def get_model():
-    """Return the preloaded model, or raise an error if it failed to load."""
-    global _model
-    if _model is None:
-        preload_model()
-    if _model == "FAILED":
-        raise RuntimeError("Embedding model failed to load at startup")
-    return _model
+    """Compatibility shim — returns a callable that wraps get_embeddings."""
+    class _Compat:
+        def encode(self, texts, **kwargs):
+            return get_embeddings(texts)
+    return _Compat()
 
 
 # ── Extension / directory filters ────────────────────────────────────────────
