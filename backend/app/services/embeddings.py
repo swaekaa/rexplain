@@ -28,44 +28,97 @@ import re
 from typing import Optional
 
 # ── Embedding backend ─────────────────────────────────────────────────────────
-# Uses HuggingFace Inference API when HF_API_TOKEN is set (production/Render),
-# falls back to local SentenceTransformer for local development.
+# Priority order:
+#   1. HuggingFace Inference API  — set HF_API_TOKEN (recommended for Render)
+#   2. Local SentenceTransformer  — works on dev machines with torch installed
+#   3. TF-IDF hash fallback       — always works, no external deps, lower accuracy
 
 import os
 import time
 import requests as _requests
 
 _HF_API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
-_hf_token = None
-_local_model = None
-_use_hf_api = False
+_hf_token    = None
+_local_model = None   # None = not loaded, "TFIDF" = use fallback, str obj = loaded
+_use_hf_api  = False
 
 
 def preload_model():
     """Detect which backend to use and warm it up."""
     global _hf_token, _local_model, _use_hf_api
 
-    token = os.environ.get("HF_API_TOKEN", "")
+    token = os.environ.get("HF_API_TOKEN", "").strip()
     if token:
-        _hf_token = token
+        _hf_token   = token
         _use_hf_api = True
         print("[startup] Embedding backend: HuggingFace Inference API (remote, no torch)")
-        # Warm-up ping
         try:
             _embed_via_api(["warmup"])
             print("[startup] HF API warm-up OK")
         except Exception as e:
             print(f"[startup] HF API warm-up failed (will retry on first request): {e}")
     else:
-        print("[startup] HF_API_TOKEN not set — loading local SentenceTransformer")
+        print("[startup] HF_API_TOKEN not set — trying local SentenceTransformer")
         try:
             from sentence_transformers import SentenceTransformer
             _local_model = SentenceTransformer("all-MiniLM-L6-v2")
             _local_model.encode(["warmup"])
             print("[startup] local model loaded and warmed up")
         except Exception as e:
-            print(f"[startup] local model load failed: {e}")
-            _local_model = "FAILED"
+            print(
+                f"[startup] local model unavailable ({e})\n"
+                "[startup] *** ACTION REQUIRED for full accuracy ***\n"
+                "[startup]   Set HF_API_TOKEN in Render → Service → Environment tab.\n"
+                "[startup]   Get a FREE token at: https://huggingface.co/settings/tokens\n"
+                "[startup]   Falling back to TF-IDF hash embeddings (RAG stays functional)."
+            )
+            _local_model = "TFIDF"  # signal to use hash fallback
+
+
+# ── TF-IDF hash fallback ──────────────────────────────────────────────────────
+# Produces a deterministic 384-dim vector with no external dependencies.
+# Accuracy is lower than neural embeddings but sufficient to keep RAG functional.
+
+def _tfidf_embed(texts: list[str]) -> "list[list[float]]":
+    import re
+    import math
+    import numpy as np
+    from collections import Counter
+
+    DIM = 384
+
+    def _tok(text: str) -> list[str]:
+        return re.findall(r"[a-zA-Z0-9_]{2,}", text.lower())
+
+    def _hash(token: str) -> tuple[int, float]:
+        h = 0
+        for ch in token:
+            h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+        return h % DIM, (1.0 if (h >> 16) & 1 else -1.0)
+
+    results = []
+    for text in texts:
+        tokens = _tok(text)
+        if not tokens:
+            results.append([0.0] * DIM)
+            continue
+        tf    = Counter(tokens)
+        total = sum(tf.values())
+        vec   = np.zeros(DIM, dtype=np.float32)
+        for tok, cnt in tf.items():
+            w = (1.0 + math.log(cnt)) / math.log(1 + total)
+            b, s = _hash(tok)
+            vec[b] += s * w
+            # second projection with reversed string for spread
+            h2 = 0
+            for ch in tok[::-1]:
+                h2 = (h2 * 37 + ord(ch)) & 0xFFFFFFFF
+            vec[h2 % DIM] += (1.0 if (h2 >> 8) & 1 else -1.0) * w * 0.5
+        norm = float(np.linalg.norm(vec))
+        if norm > 0:
+            vec /= norm
+        results.append(vec.tolist())
+    return results
 
 
 def _embed_via_api(texts: list[str]) -> list[list[float]]:
@@ -98,17 +151,27 @@ def _embed_via_api(texts: list[str]) -> list[list[float]]:
 
 
 def get_embeddings(texts: list[str]):
-    """Return numpy float32 array of shape (N, 384)."""
+    """Return numpy float32 array of shape (N, 384).
+
+    Backend priority:
+      1. HF Inference API  (if HF_API_TOKEN is set)
+      2. Local SentenceTransformer  (if torch is installed)
+      3. TF-IDF hash fallback  (always available, lower accuracy)
+    """
     import numpy as np
     if _use_hf_api:
         vecs = _embed_via_api(texts)
         return np.array(vecs, dtype=np.float32)
-    else:
-        if _local_model is None:
-            preload_model()
-        if _local_model == "FAILED":
-            raise RuntimeError("Embedding model failed to load")
-        return _local_model.encode(texts, convert_to_numpy=True).astype(np.float32)
+
+    if _local_model is None:
+        preload_model()
+
+    if _local_model == "TFIDF":
+        print("[embed] using TF-IDF hash fallback — set HF_API_TOKEN for better accuracy")
+        vecs = _tfidf_embed(texts)
+        return np.array(vecs, dtype=np.float32)
+
+    return _local_model.encode(texts, convert_to_numpy=True).astype(np.float32)
 
 
 def get_model():
