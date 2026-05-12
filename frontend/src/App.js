@@ -1089,22 +1089,21 @@ export default function App() {
   const [healthStatus, setHealthStatus] = useState("Checking backend...");
 
   useEffect(() => {
-    async function checkHealth() {
-      try {
-        console.log("API URL:", API_URL);
-        const res = await axios.get(`${API_URL}/health`);
-        console.log("Response:", res.data);
-        if (res.data.status === "ok") {
-          setHealthStatus("Backend connected");
-        } else {
-          setHealthStatus("Backend offline");
+    (async () => {
+      // Retry up to 3 times with 3s gap — Render sometimes needs a moment after wake
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await axios.get(`${API_URL}/health`, { timeout: 8000 });
+          if (res.data.status === "ok") {
+            setHealthStatus("Backend connected");
+            return;
+          }
+        } catch (_) {
+          if (attempt < 2) await new Promise(r => setTimeout(r, 3000));
         }
-      } catch (err) {
-        console.error("API Error:", err);
-        setHealthStatus("Backend offline");
       }
-    }
-    checkHealth();
+      setHealthStatus("Backend offline");
+    })();
   }, []);
 
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
@@ -1125,7 +1124,7 @@ export default function App() {
     try {
       console.log("API URL:", API_URL);
       const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
-        timeout: 60000,
+        timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
       });
       console.log("Response:", res.data);
       setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });

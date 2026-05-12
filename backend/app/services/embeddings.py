@@ -37,7 +37,7 @@ import os
 import time
 import requests as _requests
 
-_HF_API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+_HF_API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
 _hf_token    = None
 _local_model = None   # None = not loaded, "TFIDF" = use fallback, str obj = loaded
 _use_hf_api  = False
