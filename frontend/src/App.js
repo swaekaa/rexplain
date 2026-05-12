@@ -190,11 +190,6 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Explore</a>
           </nav>
         </div>
-        <div className="flex items-center">
-          <span className={`text-[10px] md:text-xs font-bold px-2 md:px-3 py-1 rounded-full ${healthStatus === 'Backend connected' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-            {healthStatus}
-          </span>
-        </div>
       </header>
 
       <main className="min-h-[100dvh] pt-32 md:pt-40 pb-24 flex flex-col items-center justify-center px-4 md:px-6 relative overflow-hidden bg-[radial-gradient(circle_at_50%_0%,rgba(168,85,247,0.08)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(249,115,22,0.05)_0%,transparent_50%)]">
@@ -773,12 +768,16 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
   }, []);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Close chat drawer when switching to desktop
+  useEffect(() => { if (!isMobile) setChatOpen(false); }, [isMobile]);
 
   return (
     <div className="bg-background text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col">
@@ -803,10 +802,10 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
       <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
         {/* Left Side: Analysis Content */}
         <main 
-          style={isMobile ? { width: '100%', flex: '55 1 0', overflowY: 'auto' } : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }} 
-          className="bg-transparent scroll-hide border-b md:border-b-0 md:border-r border-white/5"
+          style={isMobile ? { width: '100%', flex: '1 1 0', overflowY: 'auto' } : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }}
+          className="bg-transparent scroll-hide md:border-r border-white/5"
         >
-          <div className="w-full px-4 md:px-6 pt-8 md:pt-20 pb-24 max-w-[100vw] overflow-x-hidden">
+          <div className="w-full px-4 md:px-6 pt-8 md:pt-20 pb-28 md:pb-24 max-w-[100vw] overflow-x-hidden">
             
             {/* Hero Analysis Header */}
             <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
@@ -1065,11 +1064,64 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </div>
         )}
 
-        {/* Right Side: AI Chat */}
-        <aside style={isMobile ? { width: '100%', flex: '1 1 auto', height: '50vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' } : { flex: `0 0 ${100 - splitPct}%`, width: `${100 - splitPct}%`, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
-        </aside>
+        {/* Desktop: Right Side AI Chat */}
+        {!isMobile && (
+          <aside style={{ flex: `0 0 ${100 - splitPct}%`, width: `${100 - splitPct}%`, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+          </aside>
+        )}
       </div>
+
+      {/* Mobile: Floating Chat Button */}
+      {isMobile && (
+        <>
+          {/* FAB */}
+          <button
+            onClick={() => setChatOpen(true)}
+            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-accent-purple shadow-[0_8px_32px_rgba(168,85,247,0.5)] flex items-center justify-center active:scale-95 transition-transform"
+            aria-label="Open AI Chat"
+          >
+            <span className="material-symbols-outlined text-white !text-2xl">auto_awesome</span>
+          </button>
+
+          {/* Slide-up drawer backdrop */}
+          {chatOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              onClick={() => setChatOpen(false)}
+            />
+          )}
+
+          {/* Slide-up drawer */}
+          <div
+            className="fixed left-0 right-0 bottom-0 z-50 flex flex-col bg-background border-t border-white/10 rounded-t-2xl shadow-[0_-8px_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-out"
+            style={{
+              height: '85dvh',
+              transform: chatOpen ? 'translateY(0)' : 'translateY(105%)',
+            }}
+          >
+            {/* Drawer handle + header */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-accent-purple/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-accent-purple !text-base">auto_awesome</span>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary/50">AI Assistant</span>
+              </div>
+              <button
+                onClick={() => setChatOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors active:scale-95"
+                aria-label="Close chat"
+              >
+                <span className="material-symbols-outlined text-secondary !text-lg">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
