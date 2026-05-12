@@ -37,26 +37,66 @@ import os
 import time
 import requests as _requests
 
-_HF_API_URL = "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2"
+# ── HF Inference API candidate URLs (tried in order at startup) ──────────────
+# Different models / URL formats to try — first one that works wins.
+_HF_CANDIDATES = [
+    # BGE-small: 384-dim, reliably hosted on free inference API
+    "https://api-inference.huggingface.co/models/BAAI/bge-small-en-v1.5",
+    # all-MiniLM via feature-extraction pipeline path
+    "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2",
+    # all-MiniLM via models path
+    "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2",
+]
+
+_HF_API_URL  = None   # set to working URL during preload_model()
 _hf_token    = None
-_local_model = None   # None = not loaded, "TFIDF" = use fallback, str obj = loaded
+_local_model = None   # None = not loaded, "TFIDF" = use TF-IDF fallback
 _use_hf_api  = False
 
 
+def _probe_hf_url(url: str, token: str) -> bool:
+    """Return True if this HF endpoint responds successfully to a test embed."""
+    try:
+        resp = _requests.post(
+            url,
+            headers={"Authorization": f"Bearer {token}"},
+            json={"inputs": ["probe"], "options": {"wait_for_model": True}},
+            timeout=(8, 20),
+        )
+        if resp.status_code == 404:
+            return False
+        if resp.status_code == 503:
+            # Model is loading — counts as available, just cold
+            return True
+        resp.raise_for_status()
+        return True
+    except Exception:
+        return False
+
+
 def preload_model():
-    """Detect which backend to use and warm it up."""
-    global _hf_token, _local_model, _use_hf_api
+    """Detect which embedding backend to use and warm it up."""
+    global _hf_token, _local_model, _use_hf_api, _HF_API_URL
 
     token = os.environ.get("HF_API_TOKEN", "").strip()
     if token:
-        _hf_token   = token
-        _use_hf_api = True
-        print("[startup] Embedding backend: HuggingFace Inference API (remote, no torch)")
-        try:
-            _embed_via_api(["warmup"])
-            print("[startup] HF API warm-up OK")
-        except Exception as e:
-            print(f"[startup] HF API warm-up failed (will retry on first request): {e}")
+        _hf_token = token
+        print("[startup] Embedding backend: trying HuggingFace Inference API...")
+        for url in _HF_CANDIDATES:
+            model_name = url.rstrip("/").split("/")[-1]
+            print(f"[startup] Probing {model_name}...")
+            if _probe_hf_url(url, token):
+                _HF_API_URL = url
+                _use_hf_api = True
+                print(f"[startup] HF API OK — using {url}")
+                return
+            print(f"[startup] {model_name} not available (404)")
+        # All candidates failed
+        print(
+            "[startup] All HF API endpoints returned 404 — falling back to TF-IDF.\n"
+            "[startup] Check that your HF_API_TOKEN has 'Read' scope and is valid."
+        )
+        _local_model = "TFIDF"
     else:
         print("[startup] HF_API_TOKEN not set — trying local SentenceTransformer")
         try:
@@ -67,12 +107,11 @@ def preload_model():
         except Exception as e:
             print(
                 f"[startup] local model unavailable ({e})\n"
-                "[startup] *** ACTION REQUIRED for full accuracy ***\n"
-                "[startup]   Set HF_API_TOKEN in Render → Service → Environment tab.\n"
+                "[startup] *** Set HF_API_TOKEN in Render → Environment to enable neural embeddings ***\n"
                 "[startup]   Get a FREE token at: https://huggingface.co/settings/tokens\n"
                 "[startup]   Falling back to TF-IDF hash embeddings (RAG stays functional)."
             )
-            _local_model = "TFIDF"  # signal to use hash fallback
+            _local_model = "TFIDF"
 
 
 # ── TF-IDF hash fallback ──────────────────────────────────────────────────────
@@ -122,31 +161,47 @@ def _tfidf_embed(texts: list[str]) -> "list[list[float]]":
 
 
 def _embed_via_api(texts: list[str]) -> list[list[float]]:
-    """Call HuggingFace Inference API; returns list of embedding vectors."""
+    """Call HuggingFace Inference API; returns list of embedding vectors.
+
+    Raises RuntimeError on 404 (model not available) so callers can fall
+    back to TF-IDF. Other errors also propagate as RuntimeError.
+    """
+    global _use_hf_api, _local_model
+
     headers = {"Authorization": f"Bearer {_hf_token}"}
-    # Batch in groups of 32 to avoid oversized payloads
     MAX_BATCH = 32
     all_vecs: list[list[float]] = []
+
     for i in range(0, len(texts), MAX_BATCH):
         batch = texts[i : i + MAX_BATCH]
-        for attempt in range(2):  # max 2 attempts
+        for attempt in range(2):
             resp = _requests.post(
                 _HF_API_URL,
                 headers=headers,
                 json={"inputs": batch, "options": {"wait_for_model": True}},
-                timeout=(10, 30),  # 10s connect, 30s read
+                timeout=(10, 30),
             )
+            if resp.status_code == 404:
+                # Model no longer available — permanently disable HF API
+                print(f"[hf-api] 404 from {_HF_API_URL} — disabling HF API, switching to TF-IDF")
+                _use_hf_api  = False
+                _local_model = "TFIDF"
+                raise RuntimeError("HF API returned 404 — switched to TF-IDF fallback")
             if resp.status_code == 503:
-                # Model is loading — wait (capped at 15s) and retry once
                 wait = min(int(resp.headers.get("X-Wait-For-Model", "15")), 15)
                 print(f"[hf-api] model loading, waiting {wait}s (attempt {attempt+1})")
                 time.sleep(wait)
                 continue
             resp.raise_for_status()
-            all_vecs.extend(resp.json())
+            result = resp.json()
+            # Handle both [[vec...], ...] and [vec...] (single-text) shapes
+            if result and isinstance(result[0], (int, float)):
+                result = [result]  # single embedding → wrap in list
+            all_vecs.extend(result)
             break
         else:
             raise RuntimeError("HF API unavailable after 2 attempts")
+
     return all_vecs
 
 
@@ -154,23 +209,28 @@ def get_embeddings(texts: list[str]):
     """Return numpy float32 array of shape (N, 384).
 
     Backend priority:
-      1. HF Inference API  (if HF_API_TOKEN is set)
-      2. Local SentenceTransformer  (if torch is installed)
-      3. TF-IDF hash fallback  (always available, lower accuracy)
+      1. HF Inference API  (if HF_API_TOKEN is set and a model is available)
+      2. Local SentenceTransformer  (if torch/sentence-transformers installed)
+      3. TF-IDF hash fallback  (always works — no external deps)
     """
     import numpy as np
-    if _use_hf_api:
-        vecs = _embed_via_api(texts)
-        return np.array(vecs, dtype=np.float32)
 
-    if _local_model is None:
+    if _local_model is None and not _use_hf_api:
         preload_model()
 
-    if _local_model == "TFIDF":
-        print("[embed] using TF-IDF hash fallback — set HF_API_TOKEN for better accuracy")
+    if _use_hf_api:
+        try:
+            vecs = _embed_via_api(texts)
+            return np.array(vecs, dtype=np.float32)
+        except RuntimeError as e:
+            # 404 or persistent failure — fall through to TF-IDF
+            print(f"[embed] HF API failed ({e}), using TF-IDF fallback")
+
+    if _local_model == "TFIDF" or _local_model is None:
         vecs = _tfidf_embed(texts)
         return np.array(vecs, dtype=np.float32)
 
+    # Local SentenceTransformer
     return _local_model.encode(texts, convert_to_numpy=True).astype(np.float32)
 
 
