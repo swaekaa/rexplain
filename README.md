@@ -119,7 +119,7 @@ Users can ask natural-language questions about any analyzed repository:
        │                  │
 ┌──────▼──────┐   ┌───────▼──────┐
 │  PostgreSQL  │   │  GitHub API  │
-│  (Render)    │   │  Groq API    │
+│  (Neon)    │   │  Groq API    │
 └─────────────┘   └──────────────┘
 ```
 
@@ -131,7 +131,7 @@ Users can ask natural-language questions about any analyzed repository:
 |---|---|
 | Frontend | [Vercel](https://vercel.com) |
 | Backend | [Render](https://render.com) (Docker) |
-| Database | Render PostgreSQL |
+| Database | Neon PostgreSQL |
 
 Docker is used for the backend because Graphviz requires system-level installation, which Render's standard Python runtime does not support natively.
 
