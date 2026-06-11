@@ -21,10 +21,10 @@ axios.interceptors.response.use(
     if (!config || !config.retry) {
       config.retry = 0;
     }
-    
+
     // Render free tier sleeping returns 502 Bad Gateway or timeouts
     const isRenderColdStart = !response || response.status === 502 || response.status === 503 || error.code === 'ECONNABORTED';
-    
+
     if (isRenderColdStart && config.retry < 3) {
       config.retry += 1;
       console.log(`[RExplain] Backend may be sleeping. Retrying request (${config.retry}/3) in 5s...`);
@@ -58,12 +58,12 @@ function Footer() {
 // ─── HTTP Method badge colors ───────────────────────────────────────────────
 function methodBg(method) {
   const styles = {
-    GET:     "text-green-400 bg-green-400/10 border-green-400/20",
-    POST:    "text-blue-400 bg-blue-400/10 border-blue-400/20",
-    PUT:     "text-orange-400 bg-orange-400/10 border-orange-400/20",
-    PATCH:   "text-purple-400 bg-purple-400/10 border-purple-400/20",
-    DELETE:  "text-red-400 bg-red-400/10 border-red-400/20",
-    HEAD:    "text-secondary bg-white/5 border-white/10",
+    GET: "text-green-400 bg-green-400/10 border-green-400/20",
+    POST: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+    PUT: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+    PATCH: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    DELETE: "text-red-400 bg-red-400/10 border-red-400/20",
+    HEAD: "text-secondary bg-white/5 border-white/10",
     OPTIONS: "text-secondary bg-white/5 border-white/10",
   };
   return styles[method] || "text-secondary bg-white/5 border-white/10";
@@ -198,41 +198,36 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         <div className="w-full max-w-5xl text-center mb-12 md:mb-16 relative z-10 flex flex-col items-center">
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
-          
-          <div className="animate-reveal-up" style={{ animationDelay: '0.1s' }}>
-            <h1 className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-shine" style={{ fontSize: "clamp(4.5rem, 14vw, 10rem)" }}>
-              RExplain
-            </h1>
-          </div>
+
+          <h1 className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up" style={{ fontSize: "clamp(4.5rem, 14vw, 10rem)", animationDelay: '0.1s' }}>
+            RExplain
+          </h1>
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
-            Unfold the complexity of any GitHub repository<br/>with <span className="italic font-light text-primary">clarity </span>and <span className="text-accent-orange">intent.</span>
+            Unfold the complexity of any GitHub repository<br />with <span className="italic font-light text-primary">clarity </span>and <span className="text-accent-orange">intent.</span>
           </p>
         </div>
 
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.2s' }}>
-          <div className="relative flex flex-col md:flex-row items-center bg-white border border-accent-purple/50 rounded-3xl md:rounded-2xl p-2 md:pl-6 animate-glow-purple gap-2 md:gap-0 transition-shadow duration-300">
+          <div className="relative flex flex-col md:flex-row items-center bg-white rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-2 md:gap-0 z-10">
+            {/* Animated Fluid Glow - Toned down for readability */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/60 via-orange-500/60 to-purple-500/60 rounded-[32px] md:rounded-[20px] blur-md opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-300 animate-shine bg-[length:200%_auto] -z-10 pointer-events-none"></div>
+            
             <div className="flex w-full items-center pl-4 md:pl-0">
-                <div className="flex items-center text-secondary/60 font-body text-base md:text-lg md:ml-4 select-none">
-                  <span className="hidden md:inline">github.com/</span>
-                  <span className="md:hidden">gh/</span>
-                </div>
-                <input 
-                className="w-full bg-transparent border-none text-primary placeholder:text-gray-300 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-3 pl-1" 
-                placeholder="username/repo" 
+              <span className="text-gray-400 font-body text-base md:text-lg whitespace-nowrap hidden sm:inline">github.com/</span>
+              <input
+                className="w-full bg-transparent border-none text-gray-800 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-4 pl-1"
+                placeholder="swaekaa/rexplain"
                 type="text"
-                value={repoUrl.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')}
-                onChange={e => {
-                  let val = e.target.value.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
-                  setRepoUrl(val);
-                }}
+                value={repoUrl}
+                onChange={e => setRepoUrl(e.target.value)}
                 onKeyDown={handleKey}
                 disabled={loading}
-                />
+              />
             </div>
-            <button 
-              className="w-full md:w-auto md:ml-4 bg-gradient-to-r from-accent-purple to-accent-orange text-white px-8 py-3.5 rounded-2xl md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_4px_15px_rgba(168,85,247,0.3)] hover:shadow-[0_4px_25px_rgba(249,115,22,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              onClick={onAnalyze} 
+            <button
+              className="w-full md:w-auto md:ml-4 bg-gradient-to-r from-purple-500/90 to-orange-500/90 text-white px-8 py-3.5 rounded-[20px] md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 drop-shadow-md"
+              onClick={onAnalyze}
               disabled={loading || !repoUrl.trim()}
             >
               <span>Explain</span>
@@ -252,8 +247,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-accent-orange/20 hover:border-accent-orange/50 hover:shadow-[0_8px_32px_rgba(249,115,22,0.15)] transition-all duration-300">
             <div className="flex justify-between items-start z-10">
               <div>
-                 <span className="text-[9px] uppercase tracking-[0.3em] text-accent-orange font-bold mb-2 block">System Intelligence</span>
-                 <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Architecture<br/>Mapping</h3>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-accent-orange font-bold mb-2 block">System Intelligence</span>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Architecture<br />Mapping</h3>
               </div>
               <div className="w-10 h-10 rounded-full bg-accent-orange/10 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-accent-orange">account_tree</span>
@@ -265,8 +260,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-accent-purple/20 hover:border-accent-purple/50 hover:shadow-[0_8px_32px_rgba(168,85,247,0.15)] transition-all duration-300">
             <div className="flex justify-between items-start z-10">
               <div>
-                 <span className="text-[9px] uppercase tracking-[0.3em] text-accent-purple font-bold mb-2 block">Cognitive Parsing</span>
-                 <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Deep Semantics</h3>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-accent-purple font-bold mb-2 block">Cognitive Parsing</span>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Deep Semantics</h3>
               </div>
               <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-accent-purple">psychology</span>
@@ -278,8 +273,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-white/5 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.05)] transition-all duration-300">
             <div className="flex justify-between items-start z-10">
               <div>
-                 <span className="text-[9px] uppercase tracking-[0.3em] text-white font-bold mb-2 block">Zero Config</span>
-                 <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Access</h3>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-white font-bold mb-2 block">Zero Config</span>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Access</h3>
               </div>
               <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-white">terminal</span>
@@ -289,16 +284,94 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           </div>
         </div>
 
+        {/* Fun Use Cases Section */}
+        <div className="w-full max-w-6xl mt-12 md:mt-20 mb-20 md:mb-32 relative z-10 px-4 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
+          <div className="text-center mb-16 relative z-10">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-orange mb-4 block">Why RExplain</span>
+            <h2 className="font-headline text-3xl md:text-5xl font-extrabold text-black mb-6">Built for every dev workflow</h2>
+            <p className="text-secondary/80 font-body text-base md:text-lg">One URL. Instant architectural clarity no setup, no noise.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Bluff */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-purple-500/80 hover:shadow-[0_8px_32px_rgba(168,85,247,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 to-purple-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-accent-purple animate-[spin_4s_linear_infinite]">psychology_alt</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">The "I Totally Read the Codebase" Bluff</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Drop a 50k-line repo into RExplain and instantly act like you've studied it for weeks. Become the 10x engineer on day one.</p>
+            </div>
+            {/* Spaghetti */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-orange-500/80 hover:shadow-[0_8px_32px_rgba(249,115,22,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/30 to-orange-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-accent-orange/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-accent-orange animate-bounce">route</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">The Spaghetti Code Autopsy</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Untangle that open-source project where 40 files import each other. RExplain is your X-Ray machine for pasta code.</p>
+            </div>
+            {/* Roast */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-red-500/80 hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-red-600/30 to-red-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-red-500 animate-pulse">local_fire_department</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">"Roast My Architecture"</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Paste your friend's repo and instantly ask the AI to find their most questionable architectural decisions. Absolute chaos ensues.</p>
+            </div>
+            {/* Vibe Coded */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-green-400/80 hover:shadow-[0_8px_32px_rgba(74,222,128,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-green-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-green-400/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-green-400 animate-[bounce_3s_infinite]">quiz</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">The "Vibe Coded" Interview Panic</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">You just vibe-coded an entire project with AI, and now the interviewer is grilling you on it. Paste it in and let RExplain save your career.</p>
+            </div>
+            {/* Hackathon */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-yellow-400/80 hover:shadow-[0_8px_32px_rgba(250,204,21,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.0s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/30 to-yellow-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-yellow-400 animate-[spin_3s_linear_infinite]">local_pizza</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">The 3 AM Hackathon Savior</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">When nobody has the brain cells left to read a library's source code at 3 AM. Throw it in and beg the AI to explain the WebSockets.</p>
+            </div>
+            {/* Tourism */}
+            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-blue-400/80 hover:shadow-[0_8px_32px_rgba(96,165,250,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-blue-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-blue-400/10 flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-blue-400 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">flight_takeoff</span>
+                </div>
+                <h3 className="font-headline text-lg font-bold text-white leading-tight">Architectural Tourism</h3>
+              </div>
+              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Take a VIP helicopter tour over React or FastAPI's architecture without actually reading 100,000 lines of code.</p>
+            </div>
+          </div>
+        </div>
+
       </main>
-      
+
       <footer className="relative z-10 bg-[#0B1120] border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 py-12 px-8">
           <div className="flex items-center gap-6">
             <span className="text-lg font-extrabold tracking-tighter font-headline text-white">RExplain</span>
-            <a 
-              href="https://github.com/swaekaa/rexplain" 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href="https://github.com/swaekaa/rexplain"
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors flex items-center gap-1"
             >
               GitHub
@@ -306,7 +379,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
             </a>
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-             © 2026 RExplain AI. Architectural Intelligence.
+            © 2026 RExplain AI. Architectural Intelligence.
           </div>
         </div>
       </footer>
@@ -317,7 +390,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 // ─── Loading State ──────────────────────────────────────────────────────────
 function LoadingState({ repoUrl, theme }) {
   const [waking, setWaking] = useState(false);
-  
+
   useEffect(() => {
     const handleWaking = () => setWaking(true);
     window.addEventListener("backend-waking-up", handleWaking);
@@ -329,12 +402,12 @@ function LoadingState({ repoUrl, theme }) {
     <div className="text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col" style={{ background: 'transparent' }}>
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-outline">
         <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex items-center">
-                <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-                <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
-            </nav>
+          <div className="flex items-center">
+            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
+            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+          </nav>
         </div>
       </header>
 
@@ -347,14 +420,14 @@ function LoadingState({ repoUrl, theme }) {
                 <div className="absolute inset-0 border border-accent-purple/30 rounded-full animate-slow-spin"></div>
                 <div className="relative w-2 h-2 bg-accent-purple rounded-full"></div>
               </div>
-              
+
               <div className="space-y-4 md:space-y-6">
                 <div className="inline-flex items-center gap-2 md:gap-3 justify-center">
-                    <div className="w-6 md:w-8 h-[1px] bg-accent-orange animate-pulse"></div>
-                    <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
+                  <div className="w-6 md:w-8 h-[1px] bg-accent-orange animate-pulse"></div>
+                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary animate-breathing">
-                  {waking ? "Waking Backend" : "Analyzing"}<br/>Repository
+                  {waking ? "Waking Backend" : "Analyzing"}<br />Repository
                 </h1>
                 <p className="text-secondary font-body text-sm md:text-base leading-relaxed font-light max-w-sm mx-auto opacity-80 px-4">
                   {waking ? "Render free tier takes ~50s to wake up. Retrying..." : "Mapping structural architecture and functional logic pathways."}
@@ -384,11 +457,15 @@ function LoadingState({ repoUrl, theme }) {
             </div>
           </div>
         </div>
-        
+
+        {/* Decorative Aesthetic Elements */}
+        <div className="fixed bottom-12 right-12 pointer-events-none opacity-[0.05] text-primary">
+          <span className="material-symbols-outlined text-[15rem]">architecture</span>
+        </div>
 
         {/* Footer (Mini) */}
         <footer className="absolute bottom-8 left-0 right-0 text-center bg-transparent">
-            <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
+          <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
         </footer>
       </main>
     </div>
@@ -516,7 +593,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
     setAsking(false);
     setStreaming(false);
     if (esRef.current) {
-        esRef.current.close();
+      esRef.current.close();
     }
   };
 
@@ -655,13 +732,13 @@ function ChatSidebar({ repoUrl, ragReady }) {
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "transparent" }}>
       <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-outline flex-shrink-0">
         <div className="flex items-center gap-2 md:gap-3">
-            <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-primary transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-primary/5 active:scale-95">
-                <span className="material-symbols-outlined">refresh</span>
-            </button>
-            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-1 md:ml-2">
-                <span className="material-symbols-outlined text-accent-purple !text-base md:!text-lg">auto_awesome</span>
-            </div>
-            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Assistant Core</span>
+          <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-primary transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-primary/5 active:scale-95">
+            <span className="material-symbols-outlined">refresh</span>
+          </button>
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-1 md:ml-2">
+            <span className="material-symbols-outlined text-accent-purple !text-base md:!text-lg">auto_awesome</span>
+          </div>
+          <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Assistant Core</span>
         </div>
       </div>
 
@@ -688,7 +765,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
               </div>
             )}
             {msg.role === "error" && (
-               <div className="p-4 rounded-xl max-w-[85%] bg-red-500/10 border border-red-500/20 text-red-400 font-body text-sm leading-relaxed">
+              <div className="p-4 rounded-xl max-w-[85%] bg-red-500/10 border border-red-500/20 text-red-400 font-body text-sm leading-relaxed">
                 ⚠️ {msg.text}
               </div>
             )}
@@ -701,26 +778,26 @@ function ChatSidebar({ repoUrl, ragReady }) {
 
       <div className="p-4 md:p-6 bg-transparent border-t border-outline flex-shrink-0 pb-[env(safe-area-inset-bottom,16px)]">
         <div className="relative group">
-            <textarea 
-              rows={1}
-              className="w-full bg-primary/5 border border-accent-purple/50 animate-glow-purple rounded-xl py-3 md:py-4 pl-4 md:pl-5 pr-12 md:pr-14 text-sm focus:outline-none transition-all placeholder:text-primary/70 text-primary font-body resize-none overflow-hidden min-h-[48px] max-h-[120px]" 
-              placeholder="Ask about architecture..."
-              value={input}
-              onChange={e => {
-                  setInput(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-              }}
-              onKeyDown={handleKey}
-              disabled={asking}
-            />
-            <button 
-              className="absolute right-2 md:right-3 bottom-2 md:top-1/2 md:-translate-y-1/2 w-8 h-8 bg-primary text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50 disabled:bg-primary/50 active:scale-95"
-              onClick={ask}
-              disabled={asking || !input.trim()}
-            >
-                <span className="material-symbols-outlined !text-sm">arrow_upward</span>
-            </button>
+          <textarea
+            rows={1}
+            className="w-full bg-primary/5 border border-outline rounded-xl py-3 md:py-4 pl-4 md:pl-5 pr-12 md:pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-primary/70 text-primary font-body resize-none overflow-hidden min-h-[48px] max-h-[120px]"
+            placeholder="Ask about architecture..."
+            value={input}
+            onChange={e => {
+              setInput(e.target.value);
+              e.target.style.height = 'auto';
+              e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+            }}
+            onKeyDown={handleKey}
+            disabled={asking}
+          />
+          <button
+            className="absolute right-2 md:right-3 bottom-2 md:top-1/2 md:-translate-y-1/2 w-8 h-8 bg-primary text-background rounded-lg flex items-center justify-center hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50 disabled:bg-primary/50 active:scale-95"
+            onClick={ask}
+            disabled={asking || !input.trim()}
+          >
+            <span className="material-symbols-outlined !text-sm">arrow_upward</span>
+          </button>
         </div>
       </div>
     </div>
@@ -790,86 +867,89 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
     <div className="text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col" style={{ background: 'transparent' }}>
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-outline">
         <div className="flex items-center gap-4 md:gap-8">
-            <div className="flex items-center">
-                <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
-            </div>
-            <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-                <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
-            </nav>
+          <div className="flex items-center">
+            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
+            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+          </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-
-            <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-accent-orange animate-pulse"></span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-accent-orange">Live Kernel</span>
+          </div>
+          <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
         </div>
       </header>
 
       <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
         {/* Left Side: Analysis Content */}
-        <main 
+        <main
           style={isMobile
             ? { width: '100%', flex: '1 1 0', overflowY: 'auto' }
             : { flex: `0 0 ${splitPct}%`, width: `${splitPct}%`, overflowY: 'auto' }}
           className="scroll-hide md:border-r border-outline/40"
         >
           <div className="w-full px-4 md:px-6 pt-8 md:pt-20 pb-28 md:pb-24 max-w-[100vw] overflow-x-hidden">
-            
+
             {/* Hero Analysis Header */}
             <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
-                <div className="inline-flex items-center gap-2 md:gap-3">
-                    <div className="w-6 md:w-8 h-[1px] bg-accent-orange"></div>
-                    <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
-                </div>
-                <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-words">
-                    Repository<br/>Analysis
-                </h1>
-                <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
-                    Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-outline pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
-                </p>
+              <div className="inline-flex items-center gap-2 md:gap-3">
+                <div className="w-6 md:w-8 h-[1px] bg-accent-orange"></div>
+                <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-words">
+                Repository<br />Analysis
+              </h1>
+              <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
+                Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-outline pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
+              </p>
             </section>
 
             {/* Repo Stats */}
             <section className="mb-8 md:mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
-                <div className="liquid-glass p-6 md:p-8 flex flex-col gap-4 md:gap-6 shadow-sm rounded-xl">
-                    <div className="space-y-1">
-                        <span className="block text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold">Comprehensive Scan</span>
-                        <h2 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-primary">
-                          {scan.total_files?.toLocaleString() || 0} <span className="text-lg md:text-xl font-light text-secondary/60 drop-shadow-none">files</span>
-                        </h2>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {langs.map(([ext, count]) => (
-                          <span key={ext} className="px-4 py-1.5 bg-primary/5 border border-outline text-secondary text-[9px] font-bold tracking-[0.1em] uppercase">
-                            {ext} ({count})
-                          </span>
-                        ))}
-                    </div>
+              <div className="liquid-glass p-6 md:p-8 flex flex-col gap-4 md:gap-6 shadow-sm rounded-xl">
+                <div className="space-y-1">
+                  <span className="block text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold">Comprehensive Scan</span>
+                  <h2 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-primary">
+                    {scan.total_files?.toLocaleString() || 0} <span className="text-lg md:text-xl font-light text-secondary/60 drop-shadow-none">files</span>
+                  </h2>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {langs.map(([ext, count]) => (
+                    <span key={ext} className="px-4 py-1.5 bg-primary/5 border border-outline text-secondary text-[9px] font-bold tracking-[0.1em] uppercase">
+                      {ext} ({count})
+                    </span>
+                  ))}
+                </div>
+              </div>
             </section>
 
             {/* File Types Graph */}
             {langs.length > 0 && (
               <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
-                  <SectionHeader label="File Distribution" />
-                  <div className="liquid-glass p-6 rounded-xl">
-                      <FileTypesGraph langs={langs} />
-                  </div>
+                <SectionHeader label="File Distribution" />
+                <div className="liquid-glass p-6 rounded-xl">
+                  <FileTypesGraph langs={langs} />
+                </div>
               </section>
             )}
 
             {/* Tech Stack */}
             <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
-                <SectionHeader label="Ecosystem" />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
-                  {stackItems.map(({ label, value, icon }) => (
-                    <div key={label} className="liquid-glass p-5 md:p-6 h-auto sm:h-40 flex sm:flex-col justify-between items-center sm:items-stretch group rounded-xl gap-2 sm:gap-0">
-                        <div className="flex sm:justify-between items-center sm:items-start w-full sm:w-auto gap-3 sm:gap-0">
-                            <span className="material-symbols-outlined text-secondary/40 group-hover:text-accent-purple transition-colors order-first sm:order-last">{icon}</span>
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/60">{label}</span>
-                        </div>
-                        <span className="text-xl md:text-2xl font-headline font-bold tracking-tight text-primary group-hover:text-accent-purple transition-all duration-300 w-full text-right sm:text-left truncate">{value || "Not detected"}</span>
+              <SectionHeader label="Ecosystem" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                {stackItems.map(({ label, value, icon }) => (
+                  <div key={label} className="liquid-glass p-5 md:p-6 h-auto sm:h-40 flex sm:flex-col justify-between items-center sm:items-stretch group rounded-xl gap-2 sm:gap-0">
+                    <div className="flex sm:justify-between items-center sm:items-start w-full sm:w-auto gap-3 sm:gap-0">
+                      <span className="material-symbols-outlined text-secondary/40 group-hover:text-accent-purple transition-colors order-first sm:order-last">{icon}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-secondary/60">{label}</span>
                     </div>
-                  ))}
-                </div>
+                    <span className="text-xl md:text-2xl font-headline font-bold tracking-tight text-primary group-hover:text-accent-purple transition-all duration-300 w-full text-right sm:text-left truncate">{value || "Not detected"}</span>
+                  </div>
+                ))}
+              </div>
             </section>
 
             {/* System Diagram */}
@@ -883,21 +963,19 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 <div className="flex items-center gap-1 bg-primary/5 border border-outline rounded-lg p-1 flex-shrink-0">
                   <button
                     onClick={() => setDiagramView("interactive")}
-                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${
-                      diagramView === "interactive"
+                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${diagramView === "interactive"
                         ? "bg-accent-purple text-white"
                         : "text-secondary/40 hover:text-primary"
-                    }`}
+                      }`}
                   >
                     Interactive
                   </button>
                   <button
                     onClick={() => setDiagramView("static")}
-                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${
-                      diagramView === "static"
+                    className={`px-3 py-1.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all ${diagramView === "static"
                         ? "bg-primary/10 text-primary"
                         : "text-secondary/40 hover:text-primary"
-                    }`}
+                      }`}
                   >
                     Classic
                   </button>
@@ -977,31 +1055,31 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             {/* Key Files */}
             {result.important_files?.length > 0 && (
               <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
-                  <SectionHeader label="Core Entry Points" />
-                  <div className="space-y-3">
-                    {result.important_files.slice(0, 6).map((file, i) => {
-                      const name = file.split("/").pop();
-                      const icon = name.includes("Dockerfile") ? "deployed_code" : file.startsWith(".github") ? "hub" : name.endsWith(".json") ? "data_object" : name.endsWith(".py") ? "terminal" : "description";
-                      return (
-                        <div key={i} onClick={() => setPreviewFile(file)} className="group liquid-glass p-4 md:p-5 rounded-xl flex justify-between items-center hover:bg-primary/[0.05] transition-all cursor-pointer">
-                            <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                                <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-primary/5 group-hover:bg-accent-purple transition-colors rounded-lg">
-                                    <span className="material-symbols-outlined text-secondary/60 group-hover:text-white text-sm md:text-base">{icon}</span>
-                                </div>
-                                <div className="flex flex-col overflow-hidden">
-                                    <span className="text-sm font-bold font-headline tracking-tight text-primary truncate">{name}</span>
-                                    <span className="text-[9px] md:text-[10px] text-secondary/60 font-medium uppercase tracking-wider truncate">{file}</span>
-                                </div>
-                            </div>
-                            <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all flex-shrink-0 ml-2">arrow_forward</span>
+                <SectionHeader label="Core Entry Points" />
+                <div className="space-y-3">
+                  {result.important_files.slice(0, 6).map((file, i) => {
+                    const name = file.split("/").pop();
+                    const icon = name.includes("Dockerfile") ? "deployed_code" : file.startsWith(".github") ? "hub" : name.endsWith(".json") ? "data_object" : name.endsWith(".py") ? "terminal" : "description";
+                    return (
+                      <div key={i} onClick={() => setPreviewFile(file)} className="group liquid-glass p-4 md:p-5 rounded-xl flex justify-between items-center hover:bg-primary/[0.05] transition-all cursor-pointer">
+                        <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                          <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-primary/5 group-hover:bg-accent-purple transition-colors rounded-lg">
+                            <span className="material-symbols-outlined text-secondary/60 group-hover:text-white text-sm md:text-base">{icon}</span>
+                          </div>
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="text-sm font-bold font-headline tracking-tight text-primary truncate">{name}</span>
+                            <span className="text-[9px] md:text-[10px] text-secondary/60 font-medium uppercase tracking-wider truncate">{file}</span>
+                          </div>
                         </div>
-                      )
-                    })}
-                  </div>
+                        <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all flex-shrink-0 ml-2">arrow_forward</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </section>
             )}
 
-            {previewFile && <FilePreviewModal repoUrl={result.repo_url || `https://github.com/${repoUrl}`} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
+            {previewFile && <FilePreviewModal repoUrl={repoUrl} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
 
             {/* Commit Activity */}
             {result.metadata?.commits?.length > 0 && (
@@ -1054,7 +1132,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {/* Footer (Mini) */}
             <footer className="pt-12 text-center bg-transparent">
-                <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
+              <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
             </footer>
 
           </div>
@@ -1062,12 +1140,12 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
         {/* DIVIDER */}
         {!isMobile && (
-            <div
+          <div
             onMouseDown={onDividerDown}
             className="w-1.5 flex-shrink-0 cursor-col-resize flex items-center justify-center z-10 transition-colors hover:bg-primary/5"
-            >
+          >
             <div className="w-0.5 h-10 rounded-full bg-primary/20 pointer-events-none" />
-            </div>
+          </div>
         )}
 
         {/* Desktop: Right Side AI Chat */}
@@ -1136,8 +1214,8 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 function SectionHeader({ label }) {
   return (
     <div className="flex items-center gap-4 mb-8">
-        <h3 className="text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold whitespace-nowrap">{label}</h3>
-        <div className="h-[1px] w-full bg-outline"></div>
+      <h3 className="text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold whitespace-nowrap">{label}</h3>
+      <div className="h-[1px] w-full bg-outline"></div>
     </div>
   );
 }
@@ -1176,29 +1254,12 @@ export default function App() {
   const [error, setError] = useState(null);
 
   const analyze = async () => {
-    let finalUrl = repoUrl.trim().replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
-    if (!finalUrl) return;
-    
-    // Validate basic format
-    if (finalUrl.split('/').filter(Boolean).length !== 2) {
-       setError("Invalid format. Please enter as 'username/repository'.");
-       return;
-    }
-
+    if (!repoUrl.trim()) return;
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
-    
     try {
-      // Pre-flight check: verify repo is public and exists
-      const ghRes = await fetch(`https://api.github.com/repos/${finalUrl}`);
-      if (!ghRes.ok) {
-        setLoading(false);
-        setError(`Cannot access '${finalUrl}'. Please ensure it is a valid, public GitHub repository.`);
-        return;
-      }
-
       console.log("API URL:", API_URL);
-      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: `https://github.com/${finalUrl}` }, {
+      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
         timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
       });
       console.log("Response:", res.data);
