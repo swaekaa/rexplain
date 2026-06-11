@@ -26,42 +26,53 @@ export default function VantaBackground({ subtle = false }) {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
-    // If the user prefers reduced motion, skip Vanta entirely —
-    // the static CSS fallback gradient (set on the container) will show instead.
     if (prefersReducedMotion) return;
 
-    // Guard: wait until the CDN scripts have loaded the global VANTA object
-    if (typeof window.VANTA === "undefined" || !window.VANTA.CLOUDS) {
-      console.warn("VantaBackground: VANTA.CLOUDS not available. CDN scripts may not be loaded yet.");
-      return;
-    }
+    let initAttempts = 0;
+    let timeoutId;
 
-    // Initialise the effect — premium AI/SaaS config tuned for the light theme
-    vantaEffect.current = window.VANTA.CLOUDS({
-      el: vantaRef.current,
-      THREE: window.THREE,
+    const initVanta = () => {
+      // Guard: wait until the CDN scripts have loaded the global VANTA and THREE objects
+      if (typeof window.VANTA === "undefined" || !window.VANTA.CLOUDS || typeof window.THREE === "undefined") {
+        initAttempts++;
+        if (initAttempts < 50) { // Try for up to 5 seconds
+          timeoutId = setTimeout(initVanta, 100);
+        } else {
+          console.warn("VantaBackground: VANTA.CLOUDS not available. CDN scripts failed to load.");
+        }
+        return;
+      }
 
-      // ----- Color palette (matches RExplain brand) -----
-      skyColor: 0xf0ecff,        // very pale lavender sky
-      cloudColor: 0xd8b4fe,      // soft purple clouds (matches accent-purple)
-      cloudShadowColor: 0x9333ea, // deeper purple shadow
-      sunColor: 0xf97316,        // orange sun (matches accent-orange)
-      sunGlareColor: 0xfbbf24,   // warm amber glare
-      sunlightColor: 0xffffff,   // white sunlight
+      // Initialise the effect if not already done
+      if (!vantaEffect.current && vantaRef.current) {
+        vantaEffect.current = window.VANTA.CLOUDS({
+          el: vantaRef.current,
+          THREE: window.THREE,
 
-      // ----- Animation settings -----
-      speed: 0.5,                // subtle — not distracting
-      zoom: 0.75,                // pull back slightly for an airy, open feel
+          // ----- Color palette (matches RExplain brand) -----
+          skyColor: 0xf0ecff,        // very pale lavender sky
+          cloudColor: 0xd8b4fe,      // soft purple clouds (matches accent-purple)
+          cloudShadowColor: 0x9333ea, // deeper purple shadow
+          sunColor: 0xf97316,        // orange sun (matches accent-orange)
+          sunGlareColor: 0xfbbf24,   // warm amber glare
+          sunlightColor: 0xffffff,   // white sunlight
 
-      // ----- Sizing -----
-      // minWidth/minHeight prevent the canvas from collapsing on small screens
-      minWidth: 200,
-      minHeight: 200,
+          // ----- Animation settings -----
+          speed: 0.5,                // subtle — not distracting
+          zoom: 0.75,                // pull back slightly for an airy, open feel
 
-      mouseControls: false,      // disable mouse parallax for a calmer feel
-      touchControls: false,      // no touch parallax on mobile
-      gyroControls: false,       // no gyro on mobile — prevents disorientation
-    });
+          // ----- Sizing -----
+          minWidth: 200,
+          minHeight: 200,
+
+          mouseControls: false,      // disable mouse parallax for a calmer feel
+          touchControls: false,      // no touch parallax on mobile
+          gyroControls: false,       // no gyro on mobile — prevents disorientation
+        });
+      }
+    };
+
+    initVanta();
 
     // ResizeObserver keeps the canvas sized correctly when the window changes.
     // Without this, Vanta's canvas stays the initial viewport size after resize.
@@ -72,6 +83,7 @@ export default function VantaBackground({ subtle = false }) {
 
     // Cleanup on unmount — prevents GPU memory leaks
     return () => {
+      clearTimeout(timeoutId);
       observer.disconnect();
       vantaEffect.current?.destroy();
       vantaEffect.current = null;
