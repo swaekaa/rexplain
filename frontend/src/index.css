@@ -23,6 +23,16 @@ body {
 }
 
 /* Liquid glass text (landing hero h1 - large) */
+@keyframes cssShine {
+  0% { background-position: -100% center; }
+  100% { background-position: 100% center; }
+}
+
+@keyframes cssFadeInTitle {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .liquid-glass-text {
   background: linear-gradient(120deg,
       #111827 30%,
@@ -34,7 +44,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shine 8s ease-in-out infinite, fadeInTitle 1s ease-out forwards;
+  animation: cssShine 8s ease-in-out infinite, cssFadeInTitle 1s ease-out forwards;
   opacity: 0;
 }
 
