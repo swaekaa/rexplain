@@ -22,18 +22,18 @@
         theme: {
           extend: {
             "colors": {
-              "primary": "#ffffff",
-              "surface-container-lowest": "#1c1c1c",
+              "primary": "#111827",
+              "surface-container-lowest": "#ffffff",
               "tertiary": "#a855f7",
               "accent-orange": "#f97316",
-              "background": "#121212",
-              "on-background": "#f3f3f1",
-              "secondary": "#a3a3a3",
-              "outline": "rgba(255, 255, 255, 0.05)",
+              "background": "#f9fafb",
+              "on-background": "#111827",
+              "secondary": "#6b7280",
+              "outline": "rgba(0, 0, 0, 0.1)",
               "accent-purple": "#a855f7",
-              "bg-page": "#121212",
-              "bg-subtle": "rgba(255, 255, 255, 0.03)",
-              "border-subtle": "rgba(255, 255, 255, 0.05)"
+              "bg-page": "#f9fafb",
+              "bg-subtle": "rgba(0, 0, 0, 0.03)",
+              "border-subtle": "rgba(0, 0, 0, 0.05)"
             },
             "borderRadius": {
               "DEFAULT": "0.125rem",
@@ -57,7 +57,8 @@
               "draw-line": "drawLine 2s ease-in-out forwards",
               "shine": "shine 12s ease-in-out infinite",
               "fadeInTitle": "fadeInTitle 2.5s ease-out forwards",
-              "slideUpFade": "slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both"
+              "slideUpFade": "slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
+              "glow-purple": "glowPurple 3s ease-in-out infinite"
             },
             "keyframes": {
               shimmer: {
@@ -91,6 +92,10 @@
               slideUpFade: {
                 from: { opacity: "0", transform: "translateY(20px)" },
                 to: { opacity: "1", transform: "translateY(0)" }
+              },
+              glowPurple: {
+                "0%, 100%": { boxShadow: "0 0 5px rgba(168,85,247,0.2)", borderColor: "rgba(168,85,247,0.3)" },
+                "50%": { boxShadow: "0 0 20px rgba(168,85,247,0.8)", borderColor: "rgba(168,85,247,1)" }
               }
             }
           },
@@ -102,5 +107,10 @@
   <body class="bg-page text-on-background antialiased selection:bg-tertiary selection:text-white">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- Three.js: required peer dependency for Vanta.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <!-- Vanta.js Clouds effect -->
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
   </body>
 </html>

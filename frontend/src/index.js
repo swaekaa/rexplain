@@ -7,6 +7,19 @@ import { Analytics } from '@vercel/analytics/react';
 
 console.log("Vercel Analytics initialized");
 
+// Prevent benign ResizeObserver loop errors from breaking the CRA dev overlay (common with Recharts/ReactFlow)
+const _ResizeObserver = window.ResizeObserver;
+window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
+  constructor(callback) {
+    super((entries, observer) => {
+      window.requestAnimationFrame(() => {
+        try {
+          callback(entries, observer);
+        } catch (e) {}
+      });
+    });
+  }
+};
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

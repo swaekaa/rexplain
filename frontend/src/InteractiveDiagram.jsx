@@ -31,16 +31,16 @@ import "@xyflow/react/dist/style.css";
 // ── Layer colour palette ──────────────────────────────────────────────────────
 
 const LAYER_COLORS = {
-  frontend:  { border: "#bc8cff", bg: "#1a0d2e", accent: "#a855f7" },
-  route:     { border: "#60a5fa", bg: "#0d1a2e", accent: "#3b82f6" },
-  backend:   { border: "#60a5fa", bg: "#0d1a2e", accent: "#3b82f6" },
-  service:   { border: "#34d399", bg: "#0d1f16", accent: "#10b981" },
-  model:     { border: "#fbbf24", bg: "#1f180d", accent: "#f59e0b" },
-  database:  { border: "#3fb950", bg: "#0d1f0d", accent: "#22c55e" },
-  infra:     { border: "#ffa657", bg: "#1f150d", accent: "#f97316" },
+  frontend:  { border: "#a855f7", bg: "#faf5ff", accent: "#a855f7" },
+  route:     { border: "#3b82f6", bg: "#eff6ff", accent: "#3b82f6" },
+  backend:   { border: "#3b82f6", bg: "#eff6ff", accent: "#3b82f6" },
+  service:   { border: "#10b981", bg: "#f0fdf4", accent: "#10b981" },
+  model:     { border: "#f59e0b", bg: "#fffbeb", accent: "#f59e0b" },
+  database:  { border: "#22c55e", bg: "#f0fdf4", accent: "#22c55e" },
+  infra:     { border: "#f97316", bg: "#fff7ed", accent: "#f97316" },
 };
 
-const LAYER_COLOR_DEFAULT = { border: "#484f58", bg: "#161b22", accent: "#6e7681" };
+const LAYER_COLOR_DEFAULT = { border: "#d1d5db", bg: "#ffffff", accent: "#6e7681" };
 
 function getLayer(layer) {
   return LAYER_COLORS[layer] || LAYER_COLOR_DEFAULT;
@@ -103,7 +103,7 @@ function LayerNode({ data, selected }) {
         </span>
         <span
           style={{
-            color: "#ffffff",
+            color: "#111827",
             fontWeight: 800,
             fontSize: 13,
             letterSpacing: "-0.01em",
@@ -139,7 +139,7 @@ function FrameworkNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 14, color: accent }}>
           {data.icon}
         </span>
-        <span style={{ color: "#e6edf3", fontWeight: 700, fontSize: 12 }}>
+        <span style={{ color: "#374151", fontWeight: 700, fontSize: 12 }}>
           {data.label}
         </span>
       </div>
@@ -159,7 +159,7 @@ function FolderNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 14, color: accent }}>
           folder
         </span>
-        <span style={{ color: "#c9d1d9", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
+        <span style={{ color: "#111827", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
           {data.label}
         </span>
       </div>
@@ -183,7 +183,7 @@ function FileNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 12, color: accent }}>
           {data.icon}
         </span>
-        <span style={{ color: "#c9d1d9", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
+        <span style={{ color: "#111827", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
           {data.label}
         </span>
       </div>
@@ -217,7 +217,7 @@ function RouteNode({ data, selected }) {
         >
           {meta.method || "GET"}
         </span>
-        <span style={{ color: "#c9d1d9", fontWeight: 500, fontSize: 11, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ color: "#111827", fontWeight: 500, fontSize: 11, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {meta.path || data.label}
         </span>
       </div>
@@ -284,7 +284,7 @@ function Inspector({ node, onClose, onFileClick }) {
         top: 12,
         right: 12,
         width: 280,
-        background: "#0d1117",
+        background: "#f8fafc",
         border: `1.5px solid ${accent}55`,
         borderRadius: 14,
         padding: 16,
@@ -312,7 +312,7 @@ function Inspector({ node, onClose, onFileClick }) {
             </span>
           </div>
           <div>
-            <div style={{ color: "#fff", fontWeight: 800, fontSize: 12, lineHeight: 1.2 }}>
+            <div style={{ color: "#111827", fontWeight: 800, fontSize: 12, lineHeight: 1.2 }}>
               {data.label}
             </div>
             <div
@@ -334,7 +334,7 @@ function Inspector({ node, onClose, onFileClick }) {
           style={{
             background: "none",
             border: "none",
-            color: "#484f58",
+            color: "#9ca3af",
             cursor: "pointer",
             padding: 0,
             lineHeight: 1,
@@ -347,7 +347,7 @@ function Inspector({ node, onClose, onFileClick }) {
       {/* Description */}
       <p
         style={{
-          color: "#8b949e",
+          color: "#6b7280",
           fontSize: 11,
           lineHeight: 1.6,
           margin: "0 0 12px 0",
@@ -380,7 +380,7 @@ function Inspector({ node, onClose, onFileClick }) {
               </span>
             );
           })()}
-          <code style={{ color: "#c9d1d9", fontSize: 11, marginLeft: 8, fontFamily: "monospace" }}>
+          <code style={{ color: "#111827", fontSize: 11, marginLeft: 8, fontFamily: "monospace" }}>
             {data.meta.path}
           </code>
         </div>
@@ -391,7 +391,7 @@ function Inspector({ node, onClose, onFileClick }) {
         <div>
           <div
             style={{
-              color: "#484f58",
+              color: "#9ca3af",
               fontSize: 8,
               fontWeight: 800,
               letterSpacing: "0.12em",
@@ -410,8 +410,8 @@ function Inspector({ node, onClose, onFileClick }) {
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  background: "#161b22",
-                  border: "1px solid #30363d",
+                  background: "#ffffff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: 6,
                   padding: "5px 8px",
                   cursor: "pointer",
@@ -423,17 +423,17 @@ function Inspector({ node, onClose, onFileClick }) {
                   e.currentTarget.style.background = accent + "11";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "#30363d";
-                  e.currentTarget.style.background = "#161b22";
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.8)";
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 11, color: "#484f58" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 11, color: "#9ca3af" }}>
                   description
                 </span>
-                <span style={{ color: "#c9d1d9", fontSize: 10, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ color: "#111827", fontSize: 10, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {f}
                 </span>
-                <span className="material-symbols-outlined" style={{ fontSize: 10, color: "#484f58", marginLeft: "auto", flexShrink: 0 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 10, color: "#9ca3af", marginLeft: "auto", flexShrink: 0 }}>
                   open_in_new
                 </span>
               </button>
@@ -573,10 +573,10 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           fontFamily: "Manrope, Inter, sans-serif",
         }}
       >
-        <span className="material-symbols-outlined" style={{ fontSize: 40, color: "#484f58" }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 40, color: "#9ca3af" }}>
           schema
         </span>
-        <p style={{ color: "#8b949e", fontSize: 13, margin: 0 }}>
+        <p style={{ color: "#6b7280", fontSize: 13, margin: 0 }}>
           No interactive graph data available
         </p>
       </div>
@@ -594,8 +594,8 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           gap: 4px !important;
         }
         .react-flow__controls-button {
-          background: #161b22 !important;
-          border: 1px solid #30363d !important;
+          background: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
           border-radius: 6px !important;
           width: 26px !important;
           height: 26px !important;
@@ -606,18 +606,18 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           padding: 0 !important;
         }
         .react-flow__controls-button:hover {
-          background: #21262d !important;
-          border-color: #484f58 !important;
+          background: #f3f4f6 !important;
+          border-color: #d1d5db !important;
         }
         .react-flow__controls-button svg {
-          fill: #8b949e !important;
+          fill: #6b7280 !important;
           width: 12px !important;
           height: 12px !important;
           max-width: 12px !important;
           max-height: 12px !important;
         }
         .react-flow__controls-button:hover svg {
-          fill: #e6edf3 !important;
+          fill: #111827 !important;
         }
       `}</style>
       <ReactFlow
@@ -629,17 +629,16 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         nodeTypes={NODE_TYPES}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
-        fitView
-        fitViewOptions={{ padding: 0.15 }}
-        minZoom={0.2}
+        defaultViewport={{ x: 50, y: 50, zoom: 0.85 }}
+        minZoom={0.6}
         maxZoom={2.5}
         preventScrolling
         proOptions={{ hideAttribution: true }}
-        style={{ background: "#0d1117" }}
+        style={{ background: "#f8fafc" }}
         defaultEdgeOptions={{ type: "smoothstep" }}
       >
         <Background
-          color="#30363d"
+          color="#e5e7eb"
           variant="dots"
           gap={20}
           size={1}
@@ -657,8 +656,8 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         />
         <MiniMap
           style={{
-            background: "#0d1117",
-            border: "1px solid #30363d",
+            background: "#f8fafc",
+            border: "1px solid #e5e7eb",
             borderRadius: 8,
           }}
           nodeColor={(n) => {
@@ -672,8 +671,8 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         <Panel position="top-left">
           <div
             style={{
-              background: "#0d1117cc",
-              border: "1px solid #30363d",
+              background: "rgba(255,255,255,0.8)",
+              border: "1px solid #e5e7eb",
               borderRadius: 10,
               padding: "8px 12px",
               fontFamily: "Manrope, Inter, sans-serif",
@@ -686,7 +685,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
                 fontWeight: 800,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "#484f58",
+                color: "#9ca3af",
                 marginBottom: 6,
               }}
             >
@@ -704,7 +703,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
               return (
                 <div key={layer} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: accent }} />
-                  <span style={{ fontSize: 10, color: "#8b949e", fontWeight: 600 }}>{label}</span>
+                  <span style={{ fontSize: 10, color: "#6b7280", fontWeight: 600 }}>{label}</span>
                 </div>
               );
             })}
@@ -716,7 +715,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           <div
             style={{
               fontSize: 9,
-              color: "#484f58",
+              color: "#9ca3af",
               fontFamily: "Manrope, Inter, sans-serif",
               fontWeight: 700,
               letterSpacing: "0.06em",

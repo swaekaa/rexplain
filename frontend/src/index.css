@@ -1,7 +1,7 @@
 :root {
-  --bg-page: #121212;
-  --text-primary: #ffffff;
-  --text-secondary: #a3a3a3;
+  --bg-page: #f9fafb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
   --accent-purple: #a855f7;
   --accent-orange: #f97316;
 }
@@ -24,11 +24,11 @@ body {
 .liquid-glass-text {
   background: linear-gradient(
       120deg, 
-      #fff 30%, 
+      #111827 30%, 
       #a855f7 45%, 
-      #fff 50%, 
+      #111827 50%, 
       #f97316 55%, 
-      #fff 70%
+      #111827 70%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -48,18 +48,16 @@ body {
 }
 
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .liquid-glass:hover {
   transform: scale(1.01);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3), 0 0 15px rgba(168, 85, 247, 0.1);
-  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1), 0 0 15px rgba(168, 85, 247, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .chat-bubble-ai {
@@ -69,9 +67,9 @@ body {
 }
 
 .chat-bubble-user {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .scroll-hide::-webkit-scrollbar {
@@ -81,7 +79,7 @@ body {
   background: transparent;
 }
 .scroll-hide::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.1);
   border-radius: 10px;
 }
 
@@ -102,22 +100,22 @@ h1, h2, h3, h4, h5, h6, button, nav, .liquid-glass, span.material-symbols-outlin
 .readme-prose p, .readme-prose li, .readme-prose code, input, textarea { user-select: text; -webkit-user-select: text; }
 
 /* react-markdown prose overrides */
-.readme-prose h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.5rem; letter-spacing: -0.02em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.4rem; }
-.readme-prose h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.2rem; }
+.readme-prose h1 { font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.5rem; letter-spacing: -0.02em; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.4rem; }
+.readme-prose h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 1rem 0 0.4rem; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.2rem; }
 .readme-prose h3 { font-family: 'Manrope', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0.8rem 0 0.3rem; }
-.readme-prose p  { color: var(--text-secondary); line-height: 1.8; margin: 0.5rem 0; font-size: 0.95rem; font-family: 'Inter', sans-serif; font-weight: 300; }
+.readme-prose p  { color: var(--text-secondary); line-height: 1.8; margin: 0.5rem 0; font-size: 0.95rem; font-family: 'Inter', sans-serif; font-weight: 400; }
 .readme-prose a  { color: var(--accent-purple); text-decoration: underline; text-underline-offset: 3px; }
-.readme-prose code { background: rgba(255,255,255,0.05); color: var(--text-primary); padding: 1px 6px; border-radius: 3px; font-size: 0.82em; font-family: monospace; }
-.readme-prose pre { background: rgba(255,255,255,0.03); border-left: 2px solid var(--accent-purple); padding: 14px 16px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; border-radius: 0 4px 4px 0; }
+.readme-prose code { background: rgba(0,0,0,0.05); color: var(--text-primary); padding: 1px 6px; border-radius: 3px; font-size: 0.82em; font-family: monospace; }
+.readme-prose pre { background: rgba(0,0,0,0.03); border-left: 2px solid var(--accent-purple); padding: 14px 16px; overflow-x: auto; font-size: 0.8rem; line-height: 1.6; margin: 0.6rem 0; border-radius: 0 4px 4px 0; }
 .readme-prose pre code { background: none; padding: 0; font-size: inherit; }
-.readme-prose ul, .readme-prose ol { padding-left: 1.4rem; color: var(--text-secondary); margin: 0.4rem 0; font-weight: 300; }
+.readme-prose ul, .readme-prose ol { padding-left: 1.4rem; color: var(--text-secondary); margin: 0.4rem 0; font-weight: 400; }
 .readme-prose li { margin: 0.25rem 0; line-height: 1.8; font-size: 0.9rem; }
 .readme-prose blockquote { border-left: 4px solid var(--accent-purple); padding-left: 1rem; color: var(--text-secondary); margin: 0.6rem 0; font-style: italic; }
 .readme-prose img { max-width: 100%; border-radius: 4px; margin: 0.5rem 0; }
-.readme-prose hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0; }
+.readme-prose hr { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 1rem 0; }
 .readme-prose table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.6rem 0; }
-.readme-prose th { border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; text-align: left; background: rgba(255,255,255,0.05); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
-.readme-prose td { border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; color: var(--text-secondary); }
+.readme-prose th { border: 1px solid rgba(0,0,0,0.1); padding: 6px 12px; text-align: left; background: rgba(0,0,0,0.05); font-family: 'Manrope', sans-serif; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+.readme-prose td { border: 1px solid rgba(0,0,0,0.1); padding: 6px 12px; color: var(--text-secondary); }
 
 /* Remove previous layout definitions and animations as they are in tailwind.config and index.html */
 

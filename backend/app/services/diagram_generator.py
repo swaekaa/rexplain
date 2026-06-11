@@ -31,8 +31,8 @@ _CLUSTERS = [
     {
         "id":      "cluster_frontend",
         "label":   "Frontend",
-        "color":   "#bc8cff",
-        "bg":      "#1a0d2e",
+        "color":   "#a855f7",
+        "bg":      "#faf5ff",
         "folders": {"components", "pages", "hooks", "store", "context",
                     "assets", "styles", "layouts", "public", "src",
                     "client", "ui", "views", "lib", "types", "routes_fe"},
@@ -41,8 +41,8 @@ _CLUSTERS = [
     {
         "id":      "cluster_backend",
         "label":   "Backend",
-        "color":   "#388bfd",
-        "bg":      "#0d1a2e",
+        "color":   "#3b82f6",
+        "bg":      "#eff6ff",
         "folders": {"routes", "route", "controllers", "services", "service",
                     "middleware", "api", "core", "handlers", "tasks",
                     "workers", "jobs", "utils", "helpers", "schemas",
@@ -53,8 +53,8 @@ _CLUSTERS = [
     {
         "id":      "cluster_database",
         "label":   "Database",
-        "color":   "#3fb950",
-        "bg":      "#0d1f0d",
+        "color":   "#22c55e",
+        "bg":      "#f0fdf4",
         "folders": {"models", "model", "repositories", "repository",
                     "migrations", "alembic", "prisma", "db", "database",
                     "data", "fixtures", "cache"},
@@ -63,8 +63,8 @@ _CLUSTERS = [
     {
         "id":      "cluster_infra",
         "label":   "Infrastructure",
-        "color":   "#ffa657",
-        "bg":      "#1f150d",
+        "color":   "#f97316",
+        "bg":      "#fff7ed",
         "folders": {".github", "workflows", "docker", "k8s", "terraform",
                     "ansible", "scripts", "bin", "build", "dist",
                     "notebooks", "docs", "doc", "examples"},
@@ -122,10 +122,10 @@ def generate_architecture_diagram(
     )
     dot.attr(
         rankdir="LR",
-        bgcolor="#0d1117",
+        bgcolor="#ffffff",
         fontname="Helvetica Neue,Helvetica,Arial,sans-serif",
         fontsize="13",
-        fontcolor="#e6edf3",
+        fontcolor="#111827",
         splines="ortho",
         nodesep="0.6",
         ranksep="1.2",
@@ -134,15 +134,15 @@ def generate_architecture_diagram(
     dot.attr("node",
         shape="box",
         style="filled,rounded",
-        fillcolor="#161b22",
-        fontcolor="#e6edf3",
+        fillcolor="#ffffff",
+        fontcolor="#111827",
         fontname="Helvetica Neue,Helvetica,Arial,sans-serif",
         fontsize="12",
-        color="#30363d",
+        color="#e5e7eb",
         margin="0.20,0.10",
     )
     dot.attr("edge",
-        color="#484f58",
+        color="#d1d5db",
         arrowsize="0.7",
         penwidth="1.2",
     )
@@ -225,7 +225,7 @@ def generate_architecture_diagram(
                     label=item,
                     color=ccolor + "88",
                     fillcolor=cbg,
-                    fontcolor="#e6edf3",
+                    fontcolor="#111827",
                 )
                 if prev_node:
                     c.edge(prev_node, node_id,
