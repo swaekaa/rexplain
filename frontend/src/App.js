@@ -1001,7 +1001,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
               </section>
             )}
 
-            {previewFile && <FilePreviewModal repoUrl={repoUrl} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
+            {previewFile && <FilePreviewModal repoUrl={result.repo_url || `https://github.com/${repoUrl}`} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
 
             {/* Commit Activity */}
             {result.metadata?.commits?.length > 0 && (
