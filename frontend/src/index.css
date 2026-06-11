@@ -34,8 +34,6 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shine 8s ease-in-out infinite, fadeInTitle 1s ease-out forwards;
-  opacity: 0;
 }
 
 /* RExplain nav logo - always visible */

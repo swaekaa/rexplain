@@ -199,9 +199,11 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
           
-          <h1 className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up" style={{ fontSize: "clamp(4.5rem, 14vw, 10rem)", animationDelay: '0.1s' }}>
-            RExplain
-          </h1>
+          <div className="animate-reveal-up" style={{ animationDelay: '0.1s' }}>
+            <h1 className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-shine" style={{ fontSize: "clamp(4.5rem, 14vw, 10rem)" }}>
+              RExplain
+            </h1>
+          </div>
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository<br/>with <span className="italic font-light text-primary">clarity </span>and <span className="text-accent-orange">intent.</span>
