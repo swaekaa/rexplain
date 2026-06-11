@@ -211,19 +211,25 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.2s' }}>
           <div className="relative flex flex-col md:flex-row items-center bg-white border border-accent-purple/50 rounded-3xl md:rounded-2xl p-2 md:pl-6 animate-glow-purple gap-2 md:gap-0 transition-shadow duration-300">
             <div className="flex w-full items-center pl-4 md:pl-0">
-                <span className="text-[11px] font-mono text-secondary mr-3 uppercase tracking-widest hidden md:inline-block font-bold">URL:</span>
+                <div className="flex items-center text-secondary/60 font-body text-base md:text-lg md:ml-4 select-none">
+                  <span className="hidden md:inline">github.com/</span>
+                  <span className="md:hidden">gh/</span>
+                </div>
                 <input 
-                className="w-full bg-transparent border-none text-primary placeholder:text-gray-300 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-3" 
-                placeholder="GitHub Repository URL" 
+                className="w-full bg-transparent border-none text-primary placeholder:text-gray-300 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-3 pl-1" 
+                placeholder="username/repo" 
                 type="text"
-                value={repoUrl}
-                onChange={e => setRepoUrl(e.target.value)}
+                value={repoUrl.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')}
+                onChange={e => {
+                  let val = e.target.value.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
+                  setRepoUrl(val);
+                }}
                 onKeyDown={handleKey}
                 disabled={loading}
                 />
             </div>
             <button 
-              className="w-full md:w-auto md:ml-4 bg-primary text-background px-8 py-3.5 rounded-2xl md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full md:w-auto md:ml-4 bg-gradient-to-r from-accent-purple to-accent-orange text-white px-8 py-3.5 rounded-2xl md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] shadow-[0_4px_15px_rgba(168,85,247,0.3)] hover:shadow-[0_4px_25px_rgba(249,115,22,0.4)] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               onClick={onAnalyze} 
               disabled={loading || !repoUrl.trim()}
             >
@@ -790,10 +796,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-accent-orange animate-pulse"></span>
-                <span className="text-[9px] font-bold uppercase tracking-widest text-accent-orange">Live Kernel</span>
-            </div>
+
             <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
         </div>
       </header>
@@ -1171,12 +1174,14 @@ export default function App() {
   const [error, setError] = useState(null);
 
   const analyze = async () => {
-    if (!repoUrl.trim()) return;
+    let finalUrl = repoUrl.trim().replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
+    if (!finalUrl) return;
+    
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
     try {
       console.log("API URL:", API_URL);
-      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
+      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: `https://github.com/${finalUrl}` }, {
         timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
       });
       console.log("Response:", res.data);
