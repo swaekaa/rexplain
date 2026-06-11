@@ -1179,9 +1179,24 @@ export default function App() {
     let finalUrl = repoUrl.trim().replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
     if (!finalUrl) return;
     
+    // Validate basic format
+    if (finalUrl.split('/').filter(Boolean).length !== 2) {
+       setError("Invalid format. Please enter as 'username/repository'.");
+       return;
+    }
+
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
+    
     try {
+      // Pre-flight check: verify repo is public and exists
+      const ghRes = await fetch(`https://api.github.com/repos/${finalUrl}`);
+      if (!ghRes.ok) {
+        setLoading(false);
+        setError(`Cannot access '${finalUrl}'. Please ensure it is a valid, public GitHub repository.`);
+        return;
+      }
+
       console.log("API URL:", API_URL);
       const res = await axios.post(`${API_URL}/analyze/`, { repo_url: `https://github.com/${finalUrl}` }, {
         timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
