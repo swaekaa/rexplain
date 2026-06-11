@@ -14,10 +14,11 @@ class FileRequest(BaseModel):
 def get_file_content(request: FileRequest):
     """Fetch file content from GitHub API directly."""
     repo_url = request.repo_url.rstrip("/")
-    if "github.com" not in repo_url.lower():
-        raise HTTPException(status_code=400, detail="Only GitHub URLs are supported for live file preview.")
     
     parts = repo_url.split("/")
+    if len(parts) < 2:
+        raise HTTPException(status_code=400, detail="Invalid repository format. Please provide owner/repo or a valid GitHub URL.")
+        
     owner, repo = parts[-2], parts[-1].replace(".git", "")
     
     url = f"https://api.github.com/repos/{owner}/{repo}/contents/{request.file_path}"

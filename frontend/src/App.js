@@ -217,10 +217,14 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <span className="text-gray-400 font-body text-base md:text-lg whitespace-nowrap hidden sm:inline">github.com/</span>
               <input
                 className="w-full bg-transparent border-none text-gray-800 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-4 pl-1"
-                placeholder="swaekaa/rexplain"
+                placeholder="username/repo_name"
                 type="text"
                 value={repoUrl}
-                onChange={e => setRepoUrl(e.target.value)}
+                onChange={e => {
+                  let val = e.target.value;
+                  val = val.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
+                  setRepoUrl(val);
+                }}
                 onKeyDown={handleKey}
                 disabled={loading}
               />
@@ -875,10 +879,6 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
           </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-accent-orange/10 border border-accent-orange/20 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-accent-orange animate-pulse"></span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-accent-orange">Live Kernel</span>
-          </div>
           <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
         </div>
       </header>
