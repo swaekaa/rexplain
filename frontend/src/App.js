@@ -1105,26 +1105,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
             {previewFile && <FilePreviewModal repoUrl={repoUrl} filePath={previewFile} onClose={() => setPreviewFile(null)} />}
 
-            {/* Commit Activity */}
-            {result.metadata?.commits?.length > 0 && (
-              <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
-                <SectionHeader label={`Commit Activity · ${result.metadata.total_commits || result.metadata.commits.length} commits`} />
-                <div className="liquid-glass p-4 md:p-6 rounded-xl">
-                  <CommitGraph commits={result.metadata.commits} />
-                  <div className="mt-4 md:mt-6 flex flex-col gap-3">
-                    {result.metadata.commits.slice(0, 4).map((c, i) => (
-                      <div key={i} className="flex items-start gap-3 pb-3 border-b border-outline last:border-0 last:pb-0">
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent-purple mt-2 flex-shrink-0" />
-                        <div className="min-w-0">
-                          <div className="text-sm text-primary font-medium truncate">{c.message}</div>
-                          <div className="text-[11px] text-secondary/60 mt-0.5">{c.author} · {new Date(c.date).toLocaleDateString()}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            )}
+
 
             {/* Entry Points */}
             {result.entry_points?.length > 0 && (
