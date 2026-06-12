@@ -108,8 +108,8 @@ def analyze_repo(request: RepoRequest):
                 if cached is not None:
                     # Fetch latest SHA to validate freshness
                     latest_sha = cache_db.fetch_latest_commit_sha(repo_url)
-                    if latest_sha is None or latest_sha == cached["sha"]:
-                        # ── Cache HIT ─────────────────────────────────────────
+                    if latest_sha is not None and latest_sha == cached["sha"]:
+                        # ── Cache HIT (SHA confirmed fresh) ───────────────────
                         log.info("[cache] hit  %s  (sha=%s)", repo_url, cached["sha"][:7])
                         rag_ready = _try_restore_rag(repo_url, cached)
                         result = dict(cached["analysis"])

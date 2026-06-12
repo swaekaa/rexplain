@@ -148,12 +148,21 @@ def fetch_latest_commit_sha(repo_url: str) -> Optional[str]:
     import requests  # already in requirements
 
     try:
-        # Extract owner/repo from https://github.com/owner/repo[.git][/]
+        # Support both full GitHub URLs and short 'owner/repo' format
         parts = repo_url.rstrip("/").split("/")
-        if "github.com" not in repo_url or len(parts) < 5:
+        if "github.com" in repo_url:
+            if len(parts) < 5:
+                return None
+            owner = parts[-2]
+            repo  = parts[-1].replace(".git", "")
+        elif "/" in repo_url and not repo_url.startswith("http"):
+            # Short 'owner/repo' format
+            if len(parts) < 2:
+                return None
+            owner = parts[-2]
+            repo  = parts[-1].replace(".git", "")
+        else:
             return None
-        owner = parts[-2]
-        repo  = parts[-1].replace(".git", "")
 
         headers = {"Accept": "application/vnd.github.v3+json"}
         github_token = os.environ.get("GITHUB_TOKEN", "")

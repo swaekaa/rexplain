@@ -127,24 +127,21 @@ function FilePreviewModal({ repoUrl, filePath, onClose }) {
 function CommitGraph({ commits }) {
   if (!commits || commits.length === 0) return null;
 
-  // Group by week (YYYY-WW) for cleaner visualization with many commits
+  // Use only the latest 30 commits (most recent activity)
+  const recent = [...commits].slice(0, 30);
+
+  // Group by date for granularity (30 commits = individual days)
   const dataMap = {};
-  commits.forEach(c => {
+  recent.forEach(c => {
     if (!c.date) return;
     const d = new Date(c.date);
     if (isNaN(d)) return;
-    // Get ISO week key: YYYY-MM-DD of the Monday of that week
-    const monday = new Date(d);
-    monday.setDate(d.getDate() - d.getDay() + 1);
-    const key = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    // Keep a timestamp for proper sorting
-    dataMap[monday.getTime()] = {
-      date: key,
-      count: (dataMap[monday.getTime()]?.count || 0) + 1,
-    };
+    const key = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const ts = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    dataMap[ts] = { date: key, count: (dataMap[ts]?.count || 0) + 1 };
   });
 
-  // Sort chronologically by timestamp
+  // Sort chronologically
   const data = Object.keys(dataMap)
     .sort((a, b) => Number(a) - Number(b))
     .map(k => dataMap[k]);
@@ -155,12 +152,6 @@ function CommitGraph({ commits }) {
     <div className="h-[220px] w-full mt-2">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-          <defs>
-            <linearGradient id="commitGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
-            </linearGradient>
-          </defs>
           <XAxis dataKey="date" stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} interval="preserveStartEnd" />
           <YAxis stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip
@@ -168,7 +159,7 @@ function CommitGraph({ commits }) {
             itemStyle={{ color: "#a855f7" }}
             formatter={(val) => [val, 'Commits']}
           />
-          <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#a855f7" }} />
+          <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={2.5} dot={{ r: 3, fill: "#a855f7" }} activeDot={{ r: 5, fill: "#a855f7" }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
