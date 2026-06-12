@@ -93,11 +93,24 @@ def _auth_headers() -> dict:
 def get_github_metadata(repo_url: str) -> dict:
     """Extract metadata from GitHub API if it's a GitHub repo."""
     metadata = {}
-    if "github.com" not in repo_url.lower():
+    
+    # Support both full GitHub URLs and short "owner/repo" format
+    if "github.com" in repo_url.lower():
+        try:
+            owner, repo = _parse_github_url(repo_url)
+        except Exception:
+            return metadata
+    elif "/" in repo_url and not repo_url.startswith("http"):
+        # Short "owner/repo" format
+        parts = repo_url.strip("/").split("/")
+        if len(parts) >= 2:
+            owner, repo = parts[-2], parts[-1].replace(".git", "")
+        else:
+            return metadata
+    else:
         return metadata
 
     try:
-        owner, repo = _parse_github_url(repo_url)
         headers = _auth_headers()
 
         # ── 1. Repo info (stars, forks, license, description) ────────────────
@@ -135,12 +148,12 @@ def get_github_metadata(repo_url: str) -> dict:
         except Exception as e:
             print(f"[metadata] commit count fetch error (non-fatal): {e}")
 
-        # ── 3. Latest 10 commits ──────────────────────────────────────────────
+        # ── 3. Latest 100 commits ─────────────────────────────────────────────
         try:
             cr = requests.get(
-                f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=10",
+                f"https://api.github.com/repos/{owner}/{repo}/commits?per_page=100",
                 headers=headers,
-                timeout=4,
+                timeout=8,
             )
             if cr.status_code == 200:
                 commits_list = []

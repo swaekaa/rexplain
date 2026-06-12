@@ -127,26 +127,48 @@ function FilePreviewModal({ repoUrl, filePath, onClose }) {
 function CommitGraph({ commits }) {
   if (!commits || commits.length === 0) return null;
 
-  // Group by date
+  // Group by week (YYYY-WW) for cleaner visualization with many commits
   const dataMap = {};
   commits.forEach(c => {
-    const d = new Date(c.date).toLocaleDateString();
-    dataMap[d] = (dataMap[d] || 0) + 1;
+    if (!c.date) return;
+    const d = new Date(c.date);
+    if (isNaN(d)) return;
+    // Get ISO week key: YYYY-MM-DD of the Monday of that week
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - d.getDay() + 1);
+    const key = monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    // Keep a timestamp for proper sorting
+    dataMap[monday.getTime()] = {
+      date: key,
+      count: (dataMap[monday.getTime()]?.count || 0) + 1,
+    };
   });
 
-  // Ensure chronological
-  const data = Object.keys(dataMap).reverse().map(k => ({ date: k, count: dataMap[k] }));
+  // Sort chronologically by timestamp
+  const data = Object.keys(dataMap)
+    .sort((a, b) => Number(a) - Number(b))
+    .map(k => dataMap[k]);
+
+  if (data.length === 0) return null;
 
   return (
-    <div className="h-[200px] w-full mt-2">
+    <div className="h-[220px] w-full mt-2">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <XAxis dataKey="date" stroke="#a3a3a3" fontSize={10} tickLine={false} axisLine={false} />
+        <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="commitGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <XAxis dataKey="date" stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <YAxis stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip
-            contentStyle={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 8, color: "#111827", fontSize: 12 }}
+            contentStyle={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 10, color: "#111827", fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
             itemStyle={{ color: "#a855f7" }}
+            formatter={(val) => [val, 'Commits']}
           />
-          <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} dot={{ r: 4, fill: "#a855f7" }} activeDot={{ r: 6 }} />
+          <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: "#a855f7" }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -460,11 +482,6 @@ function LoadingState({ repoUrl, theme }) {
               <span className="text-2xl font-headline font-bold tracking-tight text-primary truncate">GitHub URL</span>
             </div>
           </div>
-        </div>
-
-        {/* Decorative Aesthetic Elements */}
-        <div className="fixed bottom-12 right-12 pointer-events-none opacity-[0.05] text-primary">
-          <span className="material-symbols-outlined text-[15rem]">architecture</span>
         </div>
 
         {/* Footer (Mini) */}
@@ -815,6 +832,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
   const fw = result.framework_detection || {};
   const scan = result.scan_results || {};
   const langs = Object.entries(scan.languages || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const commits = result.metadata?.commits || [];
   const repoName = repoUrl.replace("https://github.com/", "").replace("http://github.com/", "");
   const stackItems = [
     { label: "Backend", value: fw.backend_framework, icon: "terminal" },
@@ -932,6 +950,16 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 <SectionHeader label="File Distribution" />
                 <div className="liquid-glass p-6 rounded-xl">
                   <FileTypesGraph langs={langs} />
+                </div>
+              </section>
+            )}
+
+            {/* Commit Activity Graph */}
+            {commits && commits.length > 0 && (
+              <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.3s' }}>
+                <SectionHeader label="Commit Activity" />
+                <div className="liquid-glass p-6 rounded-xl">
+                  <CommitGraph commits={commits} />
                 </div>
               </section>
             )}
