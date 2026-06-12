@@ -68,6 +68,8 @@ def _normalize_url(url: str) -> str:
     url = url.strip().rstrip("/")
     if url.endswith(".git"):
         url = url[:-4]
+    if not url.startswith("http"):
+        url = f"https://github.com/{url}"
     return url.lower()
 
 

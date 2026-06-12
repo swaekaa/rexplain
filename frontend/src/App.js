@@ -912,7 +912,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                 Repository<br />Analysis
               </h1>
               <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
-                Breakdown of <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-outline pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
+                Breakdown of <a href={repoUrl.startsWith('http') ? repoUrl : `https://github.com/${repoUrl}`} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-outline pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
               </p>
             </section>
 
