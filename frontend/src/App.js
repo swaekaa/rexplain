@@ -955,14 +955,19 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             )}
 
             {/* Commit Activity Graph */}
-            {commits && commits.length > 0 && (
-              <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.3s' }}>
-                <SectionHeader label="Commit Activity" />
-                <div className="liquid-glass p-6 rounded-xl">
+            <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.3s' }}>
+              <SectionHeader label="Commit Activity" />
+              <div className="liquid-glass p-6 rounded-xl">
+                {commits && commits.length > 0 ? (
                   <CommitGraph commits={commits} />
-                </div>
-              </section>
-            )}
+                ) : (
+                  <div className="flex flex-col items-center gap-2 py-8 opacity-50">
+                    <span className="material-symbols-outlined text-3xl text-secondary">commit</span>
+                    <p className="text-secondary font-body text-sm">Re-analyze to load commit history</p>
+                  </div>
+                )}
+              </div>
+            </section>
 
             {/* Tech Stack */}
             <section className="mb-10 md:mb-16 animate-reveal-up" style={{ animationDelay: '0.4s' }}>
@@ -1019,10 +1024,10 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                   />
                 </div>
               ) : (
-                <div className="liquid-glass p-8 rounded-xl overflow-x-auto scroll-hide">
-                  <div className="min-w-max md:min-w-0 flex items-center justify-center">
+                <div className="rounded-xl overflow-x-auto scroll-hide" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.07)', padding: '2rem' }}>
+                  <div className="min-w-max md:min-w-0 flex items-center justify-center" style={{ background: '#ffffff' }}>
                     {result.diagram ? (
-                      <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded shadow-lg border border-outline" />
+                      <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded" style={{ background: '#ffffff', display: 'block' }} />
                     ) : (
                       <div className="flex flex-col items-center gap-3 py-12 opacity-50">
                         <span className="material-symbols-outlined text-3xl text-secondary">schema</span>
@@ -1291,6 +1296,8 @@ export default function App() {
         timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
       });
       console.log("Response:", res.data);
+      console.log("[debug] metadata:", res.data?.metadata);
+      console.log("[debug] commits:", res.data?.metadata?.commits);
       setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
     } catch (err) {
       console.error("API Error:", err);
