@@ -3,7 +3,7 @@
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --accent-purple: #a855f7;
-  --accent-orange: #f97316;
+  --accent-burgundy: #800020;
 }
 
 body {
@@ -38,19 +38,20 @@ body {
       #111827 30%,
       #a855f7 45%,
       #111827 50%,
-      #f97316 55%,
+      #800020 55%,
       #111827 70%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: cssShine 8s ease-in-out infinite, cssFadeInTitle 1s ease-out forwards;
+  animation-fill-mode: forwards;
   opacity: 0;
 }
 
 /* RExplain nav logo - always visible */
 .rexplain-logo {
-  background: linear-gradient(135deg, #fff 0%, #c084fc 50%, #f97316 100%);
+  background: linear-gradient(135deg, #111827 0%, #a855f7 50%, #800020 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

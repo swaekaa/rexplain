@@ -31,7 +31,7 @@
             "primary": "#111827",
             "surface-container-lowest": "#ffffff",
             "tertiary": "#a855f7",
-            "accent-orange": "#f97316",
+            "accent-burgundy": "#800020",
             "background": "#f9fafb",
             "on-background": "#111827",
             "secondary": "#6b7280",
@@ -63,7 +63,8 @@
             "draw-line": "drawLine 2s ease-in-out forwards",
             "shine": "shine 12s ease-in-out infinite",
             "fadeInTitle": "fadeInTitle 2.5s ease-out forwards",
-            "slideUpFade": "slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both"
+            "slideUpFade": "slideUpFade 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
+            "liquid-glass-shine": "liquidGlassShine 8s ease-in-out infinite, fadeInTitle 1s ease-out forwards"
           },
           "keyframes": {
             shimmer: {
@@ -97,6 +98,10 @@
             slideUpFade: {
               from: { opacity: "0", transform: "translateY(20px)" },
               to: { opacity: "1", transform: "translateY(0)" }
+            },
+            liquidGlassShine: {
+              "0%": { "background-position": "-100% center" },
+              "100%": { "background-position": "100% center" }
             }
           }
         },

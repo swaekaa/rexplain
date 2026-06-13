@@ -68,6 +68,21 @@ def _normalize_url(url: str) -> str:
     url = url.strip().rstrip("/")
     if url.endswith(".git"):
         url = url[:-4]
+        
+    # Validate it has at least owner/repo format to prevent slow git timeouts
+    temp = url
+    if temp.startswith("http://"):
+        temp = temp[7:]
+    elif temp.startswith("https://"):
+        temp = temp[8:]
+    if temp.startswith("www."):
+        temp = temp[4:]
+    if temp.startswith("github.com/"):
+        temp = temp[11:]
+        
+    if "/" not in temp:
+        raise HTTPException(status_code=400, detail="Invalid format. Please enter a valid GitHub repository (e.g., username/repository).")
+
     if not url.startswith("http"):
         url = f"https://github.com/{url}"
     return url.lower()

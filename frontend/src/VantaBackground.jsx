@@ -53,8 +53,8 @@ export default function VantaBackground({ subtle = false }) {
           skyColor: 0xf0ecff,        // very pale lavender sky
           cloudColor: 0xd8b4fe,      // soft purple clouds (matches accent-purple)
           cloudShadowColor: 0x9333ea, // deeper purple shadow
-          sunColor: 0xf97316,        // orange sun (matches accent-orange)
-          sunGlareColor: 0xfbbf24,   // warm amber glare
+          sunColor: 0x800020,        // burgundy sun (matches accent-burgundy)
+          sunGlareColor: 0xb03060,   // lighter burgundy/rose glare
           sunlightColor: 0xffffff,   // white sunlight
 
           // ----- Animation settings -----
@@ -93,7 +93,7 @@ export default function VantaBackground({ subtle = false }) {
   // Static fallback shown when Vanta is disabled (reduced-motion or script failure)
   const staticFallback = {
     background:
-      "linear-gradient(135deg, #f0ecff 0%, #faf5ff 40%, #fff7ed 100%)",
+      "linear-gradient(135deg, #f0ecff 0%, #faf5ff 40%, #fff0f3 100%)",
   };
 
   return (

@@ -212,19 +212,24 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
 
-          <h1 className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up" style={{ fontSize: "clamp(4.5rem, 14vw, 10rem)", animationDelay: '0.1s' }}>
+          <h1
+            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up"
+            style={{
+              fontSize: "clamp(4.5rem, 14vw, 10rem)",
+              animationDelay: '0.1s',
+              animationFillMode: 'forwards',
+            }}
+          >
             RExplain
           </h1>
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
-            Unfold the complexity of any GitHub repository<br />with <span className="italic font-light text-primary">clarity </span>and <span className="text-accent-orange">intent.</span>
+            Unfold the complexity of any GitHub repository<br />with <span className="italic font-light text-primary">clarity </span>and <span style={{ color: '#800020' }}>intent.</span>
           </p>
         </div>
 
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.2s' }}>
-          <div className="relative flex flex-col md:flex-row items-center bg-white rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-2 md:gap-0 z-10">
-            {/* Animated Fluid Glow - Toned down for readability */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/60 via-orange-500/60 to-purple-500/60 rounded-[32px] md:rounded-[20px] blur-md opacity-30 group-hover:opacity-60 transition duration-1000 group-hover:duration-300 animate-shine bg-[length:200%_auto] -z-10 pointer-events-none"></div>
+          <div className="relative flex flex-col md:flex-row items-center bg-white/90 backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm border border-outline/50 gap-2 md:gap-0 z-10 hover:shadow-md hover:border-outline/80 transition-all duration-300">
             
             <div className="flex w-full items-center pl-4 md:pl-0">
               <span className="text-gray-400 font-body text-base md:text-lg whitespace-nowrap hidden sm:inline">github.com/</span>
@@ -243,7 +248,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               />
             </div>
             <button
-              className="w-full md:w-auto md:ml-4 bg-gradient-to-r from-purple-500/90 to-orange-500/90 text-white px-8 py-3.5 rounded-[20px] md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-100 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 drop-shadow-md"
+              className="w-full md:w-auto md:ml-4 text-white px-8 py-3.5 rounded-[20px] md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 drop-shadow-md"
+              style={{ background: 'linear-gradient(135deg, #a855f7 0%, #800020 100%)' }}
               onClick={onAnalyze}
               disabled={loading || !repoUrl.trim()}
             >
@@ -261,141 +267,141 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 
         {/* Feature Grid */}
         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 animate-reveal-up px-4 mb-20 md:mb-32" style={{ animationDelay: '0.4s' }}>
-          <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-accent-orange/20 hover:border-accent-orange/50 hover:shadow-[0_8px_32px_rgba(249,115,22,0.15)] transition-all duration-300">
+          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300" style={{ '--hover-border': '#800020' }}>
             <div className="flex justify-between items-start z-10">
               <div>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-accent-orange font-bold mb-2 block">System Intelligence</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Architecture<br />Mapping</h3>
+                <span className="text-[9px] uppercase tracking-[0.3em] font-bold mb-2 block" style={{ color: '#800020' }}>System Intelligence</span>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Architecture<br />Mapping</h3>
               </div>
-              <div className="w-10 h-10 rounded-full bg-accent-orange/10 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-accent-orange">account_tree</span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(128,0,32,0.1)' }}>
+                <span className="material-symbols-outlined" style={{ color: '#800020' }}>account_tree</span>
               </div>
             </div>
-            <p className="font-body text-sm text-gray-400 leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Visualize the skeleton of your project. We parse every connection, dependency, and flow to generate a living map of your codebase.</p>
+            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Visualize the skeleton of your project. We parse every connection, dependency, and flow to generate a living map of your codebase.</p>
           </div>
 
-          <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-accent-purple/20 hover:border-accent-purple/50 hover:shadow-[0_8px_32px_rgba(168,85,247,0.15)] transition-all duration-300">
+          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300 hover:border-accent-purple/50">
             <div className="flex justify-between items-start z-10">
               <div>
                 <span className="text-[9px] uppercase tracking-[0.3em] text-accent-purple font-bold mb-2 block">Cognitive Parsing</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Deep Semantics</h3>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Deep Semantics</h3>
               </div>
               <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-accent-purple">psychology</span>
               </div>
             </div>
-            <p className="font-body text-sm text-gray-400 leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Beyond syntax. RExplain understands the developer's intent, surfacing the "why" behind the logic patterns and structural choices.</p>
+            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Beyond syntax. RExplain understands the developer's intent, surfacing the "why" behind the logic patterns and structural choices.</p>
           </div>
 
-          <div className="bg-[#0B1120] p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden border border-white/5 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(255,255,255,0.05)] transition-all duration-300">
+          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300 hover:border-primary/20">
             <div className="flex justify-between items-start z-10">
               <div>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-white font-bold mb-2 block">Zero Config</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-white leading-tight">Instant Access</h3>
+                <span className="text-[9px] uppercase tracking-[0.3em] text-primary/60 font-bold mb-2 block">Zero Config</span>
+                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Access</h3>
               </div>
-              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-white">terminal</span>
+              <div className="w-10 h-10 rounded-full bg-primary/5 border border-outline flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-primary/70">terminal</span>
               </div>
             </div>
-            <p className="font-body text-sm text-gray-400 leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Paste a URL and explore. No installation, no complex setup required. Just immediate architectural insight.</p>
+            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Paste a URL and explore. No installation, no complex setup required. Just immediate architectural insight.</p>
           </div>
         </div>
 
         {/* Fun Use Cases Section */}
         <div className="w-full max-w-6xl mt-12 md:mt-20 mb-20 md:mb-32 relative z-10 px-4 animate-reveal-up" style={{ animationDelay: '0.6s' }}>
           <div className="text-center mb-16 relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-orange mb-4 block">Why RExplain</span>
-            <h2 className="font-headline text-3xl md:text-5xl font-extrabold text-black mb-6">Built for every dev workflow</h2>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 block" style={{ color: '#800020' }}>Why RExplain</span>
+            <h2 className="font-headline text-3xl md:text-5xl font-extrabold text-primary mb-6">Built for every dev workflow</h2>
             <p className="text-secondary/80 font-body text-base md:text-lg">One URL. Instant architectural clarity no setup, no noise.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Bluff */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-purple-500/80 hover:shadow-[0_8px_32px_rgba(168,85,247,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 to-purple-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-purple-500/30 hover:shadow-[0_8px_32px_rgba(168,85,247,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-accent-purple animate-[spin_4s_linear_infinite]">psychology_alt</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">The "I Totally Read the Codebase" Bluff</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">The "I Totally Read the Codebase" Bluff</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Drop a 50k-line repo into RExplain and instantly act like you've studied it for weeks. Become the 10x engineer on day one.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Drop a 50k-line repo into RExplain and instantly act like you've studied it for weeks. Become the 10x engineer on day one.</p>
             </div>
             {/* Spaghetti */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-orange-500/80 hover:shadow-[0_8px_32px_rgba(249,115,22,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/30 to-orange-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-[#800020]/30 hover:shadow-[0_8px_32px_rgba(128,0,32,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(128,0,32,0.04), rgba(128,0,32,0.08))' }}></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
-                <div className="w-10 h-10 rounded-full bg-accent-orange/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-accent-orange animate-bounce">route</span>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(128,0,32,0.1)' }}>
+                  <span className="material-symbols-outlined animate-bounce" style={{ color: '#800020' }}>route</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">The Spaghetti Code Autopsy</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">The Spaghetti Code Autopsy</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Untangle that open-source project where 40 files import each other. RExplain is your X-Ray machine for pasta code.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Untangle that open-source project where 40 files import each other. RExplain is your X-Ray machine for pasta code.</p>
             </div>
             {/* Roast */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-red-500/80 hover:shadow-[0_8px_32px_rgba(239,68,68,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-red-600/30 to-red-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-red-500/30 hover:shadow-[0_8px_32px_rgba(239,68,68,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-red-500 animate-pulse">local_fire_department</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">"Roast My Architecture"</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">"Roast My Architecture"</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Paste your friend's repo and instantly ask the AI to find their most questionable architectural decisions. Absolute chaos ensues.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Paste your friend's repo and instantly ask the AI to find their most questionable architectural decisions. Absolute chaos ensues.</p>
             </div>
             {/* Vibe Coded */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-green-400/80 hover:shadow-[0_8px_32px_rgba(74,222,128,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/30 to-green-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-green-400/30 hover:shadow-[0_8px_32px_rgba(74,222,128,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-green-400/10 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-green-400 animate-[bounce_3s_infinite]">quiz</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">The "Vibe Coded" Interview Panic</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">The "Vibe Coded" Interview Panic</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">You just vibe-coded an entire project with AI, and now the interviewer is grilling you on it. Paste it in and let RExplain save your career.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">You just vibe-coded an entire project with AI, and now the interviewer is grilling you on it. Paste it in and let RExplain save your career.</p>
             </div>
             {/* Hackathon */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-yellow-400/80 hover:shadow-[0_8px_32px_rgba(250,204,21,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.0s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/30 to-yellow-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-yellow-400/30 hover:shadow-[0_8px_32px_rgba(250,204,21,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.0s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-yellow-400 animate-[spin_3s_linear_infinite]">local_pizza</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">The 3 AM Hackathon Savior</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">The 3 AM Hackathon Savior</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">When nobody has the brain cells left to read a library's source code at 3 AM. Throw it in and beg the AI to explain the WebSockets.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">When nobody has the brain cells left to read a library's source code at 3 AM. Throw it in and beg the AI to explain the WebSockets.</p>
             </div>
             {/* Tourism */}
-            <div className="bg-[#0B1120] p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-white/5 hover:border-blue-400/80 hover:shadow-[0_8px_32px_rgba(96,165,250,0.4)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-blue-900/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-blue-400/30 hover:shadow-[0_8px_32px_rgba(96,165,250,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-blue-400/10 flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-blue-400 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">flight_takeoff</span>
                 </div>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">Architectural Tourism</h3>
+                <h3 className="font-headline text-lg font-bold text-primary leading-tight">Architectural Tourism</h3>
               </div>
-              <p className="font-body text-sm text-gray-400 leading-relaxed font-light relative z-10">Take a VIP helicopter tour over React or FastAPI's architecture without actually reading 100,000 lines of code.</p>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Take a VIP helicopter tour over React or FastAPI's architecture without actually reading 100,000 lines of code.</p>
             </div>
           </div>
         </div>
 
       </main>
 
-      <footer className="relative z-10 bg-[#0B1120] border-t border-white/5">
+      <footer className="relative z-10 bg-white/50 backdrop-blur-sm border-t border-outline/50">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 py-12 px-8">
           <div className="flex items-center gap-6">
-            <span className="text-lg font-extrabold tracking-tighter font-headline text-white">RExplain</span>
+            <span className="text-lg font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
             <a
               href="https://github.com/swaekaa/rexplain"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+              className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-secondary hover:text-primary transition-colors flex items-center gap-1"
             >
               GitHub
               <span className="material-symbols-outlined !text-[12px]">open_in_new</span>
             </a>
           </div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary/60">
             © 2026 RExplain AI. Architectural Intelligence.
           </div>
         </div>
@@ -440,8 +446,8 @@ function LoadingState({ repoUrl, theme }) {
 
               <div className="space-y-4 md:space-y-6">
                 <div className="inline-flex items-center gap-2 md:gap-3 justify-center">
-                  <div className="w-6 md:w-8 h-[1px] bg-accent-orange animate-pulse"></div>
-                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange animate-pulse">System Insight</span>
+                  <div className="w-6 md:w-8 h-[1px] animate-pulse" style={{ background: '#800020' }}></div>
+                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold animate-pulse" style={{ color: '#800020' }}>System Insight</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary animate-breathing">
                   {waking ? "Waking Backend" : "Analyzing"}<br />Repository
@@ -905,14 +911,14 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             {/* Hero Analysis Header */}
             <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
               <div className="inline-flex items-center gap-2 md:gap-3">
-                <div className="w-6 md:w-8 h-[1px] bg-accent-orange"></div>
-                <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold text-accent-orange">Structural Mapping</span>
+                <div className="w-6 md:w-8 h-[1px]" style={{ background: '#800020' }}></div>
+                <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold" style={{ color: '#800020' }}>Structural Mapping</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-words">
                 Repository<br />Analysis
               </h1>
               <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
-                Breakdown of <a href={repoUrl.startsWith('http') ? repoUrl : `https://github.com/${repoUrl}`} target="_blank" rel="noopener noreferrer" className="text-transparent bg-clip-text bg-gradient-to-r from-accent-purple to-accent-orange font-bold border-b border-outline pb-[1px] hover:border-accent-purple transition-colors duration-300 break-all">{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
+                Breakdown of <a href={repoUrl.startsWith('http') ? repoUrl : `https://github.com/${repoUrl}`} target="_blank" rel="noopener noreferrer" className="font-bold border-b pb-[1px] hover:opacity-80 transition-opacity duration-300 break-all" style={{ color: '#800020', borderColor: 'rgba(128,0,32,0.3)' }}>{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
               </p>
             </section>
 
@@ -1095,7 +1101,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                             <span className="text-[9px] md:text-[10px] text-secondary/60 font-medium uppercase tracking-wider truncate">{file}</span>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-secondary/20 group-hover:text-accent-orange transition-all flex-shrink-0 ml-2">arrow_forward</span>
+                        <span className="material-symbols-outlined text-secondary/20 group-hover:text-[#800020] transition-all flex-shrink-0 ml-2">arrow_forward</span>
                       </div>
                     )
                   })}
@@ -1219,7 +1225,10 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 function SectionHeader({ label }) {
   return (
     <div className="flex items-center gap-4 mb-8">
-      <h3 className="text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold whitespace-nowrap">{label}</h3>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="w-1 h-3 rounded-full" style={{ background: '#800020', opacity: 0.7 }}></div>
+        <h3 className="text-[9px] uppercase tracking-[0.3em] text-secondary/60 font-bold whitespace-nowrap">{label}</h3>
+      </div>
       <div className="h-[1px] w-full bg-outline"></div>
     </div>
   );
@@ -1259,7 +1268,44 @@ export default function App() {
   const [error, setError] = useState(null);
 
   const analyze = async () => {
-    if (!repoUrl.trim()) return;
+    const trimmed = repoUrl.trim();
+    if (!trimmed) return;
+
+    // Client-side format validation
+    const cleaned = trimmed
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./, '')
+      .replace(/^github\.com\//, '')
+      .replace(/\.git$/, '')
+      .replace(/\/$/, '');
+    const parts = cleaned.split('/').filter(Boolean);
+    if (!cleaned.includes('/') || parts.length < 2) {
+      setError('Invalid format. Please enter a valid GitHub repository (e.g., username/repository).');
+      return;
+    }
+
+    // Fast GitHub API pre-check — runs in ~300ms, no auth needed for public repos.
+    // Catches non-existent / private repos before starting the slow backend analysis.
+    const [owner, repo] = parts;
+    try {
+      const ghCheck = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (ghCheck.status === 404) {
+        setError(`Repository "${owner}/${repo}" was not found on GitHub. Please check the URL and try again.`);
+        return;
+      }
+      if (ghCheck.status === 403 || ghCheck.status === 451) {
+        setError(`Repository "${owner}/${repo}" is private or access is restricted. Only public repositories are supported.`);
+        return;
+      }
+      // Any non-2xx that isn't 404/403 — e.g. rate limit (429) — let backend handle it
+    } catch (_ghErr) {
+      // GitHub API unreachable (network issue) — proceed to backend anyway, it will give its own error
+      console.warn('[pre-check] GitHub API unreachable, proceeding to backend:', _ghErr);
+    }
+
     setLoading(true); setError(null); setResult(null);
     const t0 = Date.now();
     try {
@@ -1276,10 +1322,19 @@ export default function App() {
       if (err.response) {
         console.error("Backend response:", err.response.data);
       }
-      setError(
-        err.response?.data?.detail ||
-        "Backend not reachable. Try again."
-      );
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      if (status === 400) {
+        setError(detail || "Invalid repository format. Please enter a valid GitHub URL (e.g., username/repository).");
+      } else if (status === 403) {
+        setError("Repository is private or inaccessible. Only public repositories are supported.");
+      } else if (status === 404) {
+        setError("Repository not found. Please check the URL and try again.");
+      } else if (!err.response) {
+        setError("Backend not reachable. Please try again in a moment.");
+      } else {
+        setError(detail || "Analysis failed. Please try again.");
+      }
     }
     setLoading(false);
   };
