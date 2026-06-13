@@ -36,6 +36,63 @@ axios.interceptors.response.use(
   }
 );
 
+// ─── ScrambleText Animation Component ───────────────────────────────────────
+function ScrambleText({ text, as: Component = "span", className, style, delay = 0 }) {
+  const [displayedText, setDisplayedText] = useState(text);
+  const isScrambling = useRef(false);
+  
+  const defaultChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const randomString = useCallback((length) => [...Array(length)].map(() => defaultChars[Math.floor(Math.random() * defaultChars.length)]).join(''), []);
+  
+  const scramble = useCallback(() => {
+    if (isScrambling.current) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    isScrambling.current = true;
+    const stagger = 25;
+    const duration = text.length * stagger * 2;
+    const startTime = Date.now();
+    
+    const tick = () => {
+      const timePassed = Date.now() - startTime;
+      const actionTime = duration - text.length * stagger;
+      const index = Math.max(0, Math.floor((timePassed - actionTime) / stagger));
+      
+      if (index >= text.length) {
+        setDisplayedText(text);
+        isScrambling.current = false;
+      } else {
+        setDisplayedText(text.slice(0, index) + randomString(text.length - index));
+        if (Date.now() - startTime <= duration) {
+          requestAnimationFrame(tick);
+        } else {
+          setDisplayedText(text);
+          isScrambling.current = false;
+        }
+      }
+    };
+    
+    requestAnimationFrame(tick);
+  }, [text, randomString]);
+
+  useEffect(() => {
+    const timeout = setTimeout(scramble, delay);
+    return () => clearTimeout(timeout);
+  }, [scramble, delay]);
+
+  return (
+    <Component 
+      className={className} 
+      style={style} 
+      onPointerEnter={scramble} 
+      onFocus={scramble}
+      aria-label={text}
+    >
+      {displayedText}
+    </Component>
+  );
+}
+
 // ─── Shared Footer ─────────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -212,16 +269,17 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
 
-          <h1
-            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up"
+          <ScrambleText
+            as="h1"
+            text="RExplain"
+            delay={500}
+            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up cursor-default"
             style={{
               fontSize: "clamp(4.5rem, 14vw, 10rem)",
               animationDelay: '0.1s',
               animationFillMode: 'forwards',
             }}
-          >
-            RExplain
-          </h1>
+          />
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository<br />with <span className="italic font-light text-primary">clarity </span>and <span style={{ color: '#800020' }}>intent.</span>
