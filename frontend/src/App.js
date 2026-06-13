@@ -198,7 +198,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-4 md:py-6 bg-white/60 backdrop-blur-md border-b border-outline">
         <div className="flex items-center gap-4 md:gap-12">
           <div className="flex items-center">
-            <span className="text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
+            <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-semibold text-secondary">
           </nav>
@@ -317,7 +317,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Bluff */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-purple-500/30 hover:shadow-[0_8px_32px_rgba(168,85,247,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(168,85,247,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.6s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
@@ -328,7 +328,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Drop a 50k-line repo into RExplain and instantly act like you've studied it for weeks. Become the 10x engineer on day one.</p>
             </div>
             {/* Spaghetti */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-[#800020]/30 hover:shadow-[0_8px_32px_rgba(128,0,32,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(128,0,32,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.7s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(128,0,32,0.04), rgba(128,0,32,0.08))' }}></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(128,0,32,0.1)' }}>
@@ -339,7 +339,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Untangle that open-source project where 40 files import each other. RExplain is your X-Ray machine for pasta code.</p>
             </div>
             {/* Roast */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-red-500/30 hover:shadow-[0_8px_32px_rgba(239,68,68,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.8s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(239,68,68,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.8s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
@@ -350,7 +350,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">Paste your friend's repo and instantly ask the AI to find their most questionable architectural decisions. Absolute chaos ensues.</p>
             </div>
             {/* Vibe Coded */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-green-400/30 hover:shadow-[0_8px_32px_rgba(74,222,128,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(74,222,128,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '0.9s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-green-400/10 flex items-center justify-center flex-shrink-0">
@@ -361,7 +361,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">You just vibe-coded an entire project with AI, and now the interviewer is grilling you on it. Paste it in and let RExplain save your career.</p>
             </div>
             {/* Hackathon */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-yellow-400/30 hover:shadow-[0_8px_32px_rgba(250,204,21,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.0s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(250,204,21,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.0s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0">
@@ -372,7 +372,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <p className="font-body text-sm text-secondary leading-relaxed font-light relative z-10">When nobody has the brain cells left to read a library's source code at 3 AM. Throw it in and beg the AI to explain the WebSockets.</p>
             </div>
             {/* Tourism */}
-            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden border border-outline/50 hover:border-blue-400/30 hover:shadow-[0_8px_32px_rgba(96,165,250,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.1s', animationFillMode: 'both' }}>
+            <div className="liquid-glass p-6 rounded-[2rem] flex flex-col relative overflow-hidden hover:shadow-[0_8px_32px_rgba(96,165,250,0.1)] transition-all duration-500 animate-reveal-up group" style={{ animationDelay: '1.1s', animationFillMode: 'both', border: '1px solid rgba(0,0,0,0.06)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-blue-400/10 flex items-center justify-center flex-shrink-0">

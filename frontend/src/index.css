@@ -22,15 +22,79 @@ body {
   line-height: 1;
 }
 
-/* Liquid glass text (landing hero h1 - large) */
+/* ── All keyframes bundled here (works on Vercel/CDN-blocked environments) ── */
+
+@keyframes revealUp {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes liquidPulse {
+  0%, 100% { transform: scale(1);   opacity: 0.3; filter: blur(8px); }
+  50%       { transform: scale(1.4); opacity: 0.6; filter: blur(12px); }
+}
+
+@keyframes breathing {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes drawLine {
+  0%   { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes shine {
+  0%   { background-position: -100% center; }
+  100% { background-position:  100% center; }
+}
+
+@keyframes fadeInTitle {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Liquid glass text (landing hero h1) */
 @keyframes cssShine {
-  0% { background-position: -100% center; }
-  100% { background-position: 100% center; }
+  0%   { background-position: -100% center; }
+  100% { background-position:  100% center; }
 }
 
 @keyframes cssFadeInTitle {
   from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bundled utility classes for animations (fallback if Tailwind CDN is slow/blocked) */
+.animate-reveal-up {
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.animate-breathing {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+.animate-liquid-pulse {
+  animation: liquidPulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-slow-spin {
+  animation: spin 8s linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .liquid-glass-text {
