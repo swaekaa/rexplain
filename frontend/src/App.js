@@ -49,7 +49,7 @@ function ScrambleText({ text, as: Component = "span", className, style, delay = 
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     isScrambling.current = true;
-    const stagger = 25;
+    const stagger = 60;
     const duration = text.length * stagger * 2;
     const startTime = Date.now();
     
@@ -272,8 +272,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <ScrambleText
             as="h1"
             text="RExplain"
-            delay={500}
-            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text animate-reveal-up cursor-default"
+            delay={1200}
+            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text cursor-default"
             style={{
               fontSize: "clamp(4.5rem, 14vw, 10rem)",
               animationDelay: '0.1s',

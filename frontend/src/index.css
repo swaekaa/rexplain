@@ -100,7 +100,7 @@ body {
 .liquid-glass-text {
   background: linear-gradient(120deg,
       #111827 30%,
-      #a855f7 45%,
+      #a31436 45%,
       #111827 50%,
       #800020 55%,
       #111827 70%);
@@ -115,11 +115,11 @@ body {
 
 /* RExplain nav logo - always visible */
 .rexplain-logo {
-  background: linear-gradient(135deg, #111827 0%, #a855f7 50%, #800020 100%);
+  background: linear-gradient(135deg, #111827 0%, #a31436 50%, #800020 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.4));
+  filter: drop-shadow(0 0 12px rgba(128, 0, 32, 0.4));
 }
 
 .liquid-glass {

@@ -58,7 +58,7 @@ export default function VantaBackground({ subtle = false }) {
           sunlightColor: 0xffffff,   // white sunlight
 
           // ----- Animation settings -----
-          speed: 0.5,                // subtle — not distracting
+          speed: 1.5,                // faster animation as requested
           zoom: 0.75,                // pull back slightly for an airy, open feel
 
           // ----- Sizing -----
