@@ -326,7 +326,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
 
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
-          <div className="search-input-container relative flex flex-col md:flex-row items-center backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm gap-2 md:gap-0 z-10 transition-all duration-300">
+          <div className="search-input-container relative flex flex-col md:flex-row items-center backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm gap-2 md:gap-0 z-10 transition-all duration-300 bg-[color:var(--surface-input)] border border-[color:var(--border-default)]">
             
             <div className="flex w-full items-center pl-4 md:pl-0">
               <span className="font-body text-base md:text-lg whitespace-nowrap hidden sm:inline" style={{ color: 'var(--text-tertiary)' }}>github.com/</span>
@@ -416,7 +416,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-accent-purple animate-[spin_4s_linear_infinite]">psychology_alt</span>
+                  <span className="material-symbols-outlined text-accent-purple">psychology_alt</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">The "I Totally Read the Codebase" Bluff</h3>
               </div>
@@ -427,7 +427,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(128,0,32,0.04), rgba(128,0,32,0.08))' }}></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(128,0,32,0.1)' }}>
-                  <span className="material-symbols-outlined animate-bounce" style={{ color: '#800020' }}>route</span>
+                  <span className="material-symbols-outlined" style={{ color: '#800020' }}>route</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">The Spaghetti Code Autopsy</h3>
               </div>
@@ -438,7 +438,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-red-500 animate-pulse">local_fire_department</span>
+                  <span className="material-symbols-outlined text-red-500">local_fire_department</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">"Roast My Architecture"</h3>
               </div>
@@ -449,7 +449,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-green-400/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-green-400 animate-[bounce_3s_infinite]">quiz</span>
+                  <span className="material-symbols-outlined text-green-400">quiz</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">The "Vibe Coded" Interview Panic</h3>
               </div>
@@ -460,7 +460,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-yellow-400/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-yellow-400 animate-[spin_3s_linear_infinite]">local_pizza</span>
+                  <span className="material-symbols-outlined text-yellow-400">local_pizza</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">The 3 AM Hackathon Savior</h3>
               </div>
@@ -471,7 +471,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="flex items-center gap-4 mb-4 relative z-10">
                 <div className="w-10 h-10 rounded-full bg-blue-400/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-blue-400 animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">flight_takeoff</span>
+                  <span className="material-symbols-outlined text-blue-400">flight_takeoff</span>
                 </div>
                 <h3 className="font-headline text-lg font-bold text-primary leading-tight">Architectural Tourism</h3>
               </div>
@@ -907,7 +907,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
         <div className="relative group">
           <textarea
             rows={1}
-            className="w-full bg-primary/5 border border-outline rounded-xl py-3 md:py-4 pl-4 md:pl-5 pr-12 md:pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-primary/70 text-primary font-body resize-none overflow-hidden min-h-[48px] max-h-[120px]"
+            className="w-full bg-[color:var(--surface-input)] border border-outline rounded-xl py-3 md:py-4 pl-4 md:pl-5 pr-12 md:pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all placeholder:text-primary/70 text-primary font-body resize-none overflow-hidden min-h-[48px] max-h-[120px]"
             placeholder="Ask about architecture..."
             value={input}
             onChange={e => {
