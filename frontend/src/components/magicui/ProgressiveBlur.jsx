@@ -51,8 +51,10 @@ export default function ProgressiveBlur({
     return () => mo.disconnect();
   }, []);
 
-  const axis = direction === "bottom" || direction === "top" ? "to " + direction : "to " + direction;
-  const gradient = `linear-gradient(${axis}, transparent 0%, ${bgColor} 100%)`;
+  const axis = "to " + direction;
+  // We use both a subtle background fade and an intense blur mask
+  const bgGradient = `linear-gradient(${axis}, transparent 0%, ${bgColor} 100%)`;
+  const maskGradient = `linear-gradient(${axis}, transparent 0%, black 100%)`;
 
   const sizeStyle =
     direction === "bottom" || direction === "top"
@@ -74,7 +76,11 @@ export default function ProgressiveBlur({
         position: "absolute",
         ...posStyle,
         ...sizeStyle,
-        background: gradient,
+        background: bgGradient,
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        maskImage: maskGradient,
+        WebkitMaskImage: maskGradient,
         opacity: strength,
         pointerEvents: "none",
         zIndex,

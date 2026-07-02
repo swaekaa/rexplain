@@ -900,8 +900,8 @@ function ChatSidebar({ repoUrl, ragReady }) {
         <div ref={bottomRef} />
       </div>
 
-      <ProgressiveBlur direction="top" size={60} className="top-[72px]" zIndex={10} />
-      <ProgressiveBlur direction="bottom" size={80} className="bottom-[80px] md:bottom-[90px]" zIndex={10} />
+      <ProgressiveBlur direction="top" size={120} className="top-[72px]" zIndex={10} />
+      <ProgressiveBlur direction="bottom" size={160} className="bottom-[80px] md:bottom-[90px]" zIndex={10} />
 
       <div className="p-4 md:p-6 bg-transparent border-t border-outline flex-shrink-0 pb-[env(safe-area-inset-bottom,16px)] relative z-20 backdrop-blur-md">
         <div className="relative group">
