@@ -276,7 +276,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-4 md:py-6 backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-12">
           <div className="flex items-center">
-            <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+            <img src="/logo.png" alt="RExplain" className="h-8 md:h-10 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-semibold text-secondary">
           </nav>
@@ -510,7 +510,7 @@ function LoadingState({ repoUrl, theme, toggleTheme, overlayRef }) {
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 backdrop-blur-sm md:backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-8">
           <div className="flex items-center">
-            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+            <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
@@ -985,7 +985,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 backdrop-blur-sm md:backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-8">
           <div className="flex items-center">
-            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
+            <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
