@@ -6,7 +6,7 @@ import InteractiveDiagram from "./InteractiveDiagram";
 import VantaBackground from "./VantaBackground";
 import ThemeToggle from "./components/ThemeToggle";
 import Highlighter from "./components/magicui/Highlighter";
-import { LineShadowText } from "./components/ui/line-shadow-text";
+import { CodeTypeAnimation } from "./components/ui/code-type-animation";
 import { AnimatedListItem } from "./components/magicui/AnimatedList";
 import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularProgressBar";
 import AnimatedBeam from "./components/magicui/AnimatedBeam";
@@ -291,16 +291,14 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
 
-          <LineShadowText
+          <CodeTypeAnimation
             as="h1"
-            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter cursor-default text-primary"
+            text="RExplain"
+            className="mb-4 md:mb-6 leading-[0.95] tracking-tighter cursor-default font-normal text-primary drop-shadow-md"
             style={{
               fontSize: "clamp(4.5rem, 14vw, 10rem)",
             }}
-            shadowColor="var(--text-secondary)"
-          >
-            RExplain
-          </LineShadowText>
+          />
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository<br />with{" "}
