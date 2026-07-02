@@ -4,6 +4,14 @@ import ReactMarkdown from "react-markdown";
 import { LineChart, Line, BarChart, Bar, YAxis, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import InteractiveDiagram from "./InteractiveDiagram";
 import VantaBackground from "./VantaBackground";
+import ThemeToggle from "./components/ThemeToggle";
+import Highlighter from "./components/magicui/Highlighter";
+import KineticText from "./components/magicui/KineticText";
+import { AnimatedListItem } from "./components/magicui/AnimatedList";
+import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularProgressBar";
+import AnimatedBeam from "./components/magicui/AnimatedBeam";
+import ProgressiveBlur from "./components/magicui/ProgressiveBlur";
+import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
@@ -96,7 +104,7 @@ function ScrambleText({ text, as: Component = "span", className, style, delay = 
 // ─── Shared Footer ─────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="border-t border-outline py-16 px-8 bg-stone-100/50 backdrop-blur-sm">
+    <footer className="border-t border-outline py-16 px-8 bg-transparent backdrop-blur-sm">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
         <div className="flex flex-col md:flex-row items-center gap-10">
           <span className="bitcount-brand text-primary text-xl">REX</span>
@@ -181,13 +189,13 @@ function FilePreviewModal({ repoUrl, filePath, onClose }) {
 }
 
 // ─── Commit Graph ────────────────────────────────────────────────────────────
-function CommitGraph({ commits }) {
+function CommitGraph({ commits, theme }) {
   if (!commits || commits.length === 0) return null;
 
   // Use only the latest 30 commits (most recent activity)
   const recent = [...commits].slice(0, 30);
 
-  // Group by date for granularity (30 commits = individual days)
+  // Group by date for granularity
   const dataMap = {};
   recent.forEach(c => {
     if (!c.date) return;
@@ -205,14 +213,20 @@ function CommitGraph({ commits }) {
 
   if (data.length === 0) return null;
 
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const tooltipBg = isDark ? '#1e1e2e' : '#ffffff';
+  const tooltipBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const tooltipText = isDark ? '#f0f0f5' : '#111827';
+  const axisColor = isDark ? '#374151' : '#d1d5db';
+
   return (
     <div className="h-[220px] w-full mt-2">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-          <XAxis dataKey="date" stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-          <YAxis stroke="#d1d5db" fontSize={9} tickLine={false} axisLine={false} allowDecimals={false} />
+          <XAxis dataKey="date" stroke={axisColor} fontSize={9} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <YAxis stroke={axisColor} fontSize={9} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip
-            contentStyle={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 10, color: "#111827", fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}
+            contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 10, color: tooltipText, fontSize: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
             itemStyle={{ color: "#a855f7" }}
             formatter={(val) => [val, 'Commits']}
           />
@@ -224,21 +238,28 @@ function CommitGraph({ commits }) {
 }
 
 // ─── File Types Graph ────────────────────────────────────────────────────────
-function FileTypesGraph({ langs }) {
+function FileTypesGraph({ langs, theme }) {
   if (!langs || langs.length === 0) return null;
 
   const data = langs.map(([ext, count]) => ({ ext, count }));
+
+  const isDark = theme === 'dark';
+  const tooltipBg = isDark ? '#1e1e2e' : '#ffffff';
+  const tooltipBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)';
+  const tooltipText = isDark ? '#f0f0f5' : '#111827';
+  const axisColor = isDark ? '#4b5563' : '#a3a3a3';
+  const cursorFill = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
 
   return (
     <div className="h-[200px] w-full mt-2">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-          <XAxis dataKey="ext" stroke="#a3a3a3" fontSize={10} tickLine={false} axisLine={false} />
-          <YAxis stroke="#a3a3a3" fontSize={10} tickLine={false} axisLine={false} />
+          <XAxis dataKey="ext" stroke={axisColor} fontSize={10} tickLine={false} axisLine={false} />
+          <YAxis stroke={axisColor} fontSize={10} tickLine={false} axisLine={false} />
           <Tooltip
-            contentStyle={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 8, color: "#111827", fontSize: 12 }}
+            contentStyle={{ background: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: 8, color: tooltipText, fontSize: 12 }}
             itemStyle={{ color: "#a855f7" }}
-            cursor={{ fill: "rgba(0,0,0,0.05)" }}
+            cursor={{ fill: cursorFill }}
           />
           <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -248,11 +269,11 @@ function FileTypesGraph({ langs }) {
 }
 
 // ─── Landing Page ──────────────────────────────────────────────────────────
-function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus }) {
+function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus, overlayRef }) {
   const handleKey = (e) => { if (e.key === "Enter") onAnalyze(); };
   return (
     <div className="text-on-background font-body selection:bg-accent-purple/20 selection:text-primary antialiased min-h-[100dvh] relative" style={{ background: 'transparent' }}>
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-4 md:py-6 bg-white/60 backdrop-blur-md border-b border-outline">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-4 md:py-6 backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-12">
           <div className="flex items-center">
             <span className="rexplain-logo text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
@@ -260,7 +281,8 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-semibold text-secondary">
           </nav>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
         </div>
       </header>
 
@@ -282,17 +304,35 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           />
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
-            Unfold the complexity of any GitHub repository<br />with <span className="italic font-light text-primary">clarity </span>and <span style={{ color: '#800020' }}>intent.</span>
+            Unfold the complexity of any GitHub repository<br />with{" "}
+            <Highlighter color="rgba(168,85,247,0.2)" delay={1600}>
+              <span className="italic font-light text-primary">clarity{" "}</span>
+            </Highlighter>
+            and{" "}
+            <Highlighter color="rgba(128,0,32,0.2)" delay={1900}>
+              <span style={{ color: 'var(--accent-burgundy)' }}>intent.</span>
+            </Highlighter>
           </p>
+
+          <div className="animate-reveal-up" style={{ animationDelay: '0.3s', overflow: 'hidden' }}>
+            <KineticText
+              text="One URL. Instant architectural clarity."
+              by="word"
+              delay={1400}
+              stagger={60}
+              className="text-secondary font-body text-base md:text-lg font-light tracking-wide"
+            />
+          </div>
         </div>
 
-        <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.2s' }}>
-          <div className="relative flex flex-col md:flex-row items-center bg-white/90 backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm border border-outline/50 gap-2 md:gap-0 z-10 hover:shadow-md hover:border-outline/80 transition-all duration-300">
+        <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
+          <div className="search-input-container relative flex flex-col md:flex-row items-center backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm gap-2 md:gap-0 z-10 transition-all duration-300">
             
             <div className="flex w-full items-center pl-4 md:pl-0">
-              <span className="text-gray-400 font-body text-base md:text-lg whitespace-nowrap hidden sm:inline">github.com/</span>
+              <span className="font-body text-base md:text-lg whitespace-nowrap hidden sm:inline" style={{ color: 'var(--text-tertiary)' }}>github.com/</span>
               <input
-                className="w-full bg-transparent border-none text-gray-800 focus:outline-none focus:ring-0 font-body text-base md:text-lg py-4 pl-1"
+                className="w-full bg-transparent border-none focus:outline-none focus:ring-0 font-body text-base md:text-lg py-4 pl-1"
+                style={{ color: 'var(--text-primary)' }}
                 placeholder="username/repo_name"
                 type="text"
                 value={repoUrl}
@@ -324,45 +364,42 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
 
         {/* Feature Grid */}
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 animate-reveal-up px-4 mb-20 md:mb-32" style={{ animationDelay: '0.4s' }}>
-          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300" style={{ '--hover-border': '#800020' }}>
-            <div className="flex justify-between items-start z-10">
-              <div>
-                <span className="text-[9px] uppercase tracking-[0.3em] font-bold mb-2 block" style={{ color: '#800020' }}>System Intelligence</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Architecture<br />Mapping</h3>
+        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 px-4 mb-20 md:mb-32">
+          <AnimatedListItem delay={0}>
+            <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300">
+              <div className="flex justify-between items-start z-10">
+                <div>
+                  <span className="text-[9px] uppercase tracking-[0.3em] font-bold mb-2 block" style={{ color: 'var(--accent-burgundy)' }}>System Intelligence</span>
+                  <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Architecture<br />Mapping</h3>
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(128,0,32,0.1)' }}>
-                <span className="material-symbols-outlined" style={{ color: '#800020' }}>account_tree</span>
-              </div>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Visualize the skeleton of your project. We parse every connection, dependency, and flow to generate a living map of your codebase.</p>
             </div>
-            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Visualize the skeleton of your project. We parse every connection, dependency, and flow to generate a living map of your codebase.</p>
-          </div>
+          </AnimatedListItem>
 
-          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300 hover:border-accent-purple/50">
-            <div className="flex justify-between items-start z-10">
-              <div>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-accent-purple font-bold mb-2 block">Cognitive Parsing</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Deep Semantics</h3>
+          <AnimatedListItem delay={100}>
+            <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300">
+              <div className="flex justify-between items-start z-10">
+                <div>
+                  <span className="text-[9px] uppercase tracking-[0.3em] text-accent-purple font-bold mb-2 block">Cognitive Parsing</span>
+                  <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Deep Semantics</h3>
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-accent-purple/10 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-accent-purple">psychology</span>
-              </div>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Beyond syntax. RExplain understands the developer's intent, surfacing the "why" behind the logic patterns and structural choices.</p>
             </div>
-            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Beyond syntax. RExplain understands the developer's intent, surfacing the "why" behind the logic patterns and structural choices.</p>
-          </div>
+          </AnimatedListItem>
 
-          <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300 hover:border-primary/20">
-            <div className="flex justify-between items-start z-10">
-              <div>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-primary/60 font-bold mb-2 block">Zero Config</span>
-                <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Access</h3>
+          <AnimatedListItem delay={200}>
+            <div className="liquid-glass p-6 md:p-8 rounded-[2rem] flex flex-col justify-between h-auto md:h-80 group gap-6 md:gap-0 relative overflow-hidden transition-all duration-300">
+              <div className="flex justify-between items-start z-10">
+                <div>
+                  <span className="text-[9px] uppercase tracking-[0.3em] font-bold mb-2 block" style={{ color: 'var(--text-tertiary)' }}>Zero Config</span>
+                  <h3 className="font-headline text-2xl md:text-3xl font-bold text-primary leading-tight">Instant Access</h3>
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-primary/5 border border-outline flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-primary/70">terminal</span>
-              </div>
+              <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Paste a URL and explore. No installation, no complex setup required. Just immediate architectural insight.</p>
             </div>
-            <p className="font-body text-sm text-secondary leading-relaxed font-light z-10 max-w-[85%] mt-4 md:mt-0">Paste a URL and explore. No installation, no complex setup required. Just immediate architectural insight.</p>
-          </div>
+          </AnimatedListItem>
         </div>
 
         {/* Fun Use Cases Section */}
@@ -445,7 +482,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 
       </main>
 
-      <footer className="relative z-10 bg-white/50 backdrop-blur-sm border-t border-outline/50">
+      <footer className="relative z-10 backdrop-blur-sm border-t" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 py-12 px-8">
           <div className="flex items-center gap-6">
             <span className="text-lg font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
@@ -469,7 +506,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
 }
 
 // ─── Loading State ──────────────────────────────────────────────────────────
-function LoadingState({ repoUrl, theme }) {
+function LoadingState({ repoUrl, theme, toggleTheme, overlayRef }) {
   const [waking, setWaking] = useState(false);
 
   useEffect(() => {
@@ -481,14 +518,17 @@ function LoadingState({ repoUrl, theme }) {
   const repoName = repoUrl ? repoUrl.split("/").slice(-2).join("/") : "repository";
   return (
     <div className="text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col" style={{ background: 'transparent' }}>
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-outline">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 backdrop-blur-sm md:backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-8">
           <div className="flex items-center">
-            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
+            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
           </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
         </div>
       </header>
 
@@ -496,16 +536,24 @@ function LoadingState({ repoUrl, theme }) {
         <div className="w-full max-w-2xl flex flex-col items-center z-10">
           <div className="text-center space-y-8 mb-16">
             <div className="flex flex-col items-center">
-              <div className="relative w-16 h-16 flex items-center justify-center mb-8">
-                <div className="absolute inset-0 bg-accent-purple/10 rounded-full animate-liquid-pulse"></div>
-                <div className="absolute inset-0 border border-accent-purple/30 rounded-full animate-slow-spin"></div>
-                <div className="relative w-2 h-2 bg-accent-purple rounded-full"></div>
+              {/* Animated circular progress — replaces the spinning dot */}
+              <div className="mb-8">
+                <AnimatedCircularProgressBar
+                  value={waking ? 45 : 72}
+                  size={72}
+                  stroke={5}
+                  color="#a855f7"
+                  trackColor="rgba(168,85,247,0.1)"
+                  label={waking ? "…" : undefined}
+                  animate
+                  duration={2000}
+                />
               </div>
 
               <div className="space-y-4 md:space-y-6">
                 <div className="inline-flex items-center gap-2 md:gap-3 justify-center">
-                  <div className="w-6 md:w-8 h-[1px] animate-pulse" style={{ background: '#800020' }}></div>
-                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold animate-pulse" style={{ color: '#800020' }}>System Insight</span>
+                  <div className="w-6 md:w-8 h-[1px] animate-pulse" style={{ background: 'var(--accent-burgundy)' }}></div>
+                  <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold animate-pulse" style={{ color: 'var(--accent-burgundy)' }}>System Insight</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary animate-breathing">
                   {waking ? "Waking Backend" : "Analyzing"}<br />Repository
@@ -805,8 +853,8 @@ function ChatSidebar({ repoUrl, ragReady }) {
   const latestAssistantIdx = messages.reduce((acc, m, i) => m.role === "assistant" ? i : acc, -1);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "transparent" }}>
-      <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-outline flex-shrink-0">
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "transparent", position: "relative" }}>
+      <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-outline flex-shrink-0 relative z-20 bg-transparent backdrop-blur-md">
         <div className="flex items-center gap-2 md:gap-3">
           <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-primary transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-primary/5 active:scale-95">
             <span className="material-symbols-outlined">refresh</span>
@@ -852,7 +900,10 @@ function ChatSidebar({ repoUrl, ragReady }) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="p-4 md:p-6 bg-transparent border-t border-outline flex-shrink-0 pb-[env(safe-area-inset-bottom,16px)]">
+      <ProgressiveBlur direction="top" size={60} className="top-[72px]" zIndex={10} />
+      <ProgressiveBlur direction="bottom" size={80} className="bottom-[80px] md:bottom-[90px]" zIndex={10} />
+
+      <div className="p-4 md:p-6 bg-transparent border-t border-outline flex-shrink-0 pb-[env(safe-area-inset-bottom,16px)] relative z-20 backdrop-blur-md">
         <div className="relative group">
           <textarea
             rows={1}
@@ -883,7 +934,7 @@ function ChatSidebar({ repoUrl, ragReady }) {
 // ─── Analysis View — Split Screen ───────────────────────────────────────────
 const NAV_H = 72;
 
-function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
+function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef }) {
   const fw = result.framework_detection || {};
   const scan = result.scan_results || {};
   const langs = Object.entries(scan.languages || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -942,10 +993,10 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
 
   return (
     <div className="text-on-background font-body antialiased h-[100dvh] overflow-hidden flex flex-col" style={{ background: 'transparent' }}>
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 bg-transparent backdrop-blur-sm md:backdrop-blur-md border-b border-outline">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-8 py-3 md:py-4 backdrop-blur-sm md:backdrop-blur-md border-b" style={{ background: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }}>
         <div className="flex items-center gap-4 md:gap-8">
           <div className="flex items-center">
-            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline text-primary">RExplain</span>
+            <span className="rexplain-logo text-lg md:text-xl font-extrabold tracking-tighter font-headline">RExplain</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
             <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
@@ -953,6 +1004,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
         </div>
         <div className="flex items-center gap-3 md:gap-4">
           <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
         </div>
       </header>
 
@@ -1003,8 +1055,8 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             {langs.length > 0 && (
               <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.2s' }}>
                 <SectionHeader label="File Distribution" />
-                <div className="liquid-glass p-6 rounded-xl">
-                  <FileTypesGraph langs={langs} />
+                <div className="liquid-glass p-6 rounded-xl relative overflow-hidden">
+                  <FileTypesGraph langs={langs} theme={theme} />
                 </div>
               </section>
             )}
@@ -1012,9 +1064,9 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
             {/* Commit Activity Graph */}
             <section className="mb-12 animate-reveal-up" style={{ animationDelay: '0.3s' }}>
               <SectionHeader label="Commit Activity" />
-              <div className="liquid-glass p-6 rounded-xl">
+              <div className="liquid-glass p-6 rounded-xl relative overflow-hidden">
                 {commits && commits.length > 0 ? (
-                  <CommitGraph commits={commits} />
+                  <CommitGraph commits={commits} theme={theme} />
                 ) : (
                   <div className="flex flex-col items-center gap-2 py-8 opacity-50">
                     <span className="material-symbols-outlined text-3xl text-secondary">commit</span>
@@ -1076,13 +1128,14 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
                     graphData={result.interactive_graph}
                     fallbackData={result}
                     onFileClick={(filePath) => setPreviewFile(filePath)}
+                    theme={theme}
                   />
                 </div>
               ) : (
-                <div className="rounded-xl overflow-x-auto scroll-hide" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.07)', padding: '2rem' }}>
-                  <div className="min-w-max md:min-w-0 flex items-center justify-center" style={{ background: '#ffffff' }}>
+                <div className="rounded-xl overflow-x-auto scroll-hide" style={{ background: 'var(--diagram-bg)', border: '1px solid var(--diagram-border)', padding: '2rem' }}>
+                  <div className="min-w-max md:min-w-0 flex items-center justify-center" style={{ background: 'var(--diagram-bg)' }}>
                     {result.diagram ? (
-                      <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded" style={{ background: '#ffffff', display: 'block' }} />
+                      <img src={result.diagram} alt="Architecture Diagram" className="max-w-none md:max-w-full h-auto object-contain rounded" style={{ display: 'block' }} />
                     ) : (
                       <div className="flex flex-col items-center gap-3 py-12 opacity-50">
                         <span className="material-symbols-outlined text-3xl text-secondary">schema</span>
@@ -1204,6 +1257,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme }) {
               <p className="text-[10px] text-secondary/30 uppercase tracking-[0.2em] font-bold">© 2026 • RExplain AI Systems</p>
             </footer>
 
+            <ProgressiveBlur direction="bottom" size={100} zIndex={10} />
           </div>
         </main>
 
@@ -1314,16 +1368,38 @@ export default function App() {
     })();
   }, []);
 
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
+  const [theme, setTheme] = useState(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored) return stored;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } catch (_) { return "light"; }
+  });
   useEffect(() => {
-    localStorage.setItem("theme", theme);
+    try { localStorage.setItem("theme", theme); } catch (_) {}
     document.documentElement.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
   }, [theme]);
-  const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
+  const toggleTheme = () => setTheme(t => {
+    const next = t === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    if (next === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    return next;
+  });
   const [repoUrl, setRepoUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const overlayRef = useRef(null);
 
   const analyze = async () => {
     const trimmed = repoUrl.trim();
@@ -1399,7 +1475,16 @@ export default function App() {
 
   const reset = () => { setResult(null); setError(null); };
 
-  if (loading) return <><VantaBackground subtle /><LoadingState repoUrl={repoUrl} /></>;
-  if (result) return <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} /></>;
-  return <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} /></>;
+  return (
+    <>
+      <ThemeTransitionOverlay ref={overlayRef} />
+      {loading ? (
+        <><VantaBackground subtle /><LoadingState repoUrl={repoUrl} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
+      ) : result ? (
+        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
+      ) : (
+        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} /></>
+      )}
+    </>
+  );
 }

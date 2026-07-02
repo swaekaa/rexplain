@@ -1,15 +1,154 @@
-:root {
-  --bg-page: #f9fafb;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --accent-purple: #a855f7;
-  --accent-burgundy: #800020;
+/* ═══════════════════════════════════════════════════════════════════════════
+   RExplain Design System — index.css
+   Complete light + dark theme token system
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light theme (default) ─────────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-page:              #f9fafb;
+  --bg-surface:           #ffffff;
+  --bg-surface-alt:       #f3f4f6;
+  --bg-subtle:            rgba(0, 0, 0, 0.03);
+  --bg-overlay:           rgba(0, 0, 0, 0.6);
+
+  /* Text */
+  --text-primary:         #111827;
+  --text-secondary:       #6b7280;
+  --text-tertiary:        #9ca3af;
+  --text-inverse:         #ffffff;
+
+  /* Borders */
+  --border-default:       rgba(0, 0, 0, 0.1);
+  --border-subtle:        rgba(0, 0, 0, 0.05);
+  --border-strong:        rgba(0, 0, 0, 0.2);
+
+  /* Brand accents (unchanged in both themes) */
+  --accent-purple:        #a855f7;
+  --accent-purple-10:     rgba(168, 85, 247, 0.10);
+  --accent-purple-20:     rgba(168, 85, 247, 0.20);
+  --accent-purple-30:     rgba(168, 85, 247, 0.30);
+  --accent-burgundy:      #800020;
+  --accent-burgundy-10:   rgba(128, 0, 32, 0.10);
+
+  /* Cards / surfaces */
+  --surface-card:         #ffffff;
+  --surface-card-hover:   #fafafa;
+  --surface-input:        rgba(0, 0, 0, 0.04);
+  --surface-input-border: rgba(0, 0, 0, 0.12);
+
+  /* Charts */
+  --chart-tooltip-bg:     #ffffff;
+  --chart-tooltip-border: rgba(0, 0, 0, 0.08);
+  --chart-tooltip-text:   #111827;
+  --chart-axis:           #d1d5db;
+
+  /* Diagram */
+  --diagram-bg:           #f8fafc;
+  --diagram-border:       #e5e7eb;
+  --diagram-node-text:    #111827;
+  --diagram-control-bg:   #ffffff;
+  --diagram-control-border: #e5e7eb;
+  --diagram-control-icon: #6b7280;
+  --diagram-legend-bg:    rgba(255, 255, 255, 0.85);
+
+  /* Prose */
+  --prose-border:         rgba(0, 0, 0, 0.1);
+  --prose-code-bg:        rgba(0, 0, 0, 0.05);
+  --prose-pre-bg:         rgba(0, 0, 0, 0.03);
+
+  /* Navbar */
+  --nav-bg:               rgba(255, 255, 255, 0.70);
+  --nav-border:           rgba(0, 0, 0, 0.08);
+
+  /* Scrollbar */
+  --scrollbar-thumb:      rgba(0, 0, 0, 0.12);
+  --scrollbar-track:      transparent;
+}
+
+/* ── Dark theme ─────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-page:              #09090f;
+  --bg-surface:           #111118;
+  --bg-surface-alt:       #1a1a24;
+  --bg-subtle:            rgba(255, 255, 255, 0.04);
+  --bg-overlay:           rgba(0, 0, 0, 0.75);
+
+  /* Text */
+  --text-primary:         #f0f0f5;
+  --text-secondary:       #9ca3af;
+  --text-tertiary:        #6b7280;
+  --text-inverse:         #09090f;
+
+  /* Borders */
+  --border-default:       rgba(255, 255, 255, 0.08);
+  --border-subtle:        rgba(255, 255, 255, 0.05);
+  --border-strong:        rgba(255, 255, 255, 0.15);
+
+  /* Brand accents unchanged */
+  --accent-purple:        #a855f7;
+  --accent-purple-10:     rgba(168, 85, 247, 0.12);
+  --accent-purple-20:     rgba(168, 85, 247, 0.22);
+  --accent-purple-30:     rgba(168, 85, 247, 0.35);
+  --accent-burgundy:      #c0365c;
+  --accent-burgundy-10:   rgba(192, 54, 92, 0.12);
+
+  /* Cards / surfaces */
+  --surface-card:         rgba(255, 255, 255, 0.04);
+  --surface-card-hover:   rgba(255, 255, 255, 0.07);
+  --surface-input:        rgba(255, 255, 255, 0.05);
+  --surface-input-border: rgba(255, 255, 255, 0.1);
+
+  /* Charts */
+  --chart-tooltip-bg:     #1e1e2e;
+  --chart-tooltip-border: rgba(255, 255, 255, 0.08);
+  --chart-tooltip-text:   #f0f0f5;
+  --chart-axis:           #374151;
+
+  /* Diagram */
+  --diagram-bg:           #111118;
+  --diagram-border:       rgba(255, 255, 255, 0.08);
+  --diagram-node-text:    #f0f0f5;
+  --diagram-control-bg:   #1a1a24;
+  --diagram-control-border: rgba(255, 255, 255, 0.08);
+  --diagram-control-icon: #9ca3af;
+  --diagram-legend-bg:    rgba(17, 17, 24, 0.9);
+
+  /* Prose */
+  --prose-border:         rgba(255, 255, 255, 0.08);
+  --prose-code-bg:        rgba(255, 255, 255, 0.06);
+  --prose-pre-bg:         rgba(255, 255, 255, 0.03);
+
+  /* Navbar */
+  --nav-bg:               transparent;
+  --nav-border:           rgba(255, 255, 255, 0.06);
+
+  /* Scrollbar */
+  --scrollbar-thumb:      rgba(255, 255, 255, 0.1);
+  --scrollbar-track:      transparent;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Apply smooth theme transition to the html root */
+  transition: color-scheme 0.3s;
 }
 
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-page);
   color: var(--text-primary);
+  transition:
+    background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .font-headline {
@@ -22,7 +161,7 @@ body {
   line-height: 1;
 }
 
-/* ── All keyframes bundled here (works on Vercel/CDN-blocked environments) ── */
+/* ── Keyframes ──────────────────────────────────────────────────────────────── */
 
 @keyframes revealUp {
   0%   { opacity: 0; transform: translateY(20px); }
@@ -50,8 +189,8 @@ body {
 }
 
 @keyframes shine {
-  0%   { background-position: -100% center; }
-  100% { background-position:  100% center; }
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 @keyframes fadeInTitle {
@@ -64,7 +203,6 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Liquid glass text (landing hero h1) */
 @keyframes cssShine {
   0%   { background-position: -100% center; }
   100% { background-position:  100% center; }
@@ -75,7 +213,7 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Bundled utility classes for animations (fallback if Tailwind CDN is slow/blocked) */
+/* ── Animation utilities ─────────────────────────────────────────────────────── */
 .animate-reveal-up {
   animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
@@ -97,13 +235,14 @@ body {
   animation: shimmer 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* ── Hero logo gradient — light mode ──────────────────────────────────────── */
 .liquid-glass-text {
   background: linear-gradient(120deg,
-      #111827 30%,
+      var(--text-primary) 30%,
       #a31436 45%,
-      #111827 50%,
+      var(--text-primary) 50%,
       #800020 55%,
-      #111827 70%);
+      var(--text-primary) 70%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -113,54 +252,96 @@ body {
   opacity: 0;
 }
 
-/* RExplain nav logo - always visible */
-.rexplain-logo {
-  background: linear-gradient(135deg, #111827 0%, #a31436 50%, #800020 100%);
+/* Dark mode hero text — glowing purple-burgundy */
+[data-theme="dark"] .liquid-glass-text {
+  background: linear-gradient(120deg,
+      #e0e0f0 30%,
+      #d060a0 45%,
+      #e0e0f0 50%,
+      #a855f7 55%,
+      #e0e0f0 70%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(128, 0, 32, 0.4));
+  animation: cssShine 8s ease-in-out infinite, cssFadeInTitle 1s ease-out forwards;
 }
 
+/* ── Nav logo ────────────────────────────────────────────────────────────── */
+.rexplain-logo {
+  background: linear-gradient(135deg, var(--text-primary) 0%, #a31436 50%, #800020 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 12px rgba(128, 0, 32, 0.3));
+}
+
+[data-theme="dark"] .rexplain-logo {
+  background: linear-gradient(135deg, #f0f0f5 0%, #c0365c 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.4));
+}
+
+/* ── Liquid glass card ───────────────────────────────────────────────────── */
 .liquid-glass {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.06);
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .liquid-glass:hover {
   transform: scale(1.01);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 0 15px rgba(168, 85, 247, 0.05);
-  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.1), 0 0 15px rgba(168, 85, 247, 0.05);
+  border-color: var(--border-strong);
 }
 
+[data-theme="dark"] .liquid-glass {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .liquid-glass:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Chat bubbles ─────────────────────────────────────────────────────────── */
 .chat-bubble-ai {
-  background: rgba(168, 85, 247, 0.08);
+  background: var(--accent-purple-10);
   border-left: 3px solid var(--accent-purple);
   backdrop-filter: blur(8px);
 }
 
 .chat-bubble-user {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--bg-subtle);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-subtle);
 }
 
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 .scroll-hide::-webkit-scrollbar {
   width: 4px;
 }
 
 .scroll-hide::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
 }
 
 .scroll-hide::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 
-/* Fix autofill white overlay */
+/* ── Autofill fix ─────────────────────────────────────────────────────────── */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -170,7 +351,7 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Remove click selection */
+/* ── Text selection ──────────────────────────────────────────────────────── */
 ::selection {
   background: var(--accent-purple);
   color: #fff;
@@ -181,14 +362,9 @@ input:-webkit-autofill:active {
   color: #fff;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-button,
-nav,
+/* ── User-select rules ───────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+button, nav,
 .liquid-glass,
 span.material-symbols-outlined {
   user-select: none;
@@ -204,7 +380,7 @@ textarea {
   -webkit-user-select: text;
 }
 
-/* react-markdown prose overrides */
+/* ── Readme / Prose ──────────────────────────────────────────────────────── */
 .readme-prose h1 {
   font-family: 'Manrope', sans-serif;
   font-size: 1.6rem;
@@ -212,7 +388,7 @@ textarea {
   color: var(--text-primary);
   margin: 1rem 0 0.5rem;
   letter-spacing: -0.02em;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--prose-border);
   padding-bottom: 0.4rem;
 }
 
@@ -222,7 +398,7 @@ textarea {
   font-weight: 700;
   color: var(--text-primary);
   margin: 1rem 0 0.4rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--prose-border);
   padding-bottom: 0.2rem;
 }
 
@@ -250,7 +426,7 @@ textarea {
 }
 
 .readme-prose code {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--prose-code-bg);
   color: var(--text-primary);
   padding: 1px 6px;
   border-radius: 3px;
@@ -259,7 +435,7 @@ textarea {
 }
 
 .readme-prose pre {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--prose-pre-bg);
   border-left: 2px solid var(--accent-purple);
   padding: 14px 16px;
   overflow-x: auto;
@@ -305,7 +481,7 @@ textarea {
 
 .readme-prose hr {
   border: none;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--prose-border);
   margin: 1rem 0;
 }
 
@@ -317,10 +493,10 @@ textarea {
 }
 
 .readme-prose th {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--prose-border);
   padding: 6px 12px;
   text-align: left;
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--bg-subtle);
   font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 0.78rem;
@@ -330,65 +506,50 @@ textarea {
 }
 
 .readme-prose td {
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--prose-border);
   padding: 6px 12px;
   color: var(--text-secondary);
 }
 
-/* Remove previous layout definitions and animations as they are in tailwind.config and index.html */
-
-@keyframes shine {
-  0% {
-    background-position: -200% center;
-  }
-
-  100% {
-    background-position: 200% center;
-  }
-}
-
-@keyframes fadeInTitle {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* ── Isometric text (landing page easter egg) ─────────────────────────────── */
 .isometric-text {
   text-shadow:
     1px 1px 0 #6b21a8, 2px 2px 0 #6b21a8, 3px 3px 0 #6b21a8, 4px 4px 0 #6b21a8,
     5px 5px 0 #581c87, 6px 6px 0 #581c87, 7px 7px 0 #581c87, 8px 8px 0 #581c87,
     9px 9px 0 #4c1d95, 10px 10px 0 #4c1d95, 11px 11px 0 #4c1d95, 12px 12px 0 #4c1d95,
     13px 13px 0 #3b0764, 14px 14px 0 #3b0764, 15px 15px 0 #3b0764, 16px 16px 0 #3b0764,
-    17px 17px 0 #2e054e, 18px 18px 0 #2e054e, 19px 19px 0 #2e054e, 20px 20px 0 #2e054e,
-    21px 21px 0 #1f0336, 22px 22px 0 #1f0336, 23px 23px 0 #1f0336, 24px 24px 0 #1f0336,
-    26px 26px 0 #1f0336, 28px 28px 0 #1f0336, 30px 30px 0 #1f0336, 32px 32px 0 #1f0336,
-    34px 34px 0 #1f0336, 36px 36px 0 #1f0336, 38px 38px 0 #1f0336, 40px 40px 0 #1f0336,
-    42px 42px 0 #1f0336, 44px 44px 0 #1f0336, 46px 46px 0 #1f0336, 48px 48px 0 #1f0336,
-    50px 50px 0 #1f0336, 52px 52px 0 #1f0336, 54px 54px 0 #1f0336, 56px 56px 0 #1f0336,
-    58px 58px 0 #1f0336, 60px 60px 0 #1f0336, 62px 62px 0 #1f0336, 64px 64px 0 #1f0336,
-    66px 66px 0 #1f0336, 68px 68px 0 #1f0336, 70px 70px 0 #1f0336, 72px 72px 0 #1f0336,
-    74px 74px 0 #1f0336, 76px 76px 0 #1f0336, 78px 78px 0 #1f0336, 80px 80px 0 #1f0336,
-    85px 85px 0 #1f0336, 90px 90px 0 #1f0336, 95px 95px 0 #1f0336, 100px 100px 0 #1f0336,
-    105px 105px 0 #1f0336, 110px 110px 0 #1f0336, 115px 115px 0 #1f0336, 120px 120px 0 #1f0336,
-    125px 125px 0 #1f0336, 130px 130px 0 #1f0336, 135px 135px 0 #1f0336, 140px 140px 0 #1f0336,
-    145px 145px 0 #1f0336, 150px 150px 0 #1f0336, 155px 155px 0 #1f0336, 160px 160px 0 #1f0336,
-    165px 165px 0 #1f0336, 170px 170px 0 #1f0336, 175px 175px 0 #1f0336, 180px 180px 0 #1f0336,
-    185px 185px 0 #1f0336, 190px 190px 0 #1f0336, 195px 195px 0 #1f0336, 200px 200px 0 #1f0336,
-    210px 210px 0 #1f0336, 220px 220px 0 #1f0336, 230px 230px 0 #1f0336, 240px 240px 0 #1f0336,
-    250px 250px 0 #1f0336, 260px 260px 0 #1f0336, 270px 270px 0 #1f0336, 280px 280px 0 #1f0336,
-    290px 290px 0 #1f0336, 300px 300px 0 #1f0336, 310px 310px 0 #1f0336, 320px 320px 0 #1f0336,
-    330px 330px 0 #1f0336, 340px 340px 0 #1f0336, 350px 350px 0 #1f0336, 360px 360px 0 #1f0336,
-    370px 370px 0 #1f0336, 380px 380px 0 #1f0336, 390px 390px 0 #1f0336, 400px 400px 0 #1f0336,
-    420px 420px 0 #1f0336, 440px 440px 0 #1f0336, 460px 460px 0 #1f0336, 480px 480px 0 #1f0336,
-    500px 500px 0 #1f0336, 520px 520px 0 #1f0336, 540px 540px 0 #1f0336, 560px 560px 0 #1f0336,
-    580px 580px 0 #1f0336, 600px 600px 0 #1f0336, 620px 620px 0 #1f0336, 640px 640px 0 #1f0336,
-    660px 660px 0 #1f0336, 680px 680px 0 #1f0336, 700px 700px 0 #1f0336, 720px 720px 0 #1f0336,
-    740px 740px 0 #1f0336, 760px 760px 0 #1f0336, 780px 780px 0 #1f0336, 800px 800px 0 #1f0336,
-    800px 800px 30px rgba(0, 0, 0, 0.8);
+    20px 20px 0 #1f0336, 40px 40px 0 #1f0336, 80px 80px 0 #1f0336,
+    160px 160px 0 #1f0336, 320px 320px 0 #1f0336,
+    320px 320px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Input search box (landing page) ─────────────────────────────────────── */
+.search-input-container {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input-container:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .search-input-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .search-input-container:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Theme transition — prevent flicker on slow style applications ─────────── */
+.theme-transition-ready * {
+  transition:
+    background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
