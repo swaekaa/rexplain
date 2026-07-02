@@ -6,7 +6,7 @@ import InteractiveDiagram from "./InteractiveDiagram";
 import VantaBackground from "./VantaBackground";
 import ThemeToggle from "./components/ThemeToggle";
 import Highlighter from "./components/magicui/Highlighter";
-import KineticText from "./components/magicui/KineticText";
+import { LineShadowText } from "./components/ui/line-shadow-text";
 import { AnimatedListItem } from "./components/magicui/AnimatedList";
 import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularProgressBar";
 import AnimatedBeam from "./components/magicui/AnimatedBeam";
@@ -291,17 +291,16 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           <div className="mb-8 inline-flex items-center gap-2 px-3 py-1">
           </div>
 
-          <ScrambleText
+          <LineShadowText
             as="h1"
-            text="RExplain"
-            delay={1200}
-            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter liquid-glass-text cursor-default"
+            className="font-headline font-extrabold mb-4 md:mb-6 leading-[0.95] tracking-tighter cursor-default text-primary"
             style={{
               fontSize: "clamp(4.5rem, 14vw, 10rem)",
-              animationDelay: '0.1s',
-              animationFillMode: 'forwards',
             }}
-          />
+            shadowColor="var(--text-secondary)"
+          >
+            RExplain
+          </LineShadowText>
 
           <p className="font-headline font-extrabold text-primary mb-6 md:mb-8 leading-[1.05] tracking-tight animate-reveal-up" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", animationDelay: '0.2s' }}>
             Unfold the complexity of any GitHub repository<br />with{" "}
@@ -314,15 +313,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
             </Highlighter>
           </p>
 
-          <div className="animate-reveal-up" style={{ animationDelay: '0.3s', overflow: 'hidden' }}>
-            <KineticText
-              text="One URL. Instant architectural clarity."
-              by="word"
-              delay={1400}
-              stagger={60}
-              className="text-secondary font-body text-base md:text-lg font-light tracking-wide"
-            />
-          </div>
+
         </div>
 
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>

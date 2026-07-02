@@ -23,20 +23,14 @@ export default function KineticText({
   as: Component = "span",
   className = "",
   tokenClass = "",
+  style = {},
 }) {
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setStarted(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-
   const tokens = by === "char"
     ? text.split("")
     : text.split(" ");
 
   return (
-    <Component className={className} aria-label={text}>
+    <Component className={className} style={style} aria-label={text}>
       {tokens.map((token, i) => (
         <span
           key={i}
@@ -44,9 +38,9 @@ export default function KineticText({
           className={tokenClass}
           style={{
             display: "inline-block",
-            opacity: started ? 1 : 0,
-            transform: started ? "translateY(0) rotateX(0deg)" : "translateY(16px) rotateX(20deg)",
-            transition: `opacity 0.5s ease ${i * stagger}ms, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${i * stagger}ms`,
+            opacity: 0,
+            animation: `kineticReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+            animationDelay: `${delay + i * stagger}ms`,
             willChange: "opacity, transform",
           }}
         >
