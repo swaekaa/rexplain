@@ -298,8 +298,21 @@ body {
 
 .liquid-glass:hover {
   transform: scale(1.01);
-  box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.1), 0 0 15px rgba(168, 85, 247, 0.05);
-  border-color: var(--border-strong);
+  box-shadow: 0 8px 32px -4px rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+/* ── Hero Search Box ─────────────────────────────────────────────────────── */
+.hero-search-box {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .hero-search-box {
+  background: rgba(10, 10, 18, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.15);
 }
 
 [data-theme="dark"] .liquid-glass {

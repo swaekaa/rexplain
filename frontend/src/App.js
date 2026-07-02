@@ -326,7 +326,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
 
         <div className="w-full max-w-3xl relative group mb-16 md:mb-32 animate-reveal-up z-10" style={{ animationDelay: '0.4s' }}>
-          <div className="search-input-container relative flex flex-col md:flex-row items-center backdrop-blur-sm rounded-[28px] md:rounded-2xl p-2 md:pl-8 shadow-sm gap-2 md:gap-0 z-10 transition-all duration-300 bg-[color:var(--surface-input)] border border-[color:var(--border-default)]">
+          <div className="search-input-container hero-search-box relative flex flex-col md:flex-row items-center backdrop-blur-md rounded-[28px] md:rounded-2xl p-2 md:pl-8 gap-2 md:gap-0 z-10 transition-all duration-300">
             
             <div className="flex w-full items-center pl-4 md:pl-0">
               <span className="font-body text-base md:text-lg whitespace-nowrap hidden sm:inline" style={{ color: 'var(--text-tertiary)' }}>github.com/</span>
