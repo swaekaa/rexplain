@@ -31,19 +31,45 @@ import "@xyflow/react/dist/style.css";
 // ── Layer colour palette ──────────────────────────────────────────────────────
 
 const LAYER_COLORS = {
-  frontend:  { border: "#a855f7", bg: "#faf5ff", accent: "#a855f7" },
-  route:     { border: "#3b82f6", bg: "#eff6ff", accent: "#3b82f6" },
-  backend:   { border: "#3b82f6", bg: "#eff6ff", accent: "#3b82f6" },
-  service:   { border: "#10b981", bg: "#f0fdf4", accent: "#10b981" },
-  model:     { border: "#f59e0b", bg: "#fffbeb", accent: "#f59e0b" },
-  database:  { border: "#22c55e", bg: "#f0fdf4", accent: "#22c55e" },
-  infra:     { border: "#f97316", bg: "#fff7ed", accent: "#f97316" },
+  frontend:  { border: "#a855f7", bg: "rgba(168,85,247,0.08)", accent: "#a855f7" },
+  route:     { border: "#3b82f6", bg: "rgba(59,130,246,0.08)", accent: "#3b82f6" },
+  backend:   { border: "#3b82f6", bg: "rgba(59,130,246,0.08)", accent: "#3b82f6" },
+  service:   { border: "#10b981", bg: "rgba(16,185,129,0.08)", accent: "#10b981" },
+  model:     { border: "#f59e0b", bg: "rgba(245,158,11,0.08)", accent: "#f59e0b" },
+  database:  { border: "#22c55e", bg: "rgba(34,197,94,0.08)", accent: "#22c55e" },
+  infra:     { border: "#f97316", bg: "rgba(249,115,22,0.08)", accent: "#f97316" },
 };
 
-const LAYER_COLOR_DEFAULT = { border: "#d1d5db", bg: "#ffffff", accent: "#6e7681" };
+const LAYER_COLOR_DEFAULT = { border: "#6b7280", bg: "rgba(107,114,128,0.08)", accent: "#6b7280" };
 
 function getLayer(layer) {
   return LAYER_COLORS[layer] || LAYER_COLOR_DEFAULT;
+}
+
+// ── Get current theme-aware surface color ─────────────────────────────────────
+function getThemeColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    isDark,
+    nodeBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.95)',
+    nodeText: isDark ? '#f0f0f5' : '#111827',
+    nodeTextSub: isDark ? '#9ca3af' : '#6b7280',
+    surfaceBg: isDark ? '#111118' : '#f8fafc',
+    surfaceBorder: isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb',
+    inspectorBg: isDark ? '#1a1a24' : '#f8fafc',
+    inspectorBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    legendBg: isDark ? 'rgba(17,17,24,0.92)' : 'rgba(255,255,255,0.85)',
+    legendBorder: isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb',
+    legendText: isDark ? '#9ca3af' : '#6b7280',
+    controlBg: isDark ? '#1a1a24' : '#ffffff',
+    controlBorder: isDark ? 'rgba(255,255,255,0.08)' : '#e5e7eb',
+    controlIcon: isDark ? '#9ca3af' : '#6b7280',
+    controlIconHover: isDark ? '#f0f0f5' : '#111827',
+    controlHoverBg: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6',
+    hintText: isDark ? '#6b7280' : '#9ca3af',
+    dotColor: isDark ? 'rgba(255,255,255,0.05)' : '#e5e7eb',
+    maskColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
+  };
 }
 
 // ── HTTP method badge colours (mirrors App.js) ────────────────────────────────
@@ -62,11 +88,12 @@ function methodStyle(method) {
 // ── Shared node wrapper ───────────────────────────────────────────────────────
 
 function NodeShell({ layer, children, selected, compact = false, style = {} }) {
-  const { border, bg } = getLayer(layer);
+  const { border, bg, accent } = getLayer(layer);
+  const { nodeBg } = getThemeColors();
   return (
     <div
       style={{
-        background: bg,
+        background: nodeBg,
         border: `1.5px solid ${selected ? border : border + "55"}`,
         borderRadius: compact ? 8 : 12,
         padding: compact ? "8px 12px" : "12px 16px",
@@ -103,7 +130,7 @@ function LayerNode({ data, selected }) {
         </span>
         <span
           style={{
-            color: "#111827",
+            color: getThemeColors().nodeText,
             fontWeight: 800,
             fontSize: 13,
             letterSpacing: "-0.01em",
@@ -139,7 +166,7 @@ function FrameworkNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 14, color: accent }}>
           {data.icon}
         </span>
-        <span style={{ color: "#374151", fontWeight: 700, fontSize: 12 }}>
+        <span style={{ color: getThemeColors().nodeText, fontWeight: 700, fontSize: 12 }}>
           {data.label}
         </span>
       </div>
@@ -159,7 +186,7 @@ function FolderNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 14, color: accent }}>
           folder
         </span>
-        <span style={{ color: "#111827", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
+        <span style={{ color: getThemeColors().nodeText, fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
           {data.label}
         </span>
       </div>
@@ -183,7 +210,7 @@ function FileNode({ data, selected }) {
         <span className="material-symbols-outlined" style={{ fontSize: 12, color: accent }}>
           {data.icon}
         </span>
-        <span style={{ color: "#111827", fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
+        <span style={{ color: getThemeColors().nodeText, fontWeight: 600, fontSize: 11, fontFamily: "monospace" }}>
           {data.label}
         </span>
       </div>
@@ -217,7 +244,7 @@ function RouteNode({ data, selected }) {
         >
           {meta.method || "GET"}
         </span>
-        <span style={{ color: "#111827", fontWeight: 500, fontSize: 11, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span style={{ color: getThemeColors().nodeText, fontWeight: 500, fontSize: 11, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {meta.path || data.label}
         </span>
       </div>
@@ -277,6 +304,8 @@ function Inspector({ node, onClose, onFileClick }) {
   const { data } = node;
   const { accent } = getLayer(data.layer);
 
+  const { inspectorBg, inspectorBorder, nodeText, nodeTextSub } = getThemeColors();
+
   return (
     <div
       style={{
@@ -284,7 +313,7 @@ function Inspector({ node, onClose, onFileClick }) {
         top: 12,
         right: 12,
         width: 280,
-        background: "#f8fafc",
+        background: inspectorBg,
         border: `1.5px solid ${accent}55`,
         borderRadius: 14,
         padding: 16,
@@ -312,7 +341,7 @@ function Inspector({ node, onClose, onFileClick }) {
             </span>
           </div>
           <div>
-            <div style={{ color: "#111827", fontWeight: 800, fontSize: 12, lineHeight: 1.2 }}>
+            <div style={{ color: getThemeColors().nodeText, fontWeight: 800, fontSize: 12, lineHeight: 1.2 }}>
               {data.label}
             </div>
             <div
@@ -345,16 +374,16 @@ function Inspector({ node, onClose, onFileClick }) {
       </div>
 
       {/* Description */}
-      <p
-        style={{
-          color: "#6b7280",
-          fontSize: 11,
-          lineHeight: 1.6,
-          margin: "0 0 12px 0",
-          borderBottom: "1px solid #30363d",
-          paddingBottom: 12,
-        }}
-      >
+        <p
+          style={{
+            color: getThemeColors().nodeTextSub,
+            fontSize: 11,
+            lineHeight: 1.6,
+            margin: "0 0 12px 0",
+            borderBottom: `1px solid ${getThemeColors().surfaceBorder}`,
+            paddingBottom: 12,
+          }}
+        >
         {data.description || "No description available."}
       </p>
 
@@ -380,7 +409,7 @@ function Inspector({ node, onClose, onFileClick }) {
               </span>
             );
           })()}
-          <code style={{ color: "#111827", fontSize: 11, marginLeft: 8, fontFamily: "monospace" }}>
+          <code style={{ color: getThemeColors().nodeText, fontSize: 11, marginLeft: 8, fontFamily: "monospace" }}>
             {data.meta.path}
           </code>
         </div>
@@ -410,8 +439,8 @@ function Inspector({ node, onClose, onFileClick }) {
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  background: "#ffffff",
-                  border: "1px solid #e5e7eb",
+                  background: getThemeColors().controlBg,
+                  border: `1px solid ${getThemeColors().surfaceBorder}`,
                   borderRadius: 6,
                   padding: "5px 8px",
                   cursor: "pointer",
@@ -423,14 +452,14 @@ function Inspector({ node, onClose, onFileClick }) {
                   e.currentTarget.style.background = accent + "11";
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = "#e5e7eb";
-                  e.currentTarget.style.background = "rgba(255,255,255,0.8)";
+                  e.currentTarget.style.borderColor = getThemeColors().surfaceBorder;
+                  e.currentTarget.style.background = getThemeColors().controlBg;
                 }}
               >
                 <span className="material-symbols-outlined" style={{ fontSize: 11, color: "#9ca3af" }}>
                   description
                 </span>
-                <span style={{ color: "#111827", fontSize: 10, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <span style={{ color: getThemeColors().nodeText, fontSize: 10, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {f}
                 </span>
                 <span className="material-symbols-outlined" style={{ fontSize: 10, color: "#9ca3af", marginLeft: "auto", flexShrink: 0 }}>
@@ -594,8 +623,8 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           gap: 4px !important;
         }
         .react-flow__controls-button {
-          background: #ffffff !important;
-          border: 1px solid #e5e7eb !important;
+          background: var(--diagram-control-bg, #ffffff) !important;
+          border: 1px solid var(--diagram-control-border, #e5e7eb) !important;
           border-radius: 6px !important;
           width: 26px !important;
           height: 26px !important;
@@ -606,18 +635,27 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           padding: 0 !important;
         }
         .react-flow__controls-button:hover {
-          background: #f3f4f6 !important;
-          border-color: #d1d5db !important;
+          background: var(--diagram-control-bg, #f3f4f6) !important;
+          border-color: var(--border-strong, #d1d5db) !important;
+          filter: brightness(1.1);
         }
         .react-flow__controls-button svg {
-          fill: #6b7280 !important;
+          fill: var(--diagram-control-icon, #6b7280) !important;
           width: 12px !important;
           height: 12px !important;
           max-width: 12px !important;
           max-height: 12px !important;
         }
         .react-flow__controls-button:hover svg {
-          fill: #111827 !important;
+          fill: var(--text-primary, #111827) !important;
+        }
+        .react-flow__minimap {
+          background: var(--diagram-bg, #f8fafc) !important;
+          border: 1px solid var(--diagram-border, #e5e7eb) !important;
+          border-radius: 8px !important;
+        }
+        .react-flow__background {
+          background: var(--diagram-bg, #f8fafc) !important;
         }
       `}</style>
       <ReactFlow
@@ -634,15 +672,15 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         maxZoom={2.5}
         preventScrolling
         proOptions={{ hideAttribution: true }}
-        style={{ background: "#f8fafc" }}
+        style={{ background: getThemeColors().surfaceBg }}
         defaultEdgeOptions={{ type: "smoothstep" }}
       >
         <Background
-          color="#e5e7eb"
+          color={getThemeColors().dotColor}
           variant="dots"
           gap={20}
           size={1}
-          style={{ opacity: 0.4 }}
+          style={{ opacity: 0.6 }}
         />
         <Controls
           position="bottom-left"
@@ -656,23 +694,23 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
         />
         <MiniMap
           style={{
-            background: "#f8fafc",
-            border: "1px solid #e5e7eb",
+            background: getThemeColors().surfaceBg,
+            border: `1px solid ${getThemeColors().surfaceBorder}`,
             borderRadius: 8,
           }}
           nodeColor={(n) => {
             const { accent } = getLayer(n.data?.layer);
             return accent + "88";
           }}
-          maskColor="rgba(0,0,0,0.5)"
+          maskColor={getThemeColors().maskColor}
         />
 
         {/* Legend */}
         <Panel position="top-left">
           <div
             style={{
-              background: "rgba(255,255,255,0.8)",
-              border: "1px solid #e5e7eb",
+              background: getThemeColors().legendBg,
+              border: `1px solid ${getThemeColors().legendBorder}`,
               borderRadius: 10,
               padding: "8px 12px",
               fontFamily: "Manrope, Inter, sans-serif",
@@ -685,7 +723,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
                 fontWeight: 800,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "#9ca3af",
+                color: getThemeColors().legendText,
                 marginBottom: 6,
               }}
             >
@@ -703,7 +741,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
               return (
                 <div key={layer} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
                   <div style={{ width: 8, height: 8, borderRadius: 2, background: accent }} />
-                  <span style={{ fontSize: 10, color: "#6b7280", fontWeight: 600 }}>{label}</span>
+                  <span style={{ fontSize: 10, color: getThemeColors().legendText, fontWeight: 600 }}>{label}</span>
                 </div>
               );
             })}
@@ -715,7 +753,7 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
           <div
             style={{
               fontSize: 9,
-              color: "#9ca3af",
+              color: getThemeColors().hintText,
               fontFamily: "Manrope, Inter, sans-serif",
               fontWeight: 700,
               letterSpacing: "0.06em",

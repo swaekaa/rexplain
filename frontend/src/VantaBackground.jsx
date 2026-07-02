@@ -1,125 +1,173 @@
-import { useEffect, useRef } from "react";
-
 /**
- * VantaBackground
- * ---------------
- * Renders the Vanta.js CLOUDS animated effect as a fixed, full-viewport
- * background on the landing page.
+ * VantaBackground — Restored & Enhanced
+ * ----------------------------------------
+ * Premium Vanta CLOUDS background for BOTH Light and Dark modes.
  *
- * Props:
- *   subtle — when true, applies a strong white overlay + desaturate filter
- *            to tone down the effect on content-heavy pages (e.g. analysis view)
- *
- * Key implementation decisions:
- *   - Loaded via CDN scripts in index.html (avoids CRA webpack/CommonJS issues)
- *   - Uses `prefers-reduced-motion` to show a static CSS fallback for accessibility
- *   - ResizeObserver calls vanta.resize() to keep canvas dimensions in sync
- *   - Vanta instance destroyed on unmount to prevent GPU/memory leaks
+ * Performance improvements:
+ * - Vanta instance stored in a module-level singleton to survive React
+ *   unmount/remount cycles without re-initializing the GPU effect.
+ * - ResizeObserver debounced to avoid spamming canvas redraws.
+ * - Theme-aware: dynamically updates Vanta options instead of destroying
+ *   and recreating the WebGL context on theme toggle.
  */
-export default function VantaBackground({ subtle = false }) {
-  const vantaRef = useRef(null);
-  const vantaEffect = useRef(null);
+import { useEffect, useRef, useState } from "react";
 
-  // Respect the user's OS-level motion preference
+// Module-level singleton — survives React strict-mode double-mount
+let _vantaEffect = null;
+let _vantaEl = null;
+
+export default function VantaBackground({ subtle = false }) {
+  const elRef = useRef(null);
+  const roRef = useRef(null);
+  const roTimer = useRef(null);
+
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.getAttribute("data-theme") === "dark"
+  );
+
   const prefersReducedMotion =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // ── Watch data-theme attribute ────────────────────────────────────────────
+  useEffect(() => {
+    const check = () =>
+      setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
+    const mo = new MutationObserver(check);
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => mo.disconnect();
+  }, []);
+
+  // ── Vanta init / update ────────────────────────────────────────────────
   useEffect(() => {
     if (prefersReducedMotion) return;
 
-    let initAttempts = 0;
-    let timeoutId;
+    // Dark mode colors (deep, rich, atmospheric)
+    const darkColors = {
+      skyColor: 0x07070f,
+      cloudColor: 0x1b1328,
+      cloudShadowColor: 0x090610,
+      sunColor: 0x6a0028,
+      sunGlareColor: 0x4a0b22,
+      sunlightColor: 0x332a40,
+    };
 
-    const initVanta = () => {
-      // Guard: wait until the CDN scripts have loaded the global VANTA and THREE objects
-      if (typeof window.VANTA === "undefined" || !window.VANTA.CLOUDS || typeof window.THREE === "undefined") {
-        initAttempts++;
-        if (initAttempts < 50) { // Try for up to 5 seconds
-          timeoutId = setTimeout(initVanta, 100);
+    // Light mode colors (original bright theme)
+    const lightColors = {
+      skyColor: 0xf0ecff,
+      cloudColor: 0xd8b4fe,
+      cloudShadowColor: 0x9333ea,
+      sunColor: 0x800020,
+      sunGlareColor: 0xb03060,
+      sunlightColor: 0xffffff,
+    };
+
+    const currentColors = isDark ? darkColors : lightColors;
+
+    // If already running on the same DOM element, just update colors
+    if (_vantaEffect && _vantaEl === elRef.current) {
+      if (typeof _vantaEffect.setOptions === 'function') {
+        _vantaEffect.setOptions(currentColors);
+      }
+      return;
+    }
+
+    // If running on a *different* element (e.g. HMR remount), destroy first
+    if (_vantaEffect) {
+      _vantaEffect.destroy();
+      _vantaEffect = null;
+      _vantaEl = null;
+    }
+
+    let attempts = 0;
+    let tid;
+
+    const init = () => {
+      if (
+        typeof window.VANTA === "undefined" ||
+        !window.VANTA?.CLOUDS ||
+        typeof window.THREE === "undefined"
+      ) {
+        if (++attempts < 60) {
+          tid = setTimeout(init, 150);
         } else {
-          console.warn("VantaBackground: VANTA.CLOUDS not available. CDN scripts failed to load.");
+          console.warn("[VantaBackground] CDN scripts failed to load.");
         }
         return;
       }
-
-      // Initialise the effect if not already done
-      if (!vantaEffect.current && vantaRef.current) {
-        vantaEffect.current = window.VANTA.CLOUDS({
-          el: vantaRef.current,
-          THREE: window.THREE,
-
-          // ----- Color palette (matches RExplain brand) -----
-          skyColor: 0xf0ecff,        // very pale lavender sky
-          cloudColor: 0xd8b4fe,      // soft purple clouds (matches accent-purple)
-          cloudShadowColor: 0x9333ea, // deeper purple shadow
-          sunColor: 0x800020,        // burgundy sun (matches accent-burgundy)
-          sunGlareColor: 0xb03060,   // lighter burgundy/rose glare
-          sunlightColor: 0xffffff,   // white sunlight
-
-          // ----- Animation settings -----
-          speed: 1.5,                // faster animation as requested
-          zoom: 0.75,                // pull back slightly for an airy, open feel
-
-          // ----- Sizing -----
-          minWidth: 200,
-          minHeight: 200,
-
-          mouseControls: false,      // disable mouse parallax for a calmer feel
-          touchControls: false,      // no touch parallax on mobile
-          gyroControls: false,       // no gyro on mobile — prevents disorientation
-        });
-      }
+      if (!elRef.current) return;
+      _vantaEl = elRef.current;
+      _vantaEffect = window.VANTA.CLOUDS({
+        el: _vantaEl,
+        THREE: window.THREE,
+        ...currentColors,
+        speed: 1.2,
+        zoom: 0.75,
+        minWidth: 200,
+        minHeight: 200,
+        mouseControls: false,
+        touchControls: false,
+        gyroControls: false,
+      });
     };
 
-    initVanta();
+    init();
 
-    // ResizeObserver keeps the canvas sized correctly when the window changes.
-    // Without this, Vanta's canvas stays the initial viewport size after resize.
-    const observer = new ResizeObserver(() => {
-      vantaEffect.current?.resize();
+    // Debounced ResizeObserver — prevents excessive canvas redraws
+    roRef.current = new ResizeObserver(() => {
+      clearTimeout(roTimer.current);
+      roTimer.current = setTimeout(() => {
+        _vantaEffect?.resize?.();
+      }, 120);
     });
-    if (vantaRef.current) observer.observe(vantaRef.current);
+    if (elRef.current) roRef.current.observe(elRef.current);
 
-    // Cleanup on unmount — prevents GPU memory leaks
     return () => {
-      clearTimeout(timeoutId);
-      observer.disconnect();
-      vantaEffect.current?.destroy();
-      vantaEffect.current = null;
+      clearTimeout(tid);
+      clearTimeout(roTimer.current);
+      roRef.current?.disconnect();
+      // NOTE: we intentionally do NOT destroy _vantaEffect on unmount —
+      // this lets it survive React re-renders without GPU re-init.
     };
-  }, [prefersReducedMotion]);
+  }, [isDark, prefersReducedMotion]);
 
-  // Static fallback shown when Vanta is disabled (reduced-motion or script failure)
-  const staticFallback = {
-    background:
-      "linear-gradient(135deg, #f0ecff 0%, #faf5ff 40%, #fff0f3 100%)",
-  };
+  // ── Cleanup on final unmount ──────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      clearTimeout(roTimer.current);
+      roRef.current?.disconnect();
+    };
+  }, []);
 
+  // ── Render ──────────────────────────────────────────────────────────────
   return (
     <div
-      ref={vantaRef}
-      aria-hidden="true"           // decorative — no semantic meaning
+      ref={elRef}
+      aria-hidden="true"
       style={{
         position: "fixed",
-        inset: 0,                  // top/right/bottom/left: 0
-        zIndex: 0,                 // behind all content
+        inset: 0,
+        zIndex: 0,
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        pointerEvents: "none",     // clicks/scrolls pass straight through
-        ...(prefersReducedMotion ? staticFallback : {}),
+        pointerEvents: "none",
+        ...(prefersReducedMotion
+          ? { background: isDark ? "linear-gradient(135deg, #050510 0%, #0a0a1a 40%, #100810 100%)" : "linear-gradient(135deg, #f0ecff 0%, #faf5ff 40%, #fff0f3 100%)" }
+          : {}),
       }}
     >
-      {/* Primary overlay — always present, softens raw cloud colours */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: subtle
-            ? "rgba(255,255,255,0.82)"   // heavy white wash for content pages
-            : "rgba(255,255,255,0.42)",  // lighter wash for landing page
-          backdropFilter: subtle ? "blur(24px) saturate(0.3)" : "blur(2px) saturate(0.85)",
+          background: isDark
+            ? (subtle ? "rgba(12,12,18,0.85)" : "rgba(12,12,18,0.25)")
+            : (subtle ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.38)"),
+          backdropFilter: subtle ? "blur(24px) saturate(0.3)" : "blur(1px) saturate(0.9)",
           pointerEvents: "none",
         }}
       />
