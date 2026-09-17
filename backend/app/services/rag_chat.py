@@ -39,7 +39,7 @@ def answer_question(question: str, retrieved_chunks: list[dict]) -> dict:
         return {
             "answer": (
                 "The AI assistant encountered an error while generating your answer. "
-                "Please check your GROQ_API_KEY in the .env file and try again."
+                "Please check your AZURE_OPENAI_API_KEY in the .env file and try again."
             ),
             "sources": [],
             "confidence": "low",

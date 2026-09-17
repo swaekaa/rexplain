@@ -23,29 +23,32 @@ import os
 import re
 from collections.abc import Generator
 
-from groq import Groq
+from openai import OpenAI
 
-# ── Groq client singleton ─────────────────────────────────────────────────────
+# ── OpenAI client singleton ─────────────────────────────────────────────────────
 
-_client: Groq | None = None
+_client: OpenAI | None = None
 
 
-def _get_client() -> Groq:
+def _get_client() -> OpenAI:
     global _client
     if _client is None:
-        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        api_key = os.environ.get("AZURE_OPENAI_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError(
-                "GROQ_API_KEY is not set. "
-                "Add it to your .env file: GROQ_API_KEY=gsk_..."
+                "AZURE_OPENAI_API_KEY is not set. "
+                "Add it to your .env file: AZURE_OPENAI_API_KEY=..."
             )
-        _client = Groq(api_key=api_key)
+        _client = OpenAI(
+            api_key=api_key,
+            base_url="https://rexplain-resource.services.ai.azure.com/openai/v1"
+        )
     return _client
 
 
 # ── Model config ──────────────────────────────────────────────────────────────
 
-MODEL = "llama-3.3-70b-versatile"   # fast, capable, stable on Groq
+MODEL = "gpt-4o-mini"   # Azure AI Foundry deployment name
 
 # ── Prompt builder ─────────────────────────────────────────────────────────────
 

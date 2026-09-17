@@ -5,8 +5,8 @@ pydantic==2.12.5
 python-dotenv>=1.0.0
 python-multipart==0.0.22
 
-# ── AI (Groq LLM — no local model needed) ──
-groq>=1.2.0
+# ── AI (Azure OpenAI) ──
+openai>=1.14.0
 
 # ── Embeddings (HF API in prod; local fallback in dev) ──
 # sentence-transformers and torch are optional — only needed locally.
