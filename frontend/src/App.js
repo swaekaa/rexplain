@@ -1419,7 +1419,15 @@ export default function App() {
         setError(`Repository "${owner}/${repo}" was not found on GitHub. Please check the URL and try again.`);
         return;
       }
-      if (ghCheck.status === 403 || ghCheck.status === 451) {
+      if (ghCheck.status === 403) {
+        const rateLimitRemaining = ghCheck.headers.get('x-ratelimit-remaining');
+        if (rateLimitRemaining === '0') {
+          console.warn('[pre-check] GitHub API rate limit hit on frontend, proceeding to backend.');
+        } else {
+          setError(`Repository "${owner}/${repo}" is private or access is restricted. Only public repositories are supported.`);
+          return;
+        }
+      } else if (ghCheck.status === 451) {
         setError(`Repository "${owner}/${repo}" is private or access is restricted. Only public repositories are supported.`);
         return;
       }
