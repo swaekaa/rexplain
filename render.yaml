@@ -8,7 +8,7 @@ services:
     region: oregon       # pick the region closest to your users
 
     envVars:
-      - key: GROQ_API_KEY
+      - key: AZURE_OPENAI_API_KEY
         sync: false         # set this manually in the Render dashboard
       - key: DATABASE_URL
         fromDatabase:
