@@ -48,7 +48,7 @@ def _get_client() -> OpenAI:
 
 # ── Model config ──────────────────────────────────────────────────────────────
 
-MODEL = "gpt-4o-mini"   # Azure AI Foundry deployment name
+MODEL = "gpt-4.1-mini"   # Azure AI Foundry deployment name
 
 # ── Prompt builder ─────────────────────────────────────────────────────────────
 
