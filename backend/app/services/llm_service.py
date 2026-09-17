@@ -249,6 +249,8 @@ def stream_answer_tokens(question: str, chunks: list[dict]) -> Generator[str, No
             stream=True,
         )
         for chunk in stream:
+            if not chunk.choices:
+                continue
             delta = chunk.choices[0].delta
             token = getattr(delta, "content", None) or ""
             if token:
@@ -276,6 +278,8 @@ def stream_answer_tokens(question: str, chunks: list[dict]) -> Generator[str, No
     )
 
     for chunk in stream:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta
         token = getattr(delta, "content", None) or ""
         if token:
