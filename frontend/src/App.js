@@ -329,7 +329,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
                 style={{ color: 'var(--text-primary)' }}
                 placeholder="username/repo_name"
                 type="text"
-                value={repoUrl}
+                value={repoUrl.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')}
                 onChange={e => {
                   let val = e.target.value;
                   val = val.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
@@ -719,92 +719,83 @@ function AssistantBubble({ msg, isLatest }) {
 // ─── Chat Sidebar ───────────────────────────────────────────────────────────
 function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
   const { token } = useAuth();
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef(null);
   const esRef = useRef(null);
 
+  // Messages come directly from workspaceProps — no local copy, no double-render.
+  const messages = workspaceProps?.messages || [];
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Sync with workspace threads when switching
-  useEffect(() => {
-    if (workspaceProps?.messages && workspaceProps.currentThreadId) {
-      setMessages(workspaceProps.messages);
-    } else if (!workspaceProps?.currentThreadId && !workspaceProps?.loadingMessages) {
-      setMessages([]);
-    }
-  }, [workspaceProps?.messages, workspaceProps?.currentThreadId, workspaceProps?.loadingMessages]);
-
   useEffect(() => () => esRef.current?.close(), []);
 
   const handleResetChat = async () => {
-    if (workspaceProps && workspaceProps.createThread) {
+    if (workspaceProps?.createThread && workspaceProps?.selectThread) {
       const thread = await workspaceProps.createThread(repoUrl);
-      if (thread && workspaceProps.selectThread) {
-        workspaceProps.selectThread(thread);
-      }
-    } else {
-      setMessages([]);
+      if (thread) workspaceProps.selectThread(thread);
     }
     setInput("");
     setAsking(false);
     setStreaming(false);
-    if (esRef.current) {
-      esRef.current.close();
-    }
+    if (esRef.current) esRef.current.close();
   };
 
   const ask = async () => {
     const q = input.trim();
-    // Strict guard: one active request at a time
     if (!q || asking) return;
 
-    // 1. Add exactly ONE user message
+    // Auto-create a thread if none is active.
+    let activeThreadId = workspaceProps?.currentThreadId;
+    if (!activeThreadId && workspaceProps?.ensureThread) {
+      const words = q.split(/\s+/).slice(0, 6).join(" ");
+      const autoTitle = words.length > 3 ? words : "New Conversation";
+      activeThreadId = await workspaceProps.ensureThread(repoUrl, autoTitle);
+    }
+
+    // Capture thread ownership at start of request — prevents stale stream writes.
+    const ownThreadId = workspaceProps?.currentThreadId;
+
+    // Add user message directly to workspace (single source of truth).
     const userMsgId = Date.now();
-    setMessages(prev => [...prev, { role: "user", text: q, _id: userMsgId }]);
+    workspaceProps?.addOptimisticMessage?.("user", q, userMsgId);
     setInput("");
     setAsking(true);
 
-    // 2. Always add exactly ONE assistant placeholder
+    // Add assistant placeholder.
     const placeholderId = userMsgId + 1;
-    setMessages(prev => [...prev, {
-      role: "assistant", text: "", sources: [], confidence: "medium",
-      _streaming: true, _id: placeholderId,
-    }]);
+    workspaceProps?.addOptimisticMessage?.("assistant", "", placeholderId);
+    workspaceProps?.updateMessage?.(placeholderId, { sources: [], confidence: "medium", _streaming: true });
 
-    // Helper: resolve the placeholder with a final message
+    // Helper: resolve the placeholder.
     const resolve = (text, sources = [], confidence = "medium") => {
-      setMessages(prev => prev.map(m =>
-        m._id === placeholderId
-          ? { ...m, text, sources, confidence, _streaming: false, _settled: false }
-          : m
-      ));
+      // Guard: only update if we still own this thread.
+      if (ownThreadId !== workspaceProps?.currentThreadId) return;
+      workspaceProps?.updateMessage?.(placeholderId, { text, sources, confidence, _streaming: false, _settled: false });
       setAsking(false);
       setStreaming(false);
 
-      // SYNC TO BACKEND
-      if (workspaceProps?.currentThreadId && token) {
-        axios.post(`${API_URL}/threads/${workspaceProps.currentThreadId}/sync`, {
+      // Persist to backend.
+      const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
+      if (syncThreadId && token) {
+        axios.post(`${API_URL}/threads/${syncThreadId}/sync`, {
           user_content: q,
           assistant_content: text
         }, { headers: { Authorization: `Bearer ${token}` } })
         .catch(err => console.error("Sync error:", err))
         .finally(() => {
-          if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(true);
+          if (workspaceProps?.refreshThreads) workspaceProps.refreshThreads(true);
         });
       }
     };
 
     const resolveError = (text) => {
-      setMessages(prev => prev.map(m =>
-        m._id === placeholderId
-          ? { role: "error", text, _id: placeholderId }
-          : m
-      ));
+      if (ownThreadId !== workspaceProps?.currentThreadId) return;
+      workspaceProps?.updateMessage?.(placeholderId, { role: "error", text, _streaming: false });
       setAsking(false);
       setStreaming(false);
     };
@@ -821,6 +812,11 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
       esRef.current = es;
 
       es.onmessage = (e) => {
+        // Guard: discard chunks if user switched thread.
+        if (ownThreadId !== workspaceProps?.currentThreadId) {
+          es.close();
+          return;
+        }
         const data = e.data;
         if (data === "[DONE]") {
           es.close();
@@ -835,18 +831,15 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
             const m = accText.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
             if (m) finalText = m[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
           }
-          // Preserve sources/confidence already set by [META] — only update text + settle flag
-          setMessages(prev => prev.map(m =>
-            m._id === placeholderId
-              ? { ...m, text: finalText, _streaming: false, _settled: false }
-              : m
-          ));
+          // Preserve sources/confidence from [META], only update text + settle flag.
+          workspaceProps?.updateMessage?.(placeholderId, { text: finalText, _streaming: false, _settled: false });
           setAsking(false);
           setStreaming(false);
 
-          // SYNC TO BACKEND
-          if (workspaceProps?.currentThreadId && token) {
-            axios.post(`${API_URL}/threads/${workspaceProps.currentThreadId}/sync`, {
+          // Persist to backend.
+          const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
+          if (syncThreadId && token) {
+            axios.post(`${API_URL}/threads/${syncThreadId}/sync`, {
               user_content: q,
               assistant_content: finalText,
               sources: accSources,
@@ -854,7 +847,7 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
             }, { headers: { Authorization: `Bearer ${token}` } })
             .catch(err => console.error("Sync error:", err))
             .finally(() => {
-              if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(true);
+              if (workspaceProps?.refreshThreads) workspaceProps.refreshThreads(true);
             });
           }
           return;
@@ -864,16 +857,12 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
             const meta = JSON.parse(data.slice(7));
             accSources = meta.sources || [];
             accConfidence = meta.confidence || "medium";
-            setMessages(prev => prev.map(m =>
-              m._id === placeholderId ? { ...m, sources: accSources, confidence: accConfidence } : m
-            ));
+            workspaceProps?.updateMessage?.(placeholderId, { sources: accSources, confidence: accConfidence });
           } catch (_) { }
           return;
         }
         accText += data.replace(/\\n/g, "\n");
-        setMessages(prev => prev.map(m =>
-          m._id === placeholderId ? { ...m, text: accText } : m
-        ));
+        workspaceProps?.updateMessage?.(placeholderId, { text: accText });
       };
 
       es.onerror = async () => {
@@ -933,19 +922,13 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 space-y-4 md:space-y-6 scroll-hide">
-        {workspaceProps?.loadingMessages && messages.length === 0 && (
-          <div className="flex flex-col gap-6 opacity-60">
-            <div className="flex justify-end">
-              <div className="w-48 h-12 bg-primary/10 animate-pulse rounded-xl rounded-tr-sm" />
-            </div>
-            <div className="flex justify-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-accent-purple/20 animate-pulse shrink-0" />
-              <div className="w-64 h-24 bg-accent-purple/10 border border-accent-purple/30 animate-pulse rounded-xl rounded-tl-sm" />
-            </div>
-          </div>
-        )}
+      {(workspaceProps?.loadingMessages || workspaceProps?.isRepoSwitching) && (
+        <div className="w-full h-[2px] bg-transparent relative overflow-hidden flex-shrink-0 z-30 -mb-[2px]">
+          <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-accent-purple animate-shimmer" />
+        </div>
+      )}
 
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 space-y-4 md:space-y-6 scroll-hide">
         {!workspaceProps?.loadingMessages && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 opacity-70">
             <span className="material-symbols-outlined text-3xl text-primary">forum</span>
@@ -1106,21 +1089,28 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
               if (selectRepo) selectRepo(url); 
               if (analyze) analyze(url);
             }}
-            onSelectThread={(t) => { 
+            onSelectThread={(t) => {
               if (t.repo_url && t.repo_url !== (currentRepoUrl || repoUrl)) {
+                // Always call analyze() so the analysis panel updates to the new repo.
+                // Backend caches results so this is fast for previously-analyzed repos.
                 if (setRepoUrl) setRepoUrl(t.repo_url);
-                if (selectRepo) selectRepo(t.repo_url);
                 if (analyze) analyze(t.repo_url, t.id);
               } else {
-                if (selectThread) selectThread(t); 
+                if (selectThread) selectThread(t);
               }
             }}
-            onNewThread={() => { if (createThread) createThread(repoUrl); }}
+            onNewThread={async () => {
+              if (createThread && selectThread) {
+                const thread = await createThread(repoUrl);
+                if (thread) selectThread(thread);
+              }
+            }}
             onDeleteThread={(id) => { if (deleteThread) deleteThread(id); }}
             onRenameThread={(id, title) => { if (renameThread) renameThread(id, title); }}
             threads={threads || []}
             repositories={repositories || []}
             loadingThreads={loadingThreads || false}
+            isRepoSwitching={workspaceProps?.isRepoSwitching || false}
             collapsed={sidebarCollapsed}
             onToggle={() => setSidebarCollapsed(c => !c)}
           />
@@ -1138,14 +1128,17 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
 
             {/* Hero Analysis Header */}
             <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
-              <div className="inline-flex items-center gap-2 md:gap-3">
+              <div className="inline-flex items-center gap-2 md:gap-3 mb-1">
                 <div className="w-6 md:w-8 h-[1px]" style={{ background: '#800020' }}></div>
                 <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold" style={{ color: '#800020' }}>Structural Mapping</span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-words">
-                Repository<br />Analysis
+              <h1 className="text-5xl md:text-7xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-all">
+                {repoName}
               </h1>
-              <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
+              <h2 className="text-2xl md:text-3xl font-headline font-bold tracking-tight text-secondary/80">
+                Repository Analysis
+              </h2>
+              <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words mt-4">
                 Breakdown of <a href={repoUrl.startsWith('http') ? repoUrl : `https://github.com/${repoUrl}`} target="_blank" rel="noopener noreferrer" className="font-bold border-b pb-[1px] hover:opacity-80 transition-opacity duration-300 break-all" style={{ color: '#800020', borderColor: 'rgba(128,0,32,0.3)' }}>{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
               </p>
             </section>
@@ -1519,6 +1512,7 @@ export default function App() {
   const [repoUrl, setRepoUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isAnalyzingInBackground, setIsAnalyzingInBackground] = useState(false);
   const [error, setError] = useState(null);
 
   const overlayRef = useRef(null);
@@ -1568,7 +1562,12 @@ export default function App() {
       console.warn('[pre-check] GitHub API unreachable, proceeding to backend:', _ghErr);
     }
 
-    setLoading(true); setError(null); setResult(null);
+    setLoading(true);
+    setResult(null);
+    setError(null);
+    if (workspace && workspace.selectRepo && urlToAnalyze.trim() !== workspace.currentRepoUrl) {
+      workspace.selectRepo(urlToAnalyze.trim());
+    }
     const t0 = Date.now();
     try {
       console.log("API URL:", API_URL);
@@ -1603,9 +1602,15 @@ export default function App() {
       }
     }
     setLoading(false);
+    setIsAnalyzingInBackground(false);
   };
 
   const reset = () => { setResult(null); setError(null); };
+
+  const enhancedWorkspace = workspace ? {
+    ...workspace,
+    loadingMessages: workspace.loadingMessages || isAnalyzingInBackground,
+  } : workspace;
 
   return (
     <>
@@ -1613,9 +1618,9 @@ export default function App() {
       {loading ? (
         <><VantaBackground subtle /><LoadingState repoUrl={repoUrl} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
       ) : result ? (
-        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} workspaceProps={workspace} analyze={analyze} setRepoUrl={setRepoUrl} /></>
+        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} workspaceProps={enhancedWorkspace} analyze={analyze} setRepoUrl={setRepoUrl} /></>
       ) : (
-        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} workspaceProps={workspace} /></>
+        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} workspaceProps={enhancedWorkspace} /></>
       )}
     </>
   );
