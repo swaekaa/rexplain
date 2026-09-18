@@ -40,7 +40,7 @@ def _build_tables():
     global _metadata, _tables
 
     from sqlalchemy import (  # type: ignore
-        Column, Text, DateTime, ForeignKey, UniqueConstraint, Index, MetaData, Table
+        Column, Text, DateTime, ForeignKey, UniqueConstraint, Index, MetaData, Table, JSON
     )
     from sqlalchemy.dialects.postgresql import UUID  # type: ignore
     from sqlalchemy.sql import func
@@ -95,6 +95,8 @@ def _build_tables():
         Column("thread_id",  UUID(as_uuid=True), ForeignKey("threads.id", ondelete="CASCADE"), nullable=False),
         Column("role",       Text, nullable=False),
         Column("content",    Text, nullable=False),
+        Column("sources",    JSON, nullable=False, server_default='[]'),
+        Column("confidence", Text, nullable=False, server_default="medium"),
         Column("created_at", DateTime(timezone=True), server_default=func.now()),
         Index("ix_messages_thread_id", "thread_id"),
         Index("ix_messages_created_at", "created_at"),
@@ -117,6 +119,18 @@ def init_db() -> bool:
         engine = _get_engine()
         _build_tables()
         _metadata.create_all(engine)
+        
+        from sqlalchemy import text
+        with engine.begin() as conn:
+            try:
+                conn.execute(text("ALTER TABLE messages ADD COLUMN sources JSON DEFAULT '[]'::json;"))
+            except Exception:
+                pass
+            try:
+                conn.execute(text("ALTER TABLE messages ADD COLUMN confidence TEXT DEFAULT 'medium';"))
+            except Exception:
+                pass
+                
         _available = True
         log.info("[user_db] tables initialised")
         return True
@@ -437,7 +451,7 @@ def auto_title_thread(thread_id: str, user_id: str, first_message: str) -> bool:
 
 # ── Messages ──────────────────────────────────────────────────────────────────
 
-def add_message(thread_id: str, role: str, content: str) -> Optional[dict]:
+def add_message(thread_id: str, role: str, content: str, sources: list = None, confidence: str = "medium") -> Optional[dict]:
     if not _available:
         return None
     try:
@@ -451,6 +465,8 @@ def add_message(thread_id: str, role: str, content: str) -> Optional[dict]:
                     thread_id=uuid.UUID(thread_id),
                     role=role,
                     content=content,
+                    sources=sources or [],
+                    confidence=confidence,
                     created_at=now,
                 )
             )
@@ -460,6 +476,8 @@ def add_message(thread_id: str, role: str, content: str) -> Optional[dict]:
             "thread_id":  thread_id,
             "role":       role,
             "content":    content,
+            "sources":    sources or [],
+            "confidence": confidence,
             "created_at": now.isoformat(),
         }
     except Exception as exc:
@@ -488,6 +506,8 @@ def get_messages(thread_id: str, user_id: str) -> list[dict]:
                 "thread_id":  _str_uuid(r.thread_id),
                 "role":       r.role,
                 "content":    r.content,
+                "sources":    r.sources if hasattr(r, 'sources') else [],
+                "confidence": r.confidence if hasattr(r, 'confidence') else "medium",
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows

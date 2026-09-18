@@ -225,3 +225,44 @@ def send_message(
         "sources":   result.get("sources", []),
         "confidence": result.get("confidence", "medium"),
     }
+
+
+class SyncMessageRequest(BaseModel):
+    user_content: str
+    assistant_content: str
+    sources: list[str] = []
+    confidence: str = "medium"
+
+@router.post("/{thread_id}/sync")
+def sync_messages(
+    thread_id: str,
+    body: SyncMessageRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Save a user-assistant message pair manually. 
+    Used by the frontend to persist messages after an SSE stream completes.
+    """
+    thread = user_db.get_thread(thread_id, current_user["id"])
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found.")
+
+    if not body.user_content.strip():
+        raise HTTPException(status_code=400, detail="User content empty")
+
+    user_msg = user_db.add_message(thread_id, "user", body.user_content)
+
+    existing = user_db.get_messages(thread_id, current_user["id"])
+    user_messages = [m for m in existing if m["role"] == "user"]
+    if len(user_messages) == 1 and thread["title"] in ("New Conversation", "Initial Analysis"):
+        user_db.auto_title_thread(thread_id, current_user["id"], body.user_content)
+
+    ast_msg = user_db.add_message(
+        thread_id, 
+        "assistant", 
+        body.assistant_content,
+        sources=body.sources,
+        confidence=body.confidence
+    )
+    user_db.touch_thread_timestamp(thread_id)
+    return {"user": user_msg, "assistant": ast_msg}
