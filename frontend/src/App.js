@@ -1582,7 +1582,7 @@ export default function App() {
 
       // If authenticated, update workspace (repo history + threads)
       if (isAuthenticated && data.repo_url) {
-        workspace.onAnalysisComplete(data.repo_url, targetThreadId || data.initial_thread_id);
+        await workspace.onAnalysisComplete(data.repo_url, targetThreadId || data.initial_thread_id);
       }
     } catch (err) {
       console.error("API Error:", err);

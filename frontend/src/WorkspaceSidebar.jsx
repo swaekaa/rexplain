@@ -53,7 +53,7 @@ function RenameInput({ thread, onSave, onCancel }) {
           if (e.key === "Escape") onCancel();
         }}
         onBlur={handleSave}
-        className="w-full bg-surface border border-outline/50 rounded-xl px-4 py-2 text-primary font-body text-[11px] font-semibold focus:outline-none focus:ring-1 focus:ring-primary/20 shadow-sm"
+        className="w-full bg-[color:var(--surface-input)] border border-[color:var(--surface-input-border)] rounded-full px-3 py-1 text-primary font-body text-[12px] font-medium focus:outline-none focus:border-[color:var(--accent-purple)] shadow-inner"
         aria-label="Rename thread"
       />
     </div>
