@@ -12,6 +12,10 @@ import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularPr
 import AnimatedBeam from "./components/magicui/AnimatedBeam";
 import ProgressiveBlur from "./components/magicui/ProgressiveBlur";
 import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay";
+import UserMenu from "./UserMenu";
+import WorkspaceSidebar from "./WorkspaceSidebar";
+import { useAuth } from "./AuthContext";
+import { useWorkspace } from "./useWorkspace";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
@@ -283,6 +287,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
@@ -518,6 +523,7 @@ function LoadingState({ repoUrl, theme, toggleTheme, overlayRef }) {
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
@@ -686,7 +692,8 @@ function AssistantBubble({ msg, isLatest }) {
 }
 
 // ─── Chat Sidebar ───────────────────────────────────────────────────────────
-function ChatSidebar({ repoUrl, ragReady }) {
+function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
+  const { token } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
@@ -698,10 +705,26 @@ function ChatSidebar({ repoUrl, ragReady }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Sync with workspace threads when switching
+  useEffect(() => {
+    if (workspaceProps?.messages && workspaceProps.currentThreadId) {
+      setMessages(workspaceProps.messages);
+    } else if (!workspaceProps?.currentThreadId && !workspaceProps?.loadingMessages) {
+      setMessages([]);
+    }
+  }, [workspaceProps?.messages, workspaceProps?.currentThreadId, workspaceProps?.loadingMessages]);
+
   useEffect(() => () => esRef.current?.close(), []);
 
-  const handleResetChat = () => {
-    setMessages([]);
+  const handleResetChat = async () => {
+    if (workspaceProps && workspaceProps.createThread) {
+      const thread = await workspaceProps.createThread(repoUrl);
+      if (thread && workspaceProps.selectThread) {
+        workspaceProps.selectThread(thread);
+      }
+    } else {
+      setMessages([]);
+    }
     setInput("");
     setAsking(false);
     setStreaming(false);
@@ -737,6 +760,18 @@ function ChatSidebar({ repoUrl, ragReady }) {
       ));
       setAsking(false);
       setStreaming(false);
+
+      // SYNC TO BACKEND
+      if (workspaceProps?.currentThreadId && token) {
+        axios.post(`${API_URL}/threads/${workspaceProps.currentThreadId}/sync`, {
+          user_content: q,
+          assistant_content: text
+        }, { headers: { Authorization: `Bearer ${token}` } })
+        .catch(err => console.error("Sync error:", err))
+        .finally(() => {
+          if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(repoUrl, true);
+        });
+      }
     };
 
     const resolveError = (text) => {
@@ -753,6 +788,8 @@ function ChatSidebar({ repoUrl, ragReady }) {
     if (typeof EventSource !== "undefined" && ragReady) {
       setStreaming(true);
       let accText = "";
+      let accSources = [];
+      let accConfidence = "medium";
       console.log("API URL:", API_URL);
       const streamUrl = `${API_URL}/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
       const es = new EventSource(streamUrl);
@@ -781,13 +818,29 @@ function ChatSidebar({ repoUrl, ragReady }) {
           ));
           setAsking(false);
           setStreaming(false);
+
+          // SYNC TO BACKEND
+          if (workspaceProps?.currentThreadId && token) {
+            axios.post(`${API_URL}/threads/${workspaceProps.currentThreadId}/sync`, {
+              user_content: q,
+              assistant_content: finalText,
+              sources: accSources,
+              confidence: accConfidence
+            }, { headers: { Authorization: `Bearer ${token}` } })
+            .catch(err => console.error("Sync error:", err))
+            .finally(() => {
+              if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(repoUrl, true);
+            });
+          }
           return;
         }
         if (data.startsWith("[META] ")) {
           try {
             const meta = JSON.parse(data.slice(7));
+            accSources = meta.sources || [];
+            accConfidence = meta.confidence || "medium";
             setMessages(prev => prev.map(m =>
-              m._id === placeholderId ? { ...m, sources: meta.sources || [], confidence: meta.confidence || "medium" } : m
+              m._id === placeholderId ? { ...m, sources: accSources, confidence: accConfidence } : m
             ));
           } catch (_) { }
           return;
@@ -845,18 +898,30 @@ function ChatSidebar({ repoUrl, ragReady }) {
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "transparent", position: "relative" }}>
       <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-outline flex-shrink-0 relative z-20 bg-transparent backdrop-blur-md">
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-primary transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-primary/5 active:scale-95">
-            <span className="material-symbols-outlined">refresh</span>
-          </button>
-          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-1 md:ml-2">
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center">
             <span className="material-symbols-outlined text-accent-purple !text-base md:!text-lg">auto_awesome</span>
           </div>
           <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Assistant Core</span>
         </div>
+        <button onClick={handleResetChat} title="New Thread" className="text-secondary/60 hover:text-accent-purple transition-colors flex items-center justify-center p-1.5 md:p-2 rounded-lg hover:bg-primary/10 active:scale-95">
+          <span className="material-symbols-outlined">add</span>
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 space-y-4 md:space-y-6 scroll-hide">
-        {messages.length === 0 && (
+        {workspaceProps?.loadingMessages && messages.length === 0 && (
+          <div className="flex flex-col gap-6 opacity-60">
+            <div className="flex justify-end">
+              <div className="w-48 h-12 bg-primary/10 animate-pulse rounded-xl rounded-tr-sm" />
+            </div>
+            <div className="flex justify-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-accent-purple/20 animate-pulse shrink-0" />
+              <div className="w-64 h-24 bg-accent-purple/10 border border-accent-purple/30 animate-pulse rounded-xl rounded-tl-sm" />
+            </div>
+          </div>
+        )}
+
+        {!workspaceProps?.loadingMessages && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 opacity-70">
             <span className="material-symbols-outlined text-3xl text-primary">forum</span>
             <p className="text-xs text-primary text-center max-w-[200px] font-body leading-relaxed font-medium">
@@ -923,7 +988,14 @@ function ChatSidebar({ repoUrl, ragReady }) {
 // ─── Analysis View — Split Screen ───────────────────────────────────────────
 const NAV_H = 72;
 
-function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef }) {
+function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef, workspaceProps, analyze, setRepoUrl }) {
+  const { isAuthenticated } = useAuth();
+  const {
+    repositories, threads, currentThreadId, loadingThreads,
+    selectRepo, selectThread, createThread, renameThread, deleteThread, currentRepoUrl
+  } = workspaceProps || {};
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const fw = result.framework_detection || {};
   const scan = result.scan_results || {};
   const langs = Object.entries(scan.languages || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -994,10 +1066,34 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
         <div className="flex items-center gap-3 md:gap-4">
           <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
-      <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
+      <div ref={containerRef} className="flex flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
+        {/* Workspace Sidebar (authenticated users only) */}
+        {isAuthenticated && !isMobile && (
+          <WorkspaceSidebar
+            currentRepoUrl={currentRepoUrl || repoUrl}
+            currentThreadId={currentThreadId}
+            onSelectRepo={(url) => { 
+              if (setRepoUrl) setRepoUrl(url);
+              if (selectRepo) selectRepo(url); 
+              if (analyze) analyze(url);
+            }}
+            onSelectThread={(t) => { if (selectThread) selectThread(t); }}
+            onNewThread={() => { if (createThread) createThread(repoUrl); }}
+            onDeleteThread={(id) => { if (deleteThread) deleteThread(id); }}
+            onRenameThread={(id, title) => { if (renameThread) renameThread(id, title); }}
+            threads={threads || []}
+            repositories={repositories || []}
+            loadingThreads={loadingThreads || false}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(c => !c)}
+          />
+        )}
+        {/* Main content columns */}
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left Side: Analysis Content */}
         <main
           style={isMobile
@@ -1263,7 +1359,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
         {/* Desktop: Right Side AI Chat */}
         {!isMobile && (
           <aside style={{ flex: `0 0 ${100 - splitPct}%`, width: `${100 - splitPct}%`, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+            <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} workspaceProps={workspaceProps} />
           </aside>
         )}
       </div>
@@ -1313,11 +1409,12 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+              <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} workspaceProps={workspaceProps} />
             </div>
           </div>
         </>
       )}
+      </div>{/* end containerRef (sidebar + content) */}
     </div>
   );
 }
@@ -1337,11 +1434,13 @@ function SectionHeader({ label }) {
 
 // ─── App Root ───────────────────────────────────────────────────────────────
 export default function App() {
+  const { token, isAuthenticated } = useAuth();
+  const workspace = useWorkspace();
+
   const [healthStatus, setHealthStatus] = useState("Checking backend...");
 
   useEffect(() => {
     (async () => {
-      // Retry up to 3 times with 3s gap — Render sometimes needs a moment after wake
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const res = await axios.get(`${API_URL}/health`, { timeout: 8000 });
@@ -1383,6 +1482,7 @@ export default function App() {
     }
     return next;
   });
+
   const [repoUrl, setRepoUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -1390,11 +1490,13 @@ export default function App() {
 
   const overlayRef = useRef(null);
 
-  const analyze = async () => {
-    const trimmed = repoUrl.trim();
+  const analyze = async (urlToAnalyze = repoUrl) => {
+    if (typeof urlToAnalyze !== "string") {
+      urlToAnalyze = repoUrl;
+    }
+    const trimmed = urlToAnalyze.trim();
     if (!trimmed) return;
 
-    // Client-side format validation
     const cleaned = trimmed
       .replace(/^https?:\/\//i, '')
       .replace(/^www\./, '')
@@ -1407,8 +1509,6 @@ export default function App() {
       return;
     }
 
-    // Fast GitHub API pre-check — runs in ~300ms, no auth needed for public repos.
-    // Catches non-existent / private repos before starting the slow backend analysis.
     const [owner, repo] = parts;
     try {
       const ghCheck = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
@@ -1431,9 +1531,7 @@ export default function App() {
         setError(`Repository "${owner}/${repo}" is private or access is restricted. Only public repositories are supported.`);
         return;
       }
-      // Any non-2xx that isn't 404/403 — e.g. rate limit (429) — let backend handle it
     } catch (_ghErr) {
-      // GitHub API unreachable (network issue) — proceed to backend anyway, it will give its own error
       console.warn('[pre-check] GitHub API unreachable, proceeding to backend:', _ghErr);
     }
 
@@ -1441,18 +1539,22 @@ export default function App() {
     const t0 = Date.now();
     try {
       console.log("API URL:", API_URL);
-      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
-        timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: urlToAnalyze.trim() }, {
+        timeout: 180000,
+        headers,
       });
       console.log("Response:", res.data);
-      console.log("[debug] metadata:", res.data?.metadata);
-      console.log("[debug] commits:", res.data?.metadata?.commits);
-      setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
+      const data = { ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) };
+      setResult(data);
+
+      // If authenticated, update workspace (repo history + threads)
+      if (isAuthenticated && data.repo_url) {
+        workspace.onAnalysisComplete(data.repo_url, data.initial_thread_id);
+      }
     } catch (err) {
       console.error("API Error:", err);
-      if (err.response) {
-        console.error("Backend response:", err.response.data);
-      }
+      if (err.response) console.error("Backend response:", err.response.data);
       const status = err.response?.status;
       const detail = err.response?.data?.detail;
       if (status === 400) {
@@ -1478,7 +1580,7 @@ export default function App() {
       {loading ? (
         <><VantaBackground subtle /><LoadingState repoUrl={repoUrl} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
       ) : result ? (
-        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
+        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} workspaceProps={workspace} analyze={analyze} setRepoUrl={setRepoUrl} /></>
       ) : (
         <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} /></>
       )}

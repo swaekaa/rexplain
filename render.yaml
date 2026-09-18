@@ -20,6 +20,16 @@ services:
         sync: false         # required for embedding on Render (no local GPU)
       - key: PORT
         value: "10000"
+      - key: GOOGLE_CLIENT_ID
+        sync: false         # set in Render dashboard — from Google Cloud Console
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false         # set in Render dashboard — from Google Cloud Console
+      - key: GOOGLE_REDIRECT_URI
+        sync: false         # e.g. https://rexplain-api.onrender.com/auth/google/callback
+      - key: JWT_SECRET
+        sync: false         # generate: python -c "import secrets; print(secrets.token_urlsafe(64))"
+      - key: FRONTEND_URL
+        sync: false         # e.g. https://rexplain.vercel.app
 
     healthCheckPath: /health
 
