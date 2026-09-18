@@ -32,31 +32,7 @@ _tables: dict = {}
 _available = False
 
 
-# ── Engine (shared DATABASE_URL with cache_db) ────────────────────────────────
-
-def _get_engine():
-    global _engine
-    if _engine is not None:
-        return _engine
-
-    db_url = os.environ.get("DATABASE_URL", "")
-    if not db_url:
-        raise RuntimeError("DATABASE_URL environment variable is not set")
-
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-    from sqlalchemy import create_engine  # type: ignore
-    _engine = create_engine(
-        db_url,
-        pool_size=5,
-        max_overflow=10,
-        pool_pre_ping=True,
-        pool_recycle=300,
-        echo=False,
-    )
-    return _engine
-
+from app.services.cache_db import _get_engine
 
 # ── Table definitions ─────────────────────────────────────────────────────────
 

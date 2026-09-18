@@ -21,6 +21,7 @@ numpy==2.4.4
 # ── Database ──
 SQLAlchemy>=2.0.0
 psycopg2-binary>=2.9.9
+pg8000>=1.31.0
 
 # ── Utilities & Graphs ──
 requests==2.33.1
