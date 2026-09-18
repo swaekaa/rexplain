@@ -30,7 +30,7 @@ import psutil
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 from app.services.repo_cloner import clone_repository, delete_repository, CloneTimeoutError, CloneError, RepoNotAccessibleError
@@ -51,6 +51,8 @@ from app.services.repo_intelligence import (
 from app.services.repo_metadata import fetch_repo_metadata
 import app.services.cache_db as cache_db
 from app.services.graph_builder import build_interactive_graph
+from app.routes.deps import get_optional_user
+import app.services.user_db as user_db
 
 log = logging.getLogger("analyze")
 
@@ -59,6 +61,8 @@ router = APIRouter(prefix="/analyze", tags=["analysis"])
 
 class RepoRequest(BaseModel):
     repo_url: str
+    # Optional: if the frontend sends the thread_id to continue, returned back
+    thread_id: str | None = None
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -108,7 +112,10 @@ def _try_restore_rag(repo_url: str, cached: dict) -> bool:
 # ── route ─────────────────────────────────────────────────────────────────────
 
 @router.post("/")
-def analyze_repo(request: RepoRequest):
+def analyze_repo(
+    request: RepoRequest,
+    current_user: dict | None = Depends(get_optional_user),
+):
     print(f"\n[analyze] START processing request for {request.repo_url}")
     t_start = time.perf_counter()
     
@@ -365,6 +372,30 @@ def analyze_repo(request: RepoRequest):
                     print(f"[cache] updated — stored in DB")
             except Exception as exc:
                 log.warning("[cache] upsert error (non-fatal): %s", exc)
+
+        # ── 10b. If user is authenticated, track repo + create initial thread ──
+        initial_thread = None
+        if current_user and user_db.is_available():
+            try:
+                user_db.touch_user_repository(
+                    user_id=current_user["id"],
+                    repo_url=repo_url,
+                )
+                # Create initial thread only if this is a fresh analysis (not cache hit)
+                if not result.get("cache_hit"):
+                    initial_thread = user_db.create_thread(
+                        user_id=current_user["id"],
+                        repo_url=repo_url,
+                        title="Initial Analysis",
+                    )
+            except Exception as exc:
+                log.warning("[analyze] user tracking failed (non-fatal): %s", exc)
+
+        if initial_thread:
+            result["initial_thread_id"] = initial_thread["id"]
+        elif request.thread_id:
+            # If caller passed an existing thread_id, echo it back
+            result["initial_thread_id"] = request.thread_id
 
         return result
 

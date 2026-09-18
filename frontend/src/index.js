@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Analytics } from '@vercel/analytics/react';
+import { AuthProvider } from './AuthContext';
 
 console.log("Vercel Analytics initialized");
 
@@ -23,8 +24,10 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
-    <Analytics />
+    <AuthProvider>
+      <App />
+      <Analytics />
+    </AuthProvider>
   </React.StrictMode>
 );
 

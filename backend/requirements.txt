@@ -8,6 +8,11 @@ python-multipart==0.0.22
 # ── AI (Azure OpenAI) ──
 openai>=1.14.0
 
+# ── Auth (Google OAuth + JWT) ──
+google-auth>=2.0.0
+google-auth-oauthlib>=1.0.0
+python-jose[cryptography]>=3.3.0
+
 # ── Embeddings (HF API in prod; local fallback in dev) ──
 # sentence-transformers and torch are optional — only needed locally.
 # On Render, set HF_API_TOKEN and these are NOT installed.
@@ -16,6 +21,7 @@ numpy==2.4.4
 # ── Database ──
 SQLAlchemy>=2.0.0
 psycopg2-binary>=2.9.9
+pg8000>=1.31.0
 
 # ── Utilities & Graphs ──
 requests==2.33.1

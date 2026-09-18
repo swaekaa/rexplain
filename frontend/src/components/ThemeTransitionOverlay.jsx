@@ -18,7 +18,7 @@
  *
  *   <ThemeTransitionOverlay ref={overlayRef} />
  */
-import { useImperativeHandle, forwardRef, useRef, useCallback } from "react";
+import { useImperativeHandle, forwardRef, useRef } from "react";
 
 const ThemeTransitionOverlay = forwardRef(function ThemeTransitionOverlay(_, ref) {
   const divRef = useRef(null);

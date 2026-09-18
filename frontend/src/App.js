@@ -9,9 +9,12 @@ import Highlighter from "./components/magicui/Highlighter";
 import { CodeTypeAnimation } from "./components/ui/code-type-animation";
 import { AnimatedListItem } from "./components/magicui/AnimatedList";
 import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularProgressBar";
-import AnimatedBeam from "./components/magicui/AnimatedBeam";
 import ProgressiveBlur from "./components/magicui/ProgressiveBlur";
 import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay";
+import UserMenu from "./UserMenu";
+import WorkspaceSidebar from "./WorkspaceSidebar";
+import { useAuth } from "./AuthContext";
+import { useWorkspace } from "./useWorkspace";
 import "./index.css";
 
 // ─── Environment & API Config ───────────────────────────────────────────────
@@ -43,82 +46,6 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// ─── ScrambleText Animation Component ───────────────────────────────────────
-function ScrambleText({ text, as: Component = "span", className, style, delay = 0 }) {
-  const [displayedText, setDisplayedText] = useState(text);
-  const isScrambling = useRef(false);
-  
-  const defaultChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const randomString = useCallback((length) => [...Array(length)].map(() => defaultChars[Math.floor(Math.random() * defaultChars.length)]).join(''), []);
-  
-  const scramble = useCallback(() => {
-    if (isScrambling.current) return;
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    isScrambling.current = true;
-    const stagger = 60;
-    const duration = text.length * stagger * 2;
-    const startTime = Date.now();
-    
-    const tick = () => {
-      const timePassed = Date.now() - startTime;
-      const actionTime = duration - text.length * stagger;
-      const index = Math.max(0, Math.floor((timePassed - actionTime) / stagger));
-      
-      if (index >= text.length) {
-        setDisplayedText(text);
-        isScrambling.current = false;
-      } else {
-        setDisplayedText(text.slice(0, index) + randomString(text.length - index));
-        if (Date.now() - startTime <= duration) {
-          requestAnimationFrame(tick);
-        } else {
-          setDisplayedText(text);
-          isScrambling.current = false;
-        }
-      }
-    };
-    
-    requestAnimationFrame(tick);
-  }, [text, randomString]);
-
-  useEffect(() => {
-    const timeout = setTimeout(scramble, delay);
-    return () => clearTimeout(timeout);
-  }, [scramble, delay]);
-
-  return (
-    <Component 
-      className={className} 
-      style={style} 
-      onPointerEnter={scramble} 
-      onFocus={scramble}
-      aria-label={text}
-    >
-      {displayedText}
-    </Component>
-  );
-}
-
-// ─── Shared Footer ─────────────────────────────────────────────────────────
-function Footer() {
-  return (
-    <footer className="border-t border-outline py-16 px-8 bg-transparent backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-        <div className="flex flex-col md:flex-row items-center gap-10">
-          <span className="bitcount-brand text-primary text-xl">REX</span>
-          <span className="text-secondary font-body text-sm font-light tracking-wide">© 2026 REX. Built for clarity.</span>
-        </div>
-        <div className="flex gap-10">
-          {["Github", "Privacy", "Terms", "Status"].map(l => (
-            <a key={l} className="text-secondary font-headline font-semibold text-[11px] uppercase tracking-widest hover:text-primary transition-colors" href="#">{l}</a>
-          ))}
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 // ─── HTTP Method badge colors ───────────────────────────────────────────────
 function methodBg(method) {
@@ -269,7 +196,7 @@ function FileTypesGraph({ langs, theme }) {
 }
 
 // ─── Landing Page ──────────────────────────────────────────────────────────
-function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus, overlayRef }) {
+function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus, overlayRef, workspaceProps }) {
   const handleKey = (e) => { if (e.key === "Enter") onAnalyze(); };
   return (
     <div className="text-on-background font-body selection:bg-accent-purple/20 selection:text-primary antialiased min-h-[100dvh] relative" style={{ background: 'transparent' }}>
@@ -283,6 +210,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
@@ -324,7 +252,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
                 style={{ color: 'var(--text-primary)' }}
                 placeholder="username/repo_name"
                 type="text"
-                value={repoUrl}
+                value={repoUrl.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')}
                 onChange={e => {
                   let val = e.target.value;
                   val = val.replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '');
@@ -337,7 +265,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
             <button
               className="w-full md:w-auto md:ml-4 text-white px-8 py-3.5 rounded-[20px] md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 drop-shadow-md"
               style={{ background: 'linear-gradient(135deg, #a855f7 0%, #800020 100%)' }}
-              onClick={onAnalyze}
+              onClick={() => onAnalyze()}
               disabled={loading || !repoUrl.trim()}
             >
               <span>Explain</span>
@@ -347,6 +275,31 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           {error && (
             <div className="mt-6 p-4 rounded-xl text-red-500 text-sm font-body border border-red-500/20 bg-red-500/5 text-center">
               ⚠️ {error}
+            </div>
+          )}
+
+          {workspaceProps?.repositories?.length > 0 && (
+            <div className="mt-8 flex flex-col items-center animate-reveal-up w-full" style={{ animationDelay: '0.5s' }}>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-secondary/60 font-bold mb-4">Recent Repositories</span>
+              <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
+                {workspaceProps.repositories.slice(0, 6).map(repo => {
+                  const parts = repo.repo_url.replace(/\.git$/, "").split("/").filter(Boolean);
+                  const name = parts[parts.length - 1] || repo.repo_url;
+                  return (
+                    <button
+                      key={repo.id}
+                      onClick={() => {
+                        setRepoUrl(repo.repo_url);
+                        onAnalyze(repo.repo_url);
+                      }}
+                      className="px-4 py-2 rounded-2xl bg-surface/80 border border-outline/50 hover:border-primary/30 hover:bg-surface text-primary/80 hover:text-primary transition-all text-xs font-semibold flex items-center gap-2 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[14px] opacity-70">history</span>
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -513,11 +466,12 @@ function LoadingState({ repoUrl, theme, toggleTheme, overlayRef }) {
             <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+            <a className="text-primary border-b-2 border-primary pb-1" href="#/">Analysis</a>
           </nav>
         </div>
         <div className="flex items-center gap-3">
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
@@ -645,23 +599,11 @@ function AssistantBubble({ msg, isLatest }) {
   // ── While SSE is still streaming: show a clean generating skeleton ──────────
   if (msg._streaming) {
     return (
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-2 w-full">
-          {["80%", "65%", "90%"].map((w, i) => (
-            <div key={i} className="h-2.5 rounded-full bg-secondary/20" style={{
-              width: w,
-              animation: `breathing 1.6s ease-in-out ${i * 0.22}s infinite`,
-            }} />
-          ))}
-        </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="w-1 h-1 rounded-full bg-secondary animate-breathing" style={{
-              animationDelay: `${i * 0.18}s`,
-            }} />
-          ))}
-          <span className="text-[9px] text-secondary/60 tracking-widest font-bold uppercase ml-1">Generating…</span>
-        </div>
+      <div className="flex items-center gap-1.5 py-0.5 px-1">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="w-1.5 h-1.5 rounded-full bg-accent-purple/70 animate-breathing" style={{ animationDelay: `${i * 0.18}s` }} />
+        ))}
+        <span className="text-[10px] text-accent-purple/70 tracking-widest font-bold uppercase ml-1">Generating…</span>
       </div>
     );
   }
@@ -686,79 +628,101 @@ function AssistantBubble({ msg, isLatest }) {
 }
 
 // ─── Chat Sidebar ───────────────────────────────────────────────────────────
-function ChatSidebar({ repoUrl, ragReady }) {
-  const [messages, setMessages] = useState([]);
+function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
+  const { token } = useAuth();
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
-  const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef(null);
   const esRef = useRef(null);
 
+  // Messages come directly from workspaceProps — no local copy, no double-render.
+  const messages = workspaceProps?.messages || [];
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [workspaceProps?.messages]);
 
   useEffect(() => () => esRef.current?.close(), []);
 
-  const handleResetChat = () => {
-    setMessages([]);
+  const handleResetChat = async () => {
+    if (workspaceProps?.createThread && workspaceProps?.selectThread) {
+      const thread = await workspaceProps.createThread(repoUrl);
+      if (thread) workspaceProps.selectThread(thread);
+    }
     setInput("");
     setAsking(false);
-    setStreaming(false);
-    if (esRef.current) {
-      esRef.current.close();
-    }
+    if (esRef.current) esRef.current.close();
   };
 
   const ask = async () => {
     const q = input.trim();
-    // Strict guard: one active request at a time
     if (!q || asking) return;
 
-    // 1. Add exactly ONE user message
+    // Auto-create a thread if none is active.
+    let activeThreadId = workspaceProps?.currentThreadId;
+    if (!activeThreadId && workspaceProps?.ensureThread) {
+      const words = q.split(/\s+/).slice(0, 6).join(" ");
+      const autoTitle = words.length > 3 ? words : "New Conversation";
+      activeThreadId = await workspaceProps.ensureThread(repoUrl, autoTitle);
+    }
+
+    // Capture thread ownership at start of request — prevents stale stream writes.
+    const ownThreadId = workspaceProps?.currentThreadId;
+
+    // Add user message directly to workspace (single source of truth).
     const userMsgId = Date.now();
-    setMessages(prev => [...prev, { role: "user", text: q, _id: userMsgId }]);
+    workspaceProps?.addOptimisticMessage?.("user", q, userMsgId);
     setInput("");
     setAsking(true);
 
-    // 2. Always add exactly ONE assistant placeholder
+    // Add assistant placeholder.
     const placeholderId = userMsgId + 1;
-    setMessages(prev => [...prev, {
-      role: "assistant", text: "", sources: [], confidence: "medium",
-      _streaming: true, _id: placeholderId,
-    }]);
+    workspaceProps?.addOptimisticMessage?.("assistant", "", placeholderId);
+    workspaceProps?.updateMessage?.(placeholderId, { sources: [], confidence: "medium", _streaming: true });
 
-    // Helper: resolve the placeholder with a final message
+    // Helper: resolve the placeholder.
     const resolve = (text, sources = [], confidence = "medium") => {
-      setMessages(prev => prev.map(m =>
-        m._id === placeholderId
-          ? { ...m, text, sources, confidence, _streaming: false, _settled: false }
-          : m
-      ));
+      // Guard: only update if we still own this thread.
+      if (ownThreadId !== workspaceProps?.currentThreadId) return;
+      workspaceProps?.updateMessage?.(placeholderId, { text, sources, confidence, _streaming: false, _settled: false });
       setAsking(false);
-      setStreaming(false);
+
+      // Persist to backend.
+      const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
+      if (syncThreadId && token) {
+        axios.post(`${API_URL}/threads/${syncThreadId}/sync`, {
+          user_content: q,
+          assistant_content: text
+        }, { headers: { Authorization: `Bearer ${token}` } })
+        .catch(err => console.error("Sync error:", err))
+        .finally(() => {
+          if (workspaceProps?.refreshThreads) workspaceProps.refreshThreads(true);
+        });
+      }
     };
 
     const resolveError = (text) => {
-      setMessages(prev => prev.map(m =>
-        m._id === placeholderId
-          ? { role: "error", text, _id: placeholderId }
-          : m
-      ));
+      if (ownThreadId !== workspaceProps?.currentThreadId) return;
+      workspaceProps?.updateMessage?.(placeholderId, { role: "error", text, _streaming: false });
       setAsking(false);
-      setStreaming(false);
     };
 
     // 3. Try streaming first (SSE), fall back to blocking POST
     if (typeof EventSource !== "undefined" && ragReady) {
-      setStreaming(true);
       let accText = "";
+      let accSources = [];
+      let accConfidence = "medium";
       console.log("API URL:", API_URL);
       const streamUrl = `${API_URL}/chat/stream?repo_url=${encodeURIComponent(repoUrl)}&question=${encodeURIComponent(q)}`;
       const es = new EventSource(streamUrl);
       esRef.current = es;
 
       es.onmessage = (e) => {
+        // Guard: discard chunks if user switched thread.
+        if (ownThreadId !== workspaceProps?.currentThreadId) {
+          es.close();
+          return;
+        }
         const data = e.data;
         if (data === "[DONE]") {
           es.close();
@@ -773,29 +737,36 @@ function ChatSidebar({ repoUrl, ragReady }) {
             const m = accText.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
             if (m) finalText = m[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
           }
-          // Preserve sources/confidence already set by [META] — only update text + settle flag
-          setMessages(prev => prev.map(m =>
-            m._id === placeholderId
-              ? { ...m, text: finalText, _streaming: false, _settled: false }
-              : m
-          ));
+          workspaceProps?.updateMessage?.(placeholderId, { text: finalText, _streaming: false, _settled: false });
           setAsking(false);
-          setStreaming(false);
+
+          // Persist to backend.
+          const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
+          if (syncThreadId && token) {
+            axios.post(`${API_URL}/threads/${syncThreadId}/sync`, {
+              user_content: q,
+              assistant_content: finalText,
+              sources: accSources,
+              confidence: accConfidence
+            }, { headers: { Authorization: `Bearer ${token}` } })
+            .catch(err => console.error("Sync error:", err))
+            .finally(() => {
+              if (workspaceProps?.refreshThreads) workspaceProps.refreshThreads(true);
+            });
+          }
           return;
         }
         if (data.startsWith("[META] ")) {
           try {
             const meta = JSON.parse(data.slice(7));
-            setMessages(prev => prev.map(m =>
-              m._id === placeholderId ? { ...m, sources: meta.sources || [], confidence: meta.confidence || "medium" } : m
-            ));
+            accSources = meta.sources || [];
+            accConfidence = meta.confidence || "medium";
+            workspaceProps?.updateMessage?.(placeholderId, { sources: accSources, confidence: accConfidence });
           } catch (_) { }
           return;
         }
         accText += data.replace(/\\n/g, "\n");
-        setMessages(prev => prev.map(m =>
-          m._id === placeholderId ? { ...m, text: accText } : m
-        ));
+        workspaceProps?.updateMessage?.(placeholderId, { text: accText });
       };
 
       es.onerror = async () => {
@@ -845,18 +816,24 @@ function ChatSidebar({ repoUrl, ragReady }) {
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: "transparent", position: "relative" }}>
       <div className="p-4 md:p-8 pb-3 md:pb-4 flex items-center justify-between border-b border-outline flex-shrink-0 relative z-20 bg-transparent backdrop-blur-md">
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={handleResetChat} title="Reset Chat" className="text-secondary/40 hover:text-primary transition-colors flex items-center justify-center p-2 md:p-1 rounded-md hover:bg-primary/5 active:scale-95">
-            <span className="material-symbols-outlined">refresh</span>
-          </button>
-          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center ml-1 md:ml-2">
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-accent-purple/20 flex items-center justify-center">
             <span className="material-symbols-outlined text-accent-purple !text-base md:!text-lg">auto_awesome</span>
           </div>
           <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Assistant Core</span>
         </div>
+        <button onClick={handleResetChat} title="New Thread" className="text-secondary/60 hover:text-accent-purple transition-colors flex items-center justify-center p-1.5 md:p-2 rounded-lg hover:bg-primary/10 active:scale-95">
+          <span className="material-symbols-outlined">add</span>
+        </button>
       </div>
 
+      {(workspaceProps?.loadingMessages || workspaceProps?.isRepoSwitching) && (
+        <div className="w-full h-[2px] bg-transparent relative overflow-hidden flex-shrink-0 z-30 -mb-[2px]">
+          <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-accent-purple animate-shimmer" />
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 space-y-4 md:space-y-6 scroll-hide">
-        {messages.length === 0 && (
+        {!workspaceProps?.loadingMessages && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 opacity-70">
             <span className="material-symbols-outlined text-3xl text-primary">forum</span>
             <p className="text-xs text-primary text-center max-w-[200px] font-body leading-relaxed font-medium">
@@ -921,9 +898,15 @@ function ChatSidebar({ repoUrl, ragReady }) {
 }
 
 // ─── Analysis View — Split Screen ───────────────────────────────────────────
-const NAV_H = 72;
 
-function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef }) {
+function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef, workspaceProps, analyze, setRepoUrl }) {
+  const { isAuthenticated } = useAuth();
+  const {
+    repositories, threads, currentThreadId, loadingThreads,
+    selectRepo, selectThread, createThread, renameThread, deleteThread, currentRepoUrl
+  } = workspaceProps || {};
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const fw = result.framework_detection || {};
   const scan = result.scan_results || {};
   const langs = Object.entries(scan.languages || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -988,16 +971,55 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
             <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+            <a className="text-primary border-b-2 border-primary pb-1" href="#/">Analysis</a>
           </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
           <button onClick={onReset} className="px-4 md:px-5 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest hover:text-accent-purple transition-colors duration-200 text-primary border border-outline md:border-none rounded-lg md:rounded-none bg-primary/5 md:bg-transparent active:scale-95">New Analysis</button>
           <ThemeToggle theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} />
+          <UserMenu />
         </div>
       </header>
 
-      <div ref={containerRef} className="flex flex-col md:flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
+      <div ref={containerRef} className="flex flex-row flex-1 overflow-hidden" style={{ marginTop: isMobile ? '56px' : '64px' }}>
+        {/* Workspace Sidebar (authenticated users only) */}
+        {isAuthenticated && !isMobile && (
+          <WorkspaceSidebar
+            currentRepoUrl={currentRepoUrl || repoUrl}
+            currentThreadId={currentThreadId}
+            onSelectRepo={(url) => { 
+              if (setRepoUrl) setRepoUrl(url);
+              if (selectRepo) selectRepo(url); 
+              if (analyze) analyze(url);
+            }}
+            onSelectThread={(t) => {
+              if (t.repo_url && t.repo_url !== (currentRepoUrl || repoUrl)) {
+                // Always call analyze() so the analysis panel updates to the new repo.
+                // Backend caches results so this is fast for previously-analyzed repos.
+                if (setRepoUrl) setRepoUrl(t.repo_url);
+                if (analyze) analyze(t.repo_url, t.id);
+              } else {
+                if (selectThread) selectThread(t);
+              }
+            }}
+            onNewThread={async () => {
+              if (createThread && selectThread) {
+                const thread = await createThread(repoUrl);
+                if (thread) selectThread(thread);
+              }
+            }}
+            onDeleteThread={(id) => { if (deleteThread) deleteThread(id); }}
+            onRenameThread={(id, title) => { if (renameThread) renameThread(id, title); }}
+            threads={threads || []}
+            repositories={repositories || []}
+            loadingThreads={loadingThreads || false}
+            isRepoSwitching={workspaceProps?.isRepoSwitching || false}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(c => !c)}
+          />
+        )}
+        {/* Main content columns */}
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left Side: Analysis Content */}
         <main
           style={isMobile
@@ -1009,14 +1031,17 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
 
             {/* Hero Analysis Header */}
             <section className="mb-10 md:mb-16 space-y-3 md:space-y-4 animate-reveal-up">
-              <div className="inline-flex items-center gap-2 md:gap-3">
+              <div className="inline-flex items-center gap-2 md:gap-3 mb-1">
                 <div className="w-6 md:w-8 h-[1px]" style={{ background: '#800020' }}></div>
                 <span className="text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-bold" style={{ color: '#800020' }}>Structural Mapping</span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-words">
-                Repository<br />Analysis
+              <h1 className="text-5xl md:text-7xl font-headline font-extrabold tracking-tight leading-[1.1] text-primary break-all">
+                {repoName}
               </h1>
-              <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words">
+              <h2 className="text-2xl md:text-3xl font-headline font-bold tracking-tight text-secondary/80">
+                Repository Analysis
+              </h2>
+              <p className="text-primary font-body text-sm md:text-base leading-relaxed font-light break-words mt-4">
                 Breakdown of <a href={repoUrl.startsWith('http') ? repoUrl : `https://github.com/${repoUrl}`} target="_blank" rel="noopener noreferrer" className="font-bold border-b pb-[1px] hover:opacity-80 transition-opacity duration-300 break-all" style={{ color: '#800020', borderColor: 'rgba(128,0,32,0.3)' }}>{repoName}</a>. Analyzed in <span className="font-medium text-primary drop-shadow-none">{result._elapsed || "~5"}s</span>.
               </p>
             </section>
@@ -1263,7 +1288,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
         {/* Desktop: Right Side AI Chat */}
         {!isMobile && (
           <aside style={{ flex: `0 0 ${100 - splitPct}%`, width: `${100 - splitPct}%`, minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+            <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} workspaceProps={workspaceProps} />
           </aside>
         )}
       </div>
@@ -1313,11 +1338,12 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} />
+              <ChatSidebar repoUrl={result.repo_url || repoUrl} ragReady={result.rag_ready} workspaceProps={workspaceProps} />
             </div>
           </div>
         </>
       )}
+      </div>{/* end containerRef (sidebar + content) */}
     </div>
   );
 }
@@ -1337,11 +1363,13 @@ function SectionHeader({ label }) {
 
 // ─── App Root ───────────────────────────────────────────────────────────────
 export default function App() {
+  const { token, isAuthenticated } = useAuth();
+  const workspace = useWorkspace();
+
   const [healthStatus, setHealthStatus] = useState("Checking backend...");
 
   useEffect(() => {
     (async () => {
-      // Retry up to 3 times with 3s gap — Render sometimes needs a moment after wake
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
           const res = await axios.get(`${API_URL}/health`, { timeout: 8000 });
@@ -1383,18 +1411,22 @@ export default function App() {
     }
     return next;
   });
+
   const [repoUrl, setRepoUrl] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isAnalyzingInBackground, setIsAnalyzingInBackground] = useState(false);
   const [error, setError] = useState(null);
 
   const overlayRef = useRef(null);
 
-  const analyze = async () => {
-    const trimmed = repoUrl.trim();
+  const analyze = async (urlToAnalyze = repoUrl, targetThreadId = null) => {
+    if (typeof urlToAnalyze !== "string") {
+      urlToAnalyze = repoUrl;
+    }
+    const trimmed = urlToAnalyze.trim();
     if (!trimmed) return;
 
-    // Client-side format validation
     const cleaned = trimmed
       .replace(/^https?:\/\//i, '')
       .replace(/^www\./, '')
@@ -1407,8 +1439,6 @@ export default function App() {
       return;
     }
 
-    // Fast GitHub API pre-check — runs in ~300ms, no auth needed for public repos.
-    // Catches non-existent / private repos before starting the slow backend analysis.
     const [owner, repo] = parts;
     try {
       const ghCheck = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
@@ -1431,28 +1461,35 @@ export default function App() {
         setError(`Repository "${owner}/${repo}" is private or access is restricted. Only public repositories are supported.`);
         return;
       }
-      // Any non-2xx that isn't 404/403 — e.g. rate limit (429) — let backend handle it
     } catch (_ghErr) {
-      // GitHub API unreachable (network issue) — proceed to backend anyway, it will give its own error
       console.warn('[pre-check] GitHub API unreachable, proceeding to backend:', _ghErr);
     }
 
-    setLoading(true); setError(null); setResult(null);
+    setLoading(true);
+    setResult(null);
+    setError(null);
+    if (workspace && workspace.selectRepo && urlToAnalyze.trim() !== workspace.currentRepoUrl) {
+      workspace.selectRepo(urlToAnalyze.trim());
+    }
     const t0 = Date.now();
     try {
       console.log("API URL:", API_URL);
-      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: repoUrl.trim() }, {
-        timeout: 180000,  // 3 min — analysis can take ~90s on cold Render start
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.post(`${API_URL}/analyze/`, { repo_url: urlToAnalyze.trim() }, {
+        timeout: 180000,
+        headers,
       });
       console.log("Response:", res.data);
-      console.log("[debug] metadata:", res.data?.metadata);
-      console.log("[debug] commits:", res.data?.metadata?.commits);
-      setResult({ ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) });
+      const data = { ...res.data, _elapsed: ((Date.now() - t0) / 1000).toFixed(1) };
+      setResult(data);
+
+      // If authenticated, update workspace (repo history + threads)
+      if (isAuthenticated && data.repo_url) {
+        await workspace.onAnalysisComplete(data.repo_url, targetThreadId || data.initial_thread_id);
+      }
     } catch (err) {
       console.error("API Error:", err);
-      if (err.response) {
-        console.error("Backend response:", err.response.data);
-      }
+      if (err.response) console.error("Backend response:", err.response.data);
       const status = err.response?.status;
       const detail = err.response?.data?.detail;
       if (status === 400) {
@@ -1468,9 +1505,15 @@ export default function App() {
       }
     }
     setLoading(false);
+    setIsAnalyzingInBackground(false);
   };
 
   const reset = () => { setResult(null); setError(null); };
+
+  const enhancedWorkspace = workspace ? {
+    ...workspace,
+    loadingMessages: workspace.loadingMessages || isAnalyzingInBackground,
+  } : workspace;
 
   return (
     <>
@@ -1478,9 +1521,9 @@ export default function App() {
       {loading ? (
         <><VantaBackground subtle /><LoadingState repoUrl={repoUrl} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
       ) : result ? (
-        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} /></>
+        <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} workspaceProps={enhancedWorkspace} analyze={analyze} setRepoUrl={setRepoUrl} /></>
       ) : (
-        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} /></>
+        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} workspaceProps={enhancedWorkspace} /></>
       )}
     </>
   );
