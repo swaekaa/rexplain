@@ -273,7 +273,7 @@ function FileTypesGraph({ langs, theme }) {
 }
 
 // ─── Landing Page ──────────────────────────────────────────────────────────
-function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus, overlayRef }) {
+function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, toggleTheme, healthStatus, overlayRef, workspaceProps }) {
   const handleKey = (e) => { if (e.key === "Enter") onAnalyze(); };
   return (
     <div className="text-on-background font-body selection:bg-accent-purple/20 selection:text-primary antialiased min-h-[100dvh] relative" style={{ background: 'transparent' }}>
@@ -342,7 +342,7 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
             <button
               className="w-full md:w-auto md:ml-4 text-white px-8 py-3.5 rounded-[20px] md:rounded-xl font-headline font-bold text-[11px] uppercase tracking-[0.2em] hover:opacity-90 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-50 drop-shadow-md"
               style={{ background: 'linear-gradient(135deg, #a855f7 0%, #800020 100%)' }}
-              onClick={onAnalyze}
+              onClick={() => onAnalyze()}
               disabled={loading || !repoUrl.trim()}
             >
               <span>Explain</span>
@@ -352,6 +352,31 @@ function LandingPage({ repoUrl, setRepoUrl, onAnalyze, loading, error, theme, to
           {error && (
             <div className="mt-6 p-4 rounded-xl text-red-500 text-sm font-body border border-red-500/20 bg-red-500/5 text-center">
               ⚠️ {error}
+            </div>
+          )}
+
+          {workspaceProps?.repositories?.length > 0 && (
+            <div className="mt-8 flex flex-col items-center animate-reveal-up w-full" style={{ animationDelay: '0.5s' }}>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-secondary/60 font-bold mb-4">Recent Repositories</span>
+              <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
+                {workspaceProps.repositories.slice(0, 6).map(repo => {
+                  const parts = repo.repo_url.replace(/\.git$/, "").split("/").filter(Boolean);
+                  const name = parts[parts.length - 1] || repo.repo_url;
+                  return (
+                    <button
+                      key={repo.id}
+                      onClick={() => {
+                        setRepoUrl(repo.repo_url);
+                        onAnalyze(repo.repo_url);
+                      }}
+                      className="px-4 py-2 rounded-2xl bg-surface/80 border border-outline/50 hover:border-primary/30 hover:bg-surface text-primary/80 hover:text-primary transition-all text-xs font-semibold flex items-center gap-2 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[14px] opacity-70">history</span>
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -769,7 +794,7 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
         }, { headers: { Authorization: `Bearer ${token}` } })
         .catch(err => console.error("Sync error:", err))
         .finally(() => {
-          if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(repoUrl, true);
+          if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(true);
         });
       }
     };
@@ -829,7 +854,7 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
             }, { headers: { Authorization: `Bearer ${token}` } })
             .catch(err => console.error("Sync error:", err))
             .finally(() => {
-              if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(repoUrl, true);
+              if (workspaceProps.refreshThreads) workspaceProps.refreshThreads(true);
             });
           }
           return;
@@ -1081,7 +1106,15 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
               if (selectRepo) selectRepo(url); 
               if (analyze) analyze(url);
             }}
-            onSelectThread={(t) => { if (selectThread) selectThread(t); }}
+            onSelectThread={(t) => { 
+              if (t.repo_url && t.repo_url !== (currentRepoUrl || repoUrl)) {
+                if (setRepoUrl) setRepoUrl(t.repo_url);
+                if (selectRepo) selectRepo(t.repo_url);
+                if (analyze) analyze(t.repo_url, t.id);
+              } else {
+                if (selectThread) selectThread(t); 
+              }
+            }}
             onNewThread={() => { if (createThread) createThread(repoUrl); }}
             onDeleteThread={(id) => { if (deleteThread) deleteThread(id); }}
             onRenameThread={(id, title) => { if (renameThread) renameThread(id, title); }}
@@ -1490,7 +1523,7 @@ export default function App() {
 
   const overlayRef = useRef(null);
 
-  const analyze = async (urlToAnalyze = repoUrl) => {
+  const analyze = async (urlToAnalyze = repoUrl, targetThreadId = null) => {
     if (typeof urlToAnalyze !== "string") {
       urlToAnalyze = repoUrl;
     }
@@ -1550,7 +1583,7 @@ export default function App() {
 
       // If authenticated, update workspace (repo history + threads)
       if (isAuthenticated && data.repo_url) {
-        workspace.onAnalysisComplete(data.repo_url, data.initial_thread_id);
+        workspace.onAnalysisComplete(data.repo_url, targetThreadId || data.initial_thread_id);
       }
     } catch (err) {
       console.error("API Error:", err);
@@ -1582,7 +1615,7 @@ export default function App() {
       ) : result ? (
         <><VantaBackground subtle /><AnalysisView result={result} repoUrl={repoUrl} onReset={reset} theme={theme} toggleTheme={toggleTheme} overlayRef={overlayRef} workspaceProps={workspace} analyze={analyze} setRepoUrl={setRepoUrl} /></>
       ) : (
-        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} /></>
+        <><VantaBackground /><LandingPage repoUrl={repoUrl} setRepoUrl={setRepoUrl} onAnalyze={analyze} loading={loading} error={error} theme={theme} toggleTheme={toggleTheme} healthStatus={healthStatus} overlayRef={overlayRef} workspaceProps={workspace} /></>
       )}
     </>
   );

@@ -135,10 +135,10 @@ export default function WorkspaceSidebar({
                           <div key={i} className="h-7 w-24 rounded-lg bg-primary/5 animate-pulse ml-2" />
                         ))}
                       </div>
-                    ) : threads.length === 0 ? (
+                    ) : threads.filter(t => t.repo_url === repo.repo_url).length === 0 ? (
                       <p className="py-2 text-secondary/40 font-body text-[10px] font-medium italic">No threads yet.</p>
                     ) : (
-                      threads.map((thread) => {
+                      threads.filter(t => t.repo_url === repo.repo_url).map((thread) => {
                         const isActive = currentThreadId === thread.id;
                         return (
                           <div key={thread.id} className="relative group/thread">
@@ -164,10 +164,10 @@ export default function WorkspaceSidebar({
                             ) : (
                               <button
                                 onClick={() => onSelectThread(thread)}
-                                className={`w-full text-left px-4 py-3 rounded-2xl transition-all relative overflow-hidden flex items-center justify-between ${
+                                className={`w-full text-left px-3 py-1.5 rounded-xl transition-all relative overflow-hidden flex items-center justify-between ${
                                   isActive
-                                    ? "bg-accent-purple/20 text-accent-purple shadow-sm font-semibold border border-accent-purple/30"
-                                    : "text-secondary/70 hover:text-primary hover:bg-primary/5 font-medium border border-transparent"
+                                    ? "text-accent-purple font-semibold"
+                                    : "text-secondary/70 hover:text-primary hover:bg-primary/5 font-medium"
                                 }`}
                               >
                                 <span className="text-[12px] truncate pr-4 relative z-10">{thread.title}</span>

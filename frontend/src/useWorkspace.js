@@ -49,19 +49,13 @@ export function useWorkspace() {
     setLoadingRepos(false);
   }, [isAuthenticated, token, authHeaders]);
 
-  useEffect(() => {
-    if (isAuthenticated) refreshRepositories();
-    else { setRepositories([]); setThreads([]); setMessages([]); }
-  }, [isAuthenticated, refreshRepositories]);
-
-  // ── Fetch threads for a repo ────────────────────────────────────────────────
-  const refreshThreads = useCallback(async (repoUrl, background = false) => {
-    if (!isAuthenticated || !token || !repoUrl) return;
+  // ── Fetch threads for all repos ────────────────────────────────────────────────
+  const refreshThreads = useCallback(async (background = false) => {
+    if (!isAuthenticated || !token) return;
     if (!background) setLoadingThreads(true);
     try {
       const res = await axios.get(`${API_URL}/threads`, {
         headers: authHeaders(),
-        params: { repo_url: repoUrl },
       });
       setThreads(res.data || []);
     } catch (e) {
@@ -69,6 +63,14 @@ export function useWorkspace() {
     }
     if (!background) setLoadingThreads(false);
   }, [isAuthenticated, token, authHeaders]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshRepositories();
+      refreshThreads(false);
+    }
+    else { setRepositories([]); setThreads([]); setMessages([]); }
+  }, [isAuthenticated, refreshRepositories, refreshThreads]);
 
   // ── Fetch messages for a thread ─────────────────────────────────────────────
   const refreshMessages = useCallback(async (threadId, background = false) => {
@@ -101,7 +103,7 @@ export function useWorkspace() {
     setCurrentRepoUrl(repoUrl);
     setCurrentThreadId(null);
     setMessages([]);
-    await refreshThreads(repoUrl);
+    await refreshThreads(true);
   }, [refreshThreads]);
 
   // ── Select a thread ─────────────────────────────────────────────────────────
@@ -172,7 +174,7 @@ export function useWorkspace() {
   const onAnalysisComplete = useCallback(async (repoUrl, initialThreadId) => {
     if (!isAuthenticated) return;
     await refreshRepositories();
-    await refreshThreads(repoUrl);
+    await refreshThreads(true);
     setCurrentRepoUrl(repoUrl);
     if (initialThreadId) {
       setCurrentThreadId(initialThreadId);
