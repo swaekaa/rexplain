@@ -9,7 +9,6 @@ import Highlighter from "./components/magicui/Highlighter";
 import { CodeTypeAnimation } from "./components/ui/code-type-animation";
 import { AnimatedListItem } from "./components/magicui/AnimatedList";
 import AnimatedCircularProgressBar from "./components/magicui/AnimatedCircularProgressBar";
-import AnimatedBeam from "./components/magicui/AnimatedBeam";
 import ProgressiveBlur from "./components/magicui/ProgressiveBlur";
 import ThemeTransitionOverlay from "./components/ThemeTransitionOverlay";
 import UserMenu from "./UserMenu";
@@ -47,82 +46,6 @@ axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// ─── ScrambleText Animation Component ───────────────────────────────────────
-function ScrambleText({ text, as: Component = "span", className, style, delay = 0 }) {
-  const [displayedText, setDisplayedText] = useState(text);
-  const isScrambling = useRef(false);
-  
-  const defaultChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const randomString = useCallback((length) => [...Array(length)].map(() => defaultChars[Math.floor(Math.random() * defaultChars.length)]).join(''), []);
-  
-  const scramble = useCallback(() => {
-    if (isScrambling.current) return;
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    isScrambling.current = true;
-    const stagger = 60;
-    const duration = text.length * stagger * 2;
-    const startTime = Date.now();
-    
-    const tick = () => {
-      const timePassed = Date.now() - startTime;
-      const actionTime = duration - text.length * stagger;
-      const index = Math.max(0, Math.floor((timePassed - actionTime) / stagger));
-      
-      if (index >= text.length) {
-        setDisplayedText(text);
-        isScrambling.current = false;
-      } else {
-        setDisplayedText(text.slice(0, index) + randomString(text.length - index));
-        if (Date.now() - startTime <= duration) {
-          requestAnimationFrame(tick);
-        } else {
-          setDisplayedText(text);
-          isScrambling.current = false;
-        }
-      }
-    };
-    
-    requestAnimationFrame(tick);
-  }, [text, randomString]);
-
-  useEffect(() => {
-    const timeout = setTimeout(scramble, delay);
-    return () => clearTimeout(timeout);
-  }, [scramble, delay]);
-
-  return (
-    <Component 
-      className={className} 
-      style={style} 
-      onPointerEnter={scramble} 
-      onFocus={scramble}
-      aria-label={text}
-    >
-      {displayedText}
-    </Component>
-  );
-}
-
-// ─── Shared Footer ─────────────────────────────────────────────────────────
-function Footer() {
-  return (
-    <footer className="border-t border-outline py-16 px-8 bg-transparent backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-        <div className="flex flex-col md:flex-row items-center gap-10">
-          <span className="bitcount-brand text-primary text-xl">REX</span>
-          <span className="text-secondary font-body text-sm font-light tracking-wide">© 2026 REX. Built for clarity.</span>
-        </div>
-        <div className="flex gap-10">
-          {["Github", "Privacy", "Terms", "Status"].map(l => (
-            <a key={l} className="text-secondary font-headline font-semibold text-[11px] uppercase tracking-widest hover:text-primary transition-colors" href="#">{l}</a>
-          ))}
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 // ─── HTTP Method badge colors ───────────────────────────────────────────────
 function methodBg(method) {
@@ -543,7 +466,7 @@ function LoadingState({ repoUrl, theme, toggleTheme, overlayRef }) {
             <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+            <a className="text-primary border-b-2 border-primary pb-1" href="#/">Analysis</a>
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -676,23 +599,11 @@ function AssistantBubble({ msg, isLatest }) {
   // ── While SSE is still streaming: show a clean generating skeleton ──────────
   if (msg._streaming) {
     return (
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-2 w-full">
-          {["80%", "65%", "90%"].map((w, i) => (
-            <div key={i} className="h-2.5 rounded-full bg-secondary/20" style={{
-              width: w,
-              animation: `breathing 1.6s ease-in-out ${i * 0.22}s infinite`,
-            }} />
-          ))}
-        </div>
-        <div className="mt-2 flex items-center gap-1.5">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="w-1 h-1 rounded-full bg-secondary animate-breathing" style={{
-              animationDelay: `${i * 0.18}s`,
-            }} />
-          ))}
-          <span className="text-[9px] text-secondary/60 tracking-widest font-bold uppercase ml-1">Generating…</span>
-        </div>
+      <div className="flex items-center gap-1.5 py-0.5 px-1">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="w-1.5 h-1.5 rounded-full bg-accent-purple/70 animate-breathing" style={{ animationDelay: `${i * 0.18}s` }} />
+        ))}
+        <span className="text-[10px] text-accent-purple/70 tracking-widest font-bold uppercase ml-1">Generating…</span>
       </div>
     );
   }
@@ -721,7 +632,6 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
   const { token } = useAuth();
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
-  const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef(null);
   const esRef = useRef(null);
 
@@ -730,7 +640,7 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [workspaceProps?.messages]);
 
   useEffect(() => () => esRef.current?.close(), []);
 
@@ -741,7 +651,6 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
     }
     setInput("");
     setAsking(false);
-    setStreaming(false);
     if (esRef.current) esRef.current.close();
   };
 
@@ -777,7 +686,6 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
       if (ownThreadId !== workspaceProps?.currentThreadId) return;
       workspaceProps?.updateMessage?.(placeholderId, { text, sources, confidence, _streaming: false, _settled: false });
       setAsking(false);
-      setStreaming(false);
 
       // Persist to backend.
       const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
@@ -797,12 +705,10 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
       if (ownThreadId !== workspaceProps?.currentThreadId) return;
       workspaceProps?.updateMessage?.(placeholderId, { role: "error", text, _streaming: false });
       setAsking(false);
-      setStreaming(false);
     };
 
     // 3. Try streaming first (SSE), fall back to blocking POST
     if (typeof EventSource !== "undefined" && ragReady) {
-      setStreaming(true);
       let accText = "";
       let accSources = [];
       let accConfidence = "medium";
@@ -831,10 +737,8 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
             const m = accText.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/s);
             if (m) finalText = m[1].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
           }
-          // Preserve sources/confidence from [META], only update text + settle flag.
           workspaceProps?.updateMessage?.(placeholderId, { text: finalText, _streaming: false, _settled: false });
           setAsking(false);
-          setStreaming(false);
 
           // Persist to backend.
           const syncThreadId = workspaceProps?.currentThreadId || activeThreadId;
@@ -994,7 +898,6 @@ function ChatSidebar({ repoUrl, ragReady, workspaceProps }) {
 }
 
 // ─── Analysis View — Split Screen ───────────────────────────────────────────
-const NAV_H = 72;
 
 function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef, workspaceProps, analyze, setRepoUrl }) {
   const { isAuthenticated } = useAuth();
@@ -1068,7 +971,7 @@ function AnalysisView({ result, repoUrl, onReset, theme, toggleTheme, overlayRef
             <img src="/logo.png" alt="RExplain" className="h-7 md:h-8 object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-8 font-['Manrope'] text-sm tracking-tight font-medium">
-            <a className="text-primary border-b-2 border-primary pb-1" href="#">Analysis</a>
+            <a className="text-primary border-b-2 border-primary pb-1" href="#/">Analysis</a>
           </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-4">

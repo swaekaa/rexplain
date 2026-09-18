@@ -88,7 +88,7 @@ function methodStyle(method) {
 // ── Shared node wrapper ───────────────────────────────────────────────────────
 
 function NodeShell({ layer, children, selected, compact = false, style = {} }) {
-  const { border, bg, accent } = getLayer(layer);
+  const { border } = getLayer(layer);
   const { nodeBg } = getThemeColors();
   return (
     <div
@@ -304,7 +304,7 @@ function Inspector({ node, onClose, onFileClick }) {
   const { data } = node;
   const { accent } = getLayer(data.layer);
 
-  const { inspectorBg, inspectorBorder, nodeText, nodeTextSub } = getThemeColors();
+  const { inspectorBg } = getThemeColors();
 
   return (
     <div
@@ -564,8 +564,8 @@ export default function InteractiveDiagram({ graphData, fallbackData, onFileClic
   // Stable key: forces ReactFlow to fully remount when graph data changes
   const graphKey = useMemo(() => rawNodes.map(n => n.id).join(","), [rawNodes]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(rawNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(rawEdges);
+  const [nodes, , onNodesChange] = useNodesState(rawNodes);
+  const [edges, , onEdgesChange] = useEdgesState(rawEdges);
   const [selectedNode, setSelectedNode] = useState(null);
 
   // ── Prevent parent scroll pane from stealing wheel events ────────────────────
