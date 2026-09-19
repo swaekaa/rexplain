@@ -88,6 +88,13 @@ export function useWorkspace() {
   const refreshMessages = useCallback(async (threadId, background = false) => {
     if (!isAuthenticated || !token || !threadId) return;
 
+    // If it's a pending optimistic thread, it has no messages on server yet.
+    if (threadId.startsWith("temp-")) {
+      setMessages([]);
+      if (!background) setLoadingMessages(false);
+      return;
+    }
+
     // Abort any in-flight fetch for a previous thread.
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
